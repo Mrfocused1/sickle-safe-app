@@ -18,7 +18,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | null;
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | null;
 
 
 interface AppBottomSheetProps {
@@ -93,6 +93,8 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return { title: 'Task Details', icon: 'assignment', color: '#f59e0b' };
             case 'request_task':
                 return { title: 'Help Needed', icon: 'handshake', color: '#3b82f6' };
+            case 'view_care_plan':
+                return { title: 'Maya\'s Care Plan', icon: 'list-alt', color: '#8b5cf6' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -613,6 +615,16 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                             placeholder="e.g. Primary Caregiver, Spouse, Parent"
                             placeholderTextColor="#94a3b8"
                         />
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Personal Message</Text>
+                        <TextInput
+                            style={[styles.smallInput, { height: 100, paddingTop: 12 }]}
+                            placeholder="Add a custom note to your invitation..."
+                            placeholderTextColor="#94a3b8"
+                            multiline
+                            textAlignVertical="top"
+                            value={notes}
+                            onChangeText={setNotes}
+                        />
                     </View>
                 );
             case 'manage_task':
@@ -669,6 +681,62 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                 Maya has flagged this task as something she needs help with. By claiming this task, it will be moved to your assigned missions.
                             </Text>
                         </View>
+                    </View>
+                );
+            case 'view_care_plan':
+                const TASKS = [
+                    { id: 1, title: 'Emergency Bag Check', detail: 'Ensure hospital bag is ready.', status: 'Assigned', helper: 'Marcus', priority: 'critical' },
+                    { id: 2, title: 'Prescription Refill', detail: 'Hydroxyurea supply is low.', status: 'Help Needed', priority: 'needs_help' },
+                    { id: 3, title: 'Evening Walk', detail: 'Light 15 min walk.', status: 'Unassigned', priority: 'personal' },
+                ];
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>Active Tasks & Requests</Text>
+                        {TASKS.map((t) => (
+                            <Pressable
+                                key={t.id}
+                                onPress={() => {
+                                    setActiveType('request_task');
+                                    task = { title: t.title, description: t.detail, priority: t.priority };
+                                }}
+                                style={{
+                                    backgroundColor: '#fff',
+                                    borderRadius: 16,
+                                    padding: 16,
+                                    marginBottom: 12,
+                                    borderWidth: 1,
+                                    borderColor: '#f1f5f9',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between'
+                                }}
+                            >
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 16, fontWeight: '700', color: '#1e293b' }}>{t.title}</Text>
+                                    <Text style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{t.detail}</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+                                        <View style={{
+                                            backgroundColor: t.status === 'Assigned' ? '#f0fdf4' : t.status === 'Help Needed' ? '#fffbeb' : '#f8fafc',
+                                            paddingHorizontal: 8,
+                                            paddingVertical: 2,
+                                            borderRadius: 6
+                                        }}>
+                                            <Text style={{
+                                                fontSize: 10,
+                                                fontWeight: '700',
+                                                color: t.status === 'Assigned' ? '#16a34a' : t.status === 'Help Needed' ? '#d97706' : '#64748b'
+                                            }}>{t.status}</Text>
+                                        </View>
+                                        {t.helper && <Text style={{ fontSize: 11, color: '#94a3b8', marginLeft: 8 }}>• {t.helper}</Text>}
+                                    </View>
+                                </View>
+                                <MaterialIcons
+                                    name={t.status === 'Assigned' ? "swap-horiz" : "add-circle-outline"}
+                                    size={24}
+                                    color={t.status === 'Assigned' ? "#94a3b8" : "#8b5cf6"}
+                                />
+                            </Pressable>
+                        ))}
                     </View>
                 );
             case 'activity_detail':
@@ -776,7 +844,8 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                         activeType === 'invite_member' ? 'Send Invitation' :
                                                             activeType === 'manage_task' ? 'Assign Task' :
                                                                 activeType === 'request_task' ? 'Claim Task' :
-                                                                    'Save Entry'}
+                                                                    activeType === 'view_care_plan' ? 'Close Plan' :
+                                                                        'Save Entry'}
                                     </Text>
                                 </Pressable>
                             )}

@@ -147,10 +147,15 @@ export default function CaregiverDashboard() {
                     </View>
                 </View>
 
-                {/* Shared Tasks / Help Needed */}
                 <View className="px-6 mb-8">
                     <View className="flex-row items-center justify-between mb-4 px-1">
                         <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Help Requested</Text>
+                        <Pressable onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setActiveType('view_care_plan');
+                        }}>
+                            <Text className="text-violet-600 font-bold text-xs">See Full Plan</Text>
+                        </Pressable>
                     </View>
 
                     <Pressable
