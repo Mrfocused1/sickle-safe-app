@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import AddMenuModal from '../../components/AddMenuModal';
 
-export default function WarriorLayout() {
+export default function OvercomerLayout() {
   const [showAddMenu, setShowAddMenu] = useState(false);
   const rotation = useRef(new Animated.Value(0)).current;
 

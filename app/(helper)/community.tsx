@@ -28,7 +28,7 @@ const POSTS = [
     {
         id: 1,
         author: 'Sarah Jenkins',
-        role: 'Mom of Warrior',
+        role: 'Mom of Overcomer',
         time: '2h ago',
         avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200',
         title: 'Managing school absences?',

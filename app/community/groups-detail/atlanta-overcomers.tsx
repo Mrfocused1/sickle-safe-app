@@ -24,7 +24,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 
-export default function AtlantaWarriorsRecreated() {
+export default function AtlantaOvercomersRecreated() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('Home');
@@ -96,7 +96,7 @@ export default function AtlantaWarriorsRecreated() {
                         <MapPin size={12} color="#fff" />
                         <Text className="text-white font-bold text-[10px] uppercase tracking-widest">Atlanta Chapter</Text>
                     </View>
-                    <Text className="text-white text-5xl font-black leading-none mb-3">Atlanta{'\n'}Warriors</Text>
+                    <Text className="text-white text-5xl font-black leading-none mb-3">Atlanta{'\n'}Overcomers</Text>
                     <Text className="text-white/80 text-base font-medium max-w-[280px]">
                         The heartbeat of the sickle cell community in Georgia.
                     </Text>

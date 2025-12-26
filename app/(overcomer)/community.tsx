@@ -21,10 +21,10 @@ const COMMUNITY_POSTS = [
   {
     id: '1',
     user: 'Jasmine W.',
-    role: 'Warrior',
+    role: 'Overcomer',
     time: '2h ago',
     category: 'Stories',
-    content: "Just completed a 5k walk today! It's been a journey, but staying hydrated and listening to my body made all the difference. Keep pushing, Warriors! 💜",
+    content: "Just completed a 5k walk today! It's been a journey, but staying hydrated and listening to my body made all the difference. Keep pushing, Overcomers! 💜",
     supportCount: 24,
     commentCount: 8,
   },
@@ -41,7 +41,7 @@ const COMMUNITY_POSTS = [
   {
     id: '3',
     user: 'Kevin S.',
-    role: 'Warrior',
+    role: 'Overcomer',
     time: '1d ago',
     category: 'General',
     content: "Has anyone tried the new support group in Central London? Thinking of joining next week.",

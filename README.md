@@ -1,6 +1,6 @@
 # Sickle Safe - Productivity & Emergency Response App
 
-A React Native app built with Expo for Sickle Cell Warriors and their Caregivers, combining daily wellness management with crisis response features.
+A React Native app built with Expo for Sickle Cell Overcomers and their Caregivers, combining daily wellness management with crisis response features.
 
 ---
 
@@ -38,8 +38,8 @@ sickle-safe/
 │   ├── (onboarding)/          # Onboarding flow screens
 │   │   ├── welcome.tsx        # First screen with hero image
 │   │   ├── community.tsx      # Community showcase
-│   │   ├── role-selection.tsx # Warrior/Helper/Volunteer choice
-│   │   ├── warrior/           # Warrior-specific onboarding
+│   │   ├── role-selection.tsx # Overcomer/Helper/Volunteer choice
+│   │   ├── overcomer/           # Overcomer-specific onboarding
 │   │   │   ├── productivity.tsx
 │   │   │   ├── safety-net.tsx
 │   │   │   └── red-alert.tsx
@@ -47,7 +47,7 @@ sickle-safe/
 │   │       ├── real-time-alerts.tsx
 │   │       └── actionable-support.tsx
 │   │
-│   ├── (warrior)/             # Warrior main app (Tab Navigator)
+│   ├── (overcomer)/             # Overcomer main app (Tab Navigator)
 │   │   ├── _layout.tsx        # Tab bar configuration
 │   │   ├── index.tsx          # Dashboard (Home)
 │   │   ├── log.tsx            # Wellness Log [PLACEHOLDER]
@@ -77,8 +77,8 @@ sickle-safe/
 ### Onboarding Flow
 - ✅ Welcome Screen (with hero image)
 - ✅ Community Showcase (profile collage)
-- ✅ Role Selection (Warrior/Helper/Volunteer)
-- ✅ Warrior Onboarding (3 screens)
+- ✅ Role Selection (Overcomer/Helper/Volunteer)
+- ✅ Overcomer Onboarding (3 screens)
   - Productivity First
   - Safety Net
   - Red Alert
@@ -87,7 +87,7 @@ sickle-safe/
   - Actionable Support
 
 ### Main App
-- ✅ Warrior Dashboard (Crisis Alert, Wellness, Care Plan)
+- ✅ Overcomer Dashboard (Crisis Alert, Wellness, Care Plan)
 - ✅ Medical ID Card (with QR code, offline-ready)
 
 ---
@@ -96,12 +96,12 @@ sickle-safe/
 
 ### Critical (Blocking MVP)
 - ⚠️ **Authentication Flow** (Login/Signup)
-- ⚠️ **Connect to Warrior** (Helper onboarding final step)
+- ⚠️ **Connect to Overcomer** (Helper onboarding final step)
 - ⚠️ **Crisis Mode Dashboard** (Active crisis UI)
 - ⚠️ **Crisis Resolution Modal** (End crisis workflow)
 
 ### High Priority
-- 🔴 Delegation List (Task management for Warriors)
+- 🔴 Delegation List (Task management for Overcomers)
 - 🔴 Helper Status View (Task feed during crisis)
 - 🔴 New Task Creation (3 variants in original HTML)
 - 🔴 Task Details & Scheduling (Calendar/time picker)
@@ -173,7 +173,7 @@ warning:  #F59E0B  // Amber 500 (Urgent tasks, notifications)
 Root (_layout.tsx)
 ├── (onboarding)      [Stack] → Hidden after completion
 ├── (auth)            [Stack] → Login/Signup
-├── (warrior)         [Tabs]  → Main app for Warriors
+├── (overcomer)         [Tabs]  → Main app for Overcomers
 │   ├── index         → Dashboard
 │   ├── log           → Wellness tracking
 │   ├── add           → Quick actions
@@ -208,7 +208,7 @@ API Layer (To Be Built):
 ## 🔥 Critical Workflows to Implement
 
 ### 1. The "Hand-off" Workflow
-**Problem**: When a Helper arrives at a Warrior's location, there's no confirmation mechanism.
+**Problem**: When a Helper arrives at a Overcomer's location, there's no confirmation mechanism.
 
 **Solution**:
 ```typescript
@@ -224,7 +224,7 @@ async function triggerHelperCheckIn(crisisId: string, helperId: string) {
   // Haptic feedback
   Haptics.notificationAsync(Haptics.NotificationFeedbackStyle.Success);
 
-  // Push notification to Warrior: "Mike has arrived"
+  // Push notification to Overcomer: "Mike has arrived"
   await Notifications.scheduleNotificationAsync({ ... });
 }
 ```
@@ -272,7 +272,7 @@ const medicalData = JSON.stringify({
 2. ✅ Convert onboarding screens to React Native
 3. ⏳ **Build Authentication Flow** (Login/Signup)
 4. ⏳ **Implement Medical ID Setup** (Multi-step form)
-5. ⏳ **Create "Connect to Warrior" screen** (Helper onboarding)
+5. ⏳ **Create "Connect to Overcomer" screen** (Helper onboarding)
 
 ### Phase 2: Task Management (Week 3-4)
 1. ⏳ Convert Delegation List screen
@@ -282,7 +282,7 @@ const medicalData = JSON.stringify({
 5. ⏳ Add task filtering and search
 
 ### Phase 3: Crisis Features (Week 5-6)
-1. ⏳ **Build Crisis Mode Dashboard** (Warrior)
+1. ⏳ **Build Crisis Mode Dashboard** (Overcomer)
 2. ⏳ **Build Helper Status View** (Helper)
 3. ⏳ **Implement Crisis Resolution Modal**
 4. ⏳ Add background location tracking (Crisis Mode only)

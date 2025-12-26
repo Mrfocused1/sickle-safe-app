@@ -107,40 +107,50 @@ export default function VolunteerEvents() {
                     {EVENTS.map((event) => (
                         <Pressable
                             key={event.id}
-                            className="bg-white rounded-[32px] p-4 shadow-sm border border-gray-100 mb-6 last:mb-0"
+                            className="bg-white rounded-[32px] p-5 shadow-sm border border-gray-100 mb-8 last:mb-0"
+                            style={{
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.05,
+                                shadowRadius: 8,
+                                elevation: 3
+                            }}
                         >
-                            <View className="h-40 bg-gray-100 rounded-[24px] mb-4 overflow-hidden relative">
+                            <View className="h-48 bg-gray-100 rounded-[24px] mb-5 overflow-hidden relative">
                                 <Image
                                     source={{ uri: event.image }}
                                     className="w-full h-full"
+                                    resizeMode="cover"
                                 />
-                                <View className="absolute top-4 left-4 bg-white px-3 py-1 rounded-full shadow-sm">
+                                <View className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
                                     <Text className="text-gray-900 font-bold text-[10px] uppercase tracking-wider">{event.category}</Text>
                                 </View>
                             </View>
 
-                            <View className="flex-row justify-between items-start mb-2">
+                            <View className="flex-row justify-between items-start mb-3">
                                 <View className="flex-1 pr-4">
-                                    <Text className="text-gray-900 font-bold text-lg mb-1">{event.title}</Text>
-                                    <View className="flex-row items-center mb-1">
-                                        <MapPin size={12} color="#9CA3AF" />
-                                        <Text className="text-gray-400 text-xs ml-1">{event.location}</Text>
+                                    <Text className="text-gray-900 font-black text-xl mb-1.5 leading-tight">{event.title}</Text>
+                                    <View className="flex-row items-center">
+                                        <MapPin size={14} color="#9CA3AF" />
+                                        <Text className="text-gray-500 text-sm font-medium ml-1.5">{event.location}</Text>
                                     </View>
                                 </View>
-                                <View className="bg-violet-50 w-12 h-14 rounded-2xl items-center justify-center border border-violet-100">
-                                    <Text className="text-violet-600 font-extrabold text-sm">{event.date.split(' ')[1]}</Text>
-                                    <Text className="text-violet-400 font-bold text-[8px] uppercase">{event.date.split(' ')[0]}</Text>
+                                <View className="bg-violet-50 w-14 h-16 rounded-2xl items-center justify-center border border-violet-100 shadow-sm">
+                                    <Text className="text-violet-600 font-black text-lg">{event.date.split(' ')[1]}</Text>
+                                    <Text className="text-violet-400 font-bold text-[10px] uppercase">{event.date.split(' ')[0]}</Text>
                                 </View>
                             </View>
 
-                            <View className="flex-row items-center justify-between mt-4 pt-4 border-t border-gray-50">
-                                <View className="flex-row items-center">
-                                    <Clock size={14} color="#9CA3AF" />
-                                    <Text className="text-gray-500 text-xs ml-1">{event.time}</Text>
+                            <View className="flex-row items-center justify-between mt-3 pt-4 border-t border-gray-50">
+                                <View className="flex-row items-center bg-gray-50 px-3 py-1.5 rounded-full">
+                                    <Clock size={14} color="#6B7280" />
+                                    <Text className="text-gray-600 text-xs font-semibold ml-1.5">{event.time}</Text>
                                 </View>
-                                <View className="flex-row items-center gap-1.5">
-                                    <Users size={14} color="#9CA3AF" />
-                                    <Text className="text-gray-500 text-xs font-bold">{event.volunteers}/{event.needed} Volunteers</Text>
+                                <View className="flex-row items-center gap-2">
+                                    <Users size={16} color="#9CA3AF" />
+                                    <Text className="text-gray-500 text-xs font-bold">
+                                        <Text className="text-gray-900">{event.volunteers}</Text>/{event.needed} Volunteers
+                                    </Text>
                                 </View>
                             </View>
                         </Pressable>

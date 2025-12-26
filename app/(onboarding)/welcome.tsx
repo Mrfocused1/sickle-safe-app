@@ -1,77 +1,95 @@
 import React from 'react';
-import { View, Text, Pressable, ImageBackground } from 'react-native';
+import { View, Text, Pressable, Dimensions, Image, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Shield, ArrowRight } from 'lucide-react-native';
+import { ArrowRight, Heart } from 'lucide-react-native';
+import { Video, ResizeMode } from 'expo-av';
+
+const { width } = Dimensions.get('window');
 
 export default function WelcomeScreen() {
   return (
-    <View className="flex-1">
-      <StatusBar style="light" />
+    <View className="flex-1 bg-white">
+      <StatusBar style="dark" />
 
-      {/* Background Image with Overlays */}
-      <ImageBackground
-        source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDCa3we7tvy_Qu0HlCXwkbjHffe_WwGVhhlVSQgKiddKnL7_Q_opU-EbQQmk4axhPQsVwY8fYRFqGgA1ojE5h-rGzHz8wPZIaRu5cXO-km7oO9ZOSeIP0bUei8Zfevdi7y4ba9m-qRiYOxt8jQ_TleHoxrhKB-x7RfVCd26UNKUK0f7MUpXQXG_3SCfxQRpCFWhKoPvXaf-gZyY5BcWxpyCE2PkIl9fae3EFImzhDDheqY1pUpXUCszOgvxPaWXZQfSnSbOktsNik1O' }}
-        className="flex-1 w-full h-full"
-        resizeMode="cover"
-      >
-        {/* Overlays */}
-        <View className="absolute inset-0 bg-white/30 dark:bg-slate-900/50" />
-        <LinearGradient
-          colors={['rgba(255,255,255,0.6)', 'transparent', 'rgba(255,255,255,0.9)']}
-          className="absolute inset-0"
-        />
-        <LinearGradient
-          colors={['transparent', 'rgba(239, 68, 68, 0.05)']}
-          className="absolute inset-0"
-        />
+      {/* Video Background - Brighter & Clearer */}
+      <Video
+        source={{ uri: 'https://assets.mixkit.co/videos/preview/mixkit-diverse-group-of-friends-cuddling-and-laughing-together-41315-large.mp4' }}
+        rate={1.0}
+        volume={0}
+        isMuted={true}
+        resizeMode={ResizeMode.COVER}
+        shouldPlay
+        isLooping
+        style={StyleSheet.absoluteFill}
+      />
 
-        <SafeAreaView className="flex-1 justify-between px-6 py-8">
-          {/* Logo Section */}
-          <View className="items-center pt-4 opacity-90">
-            <View className="flex-row items-center space-x-2">
-              <Shield size={36} color="#1f2937" strokeWidth={2} />
-              <Text className="font-bold text-3xl tracking-wide text-slate-900">
-                Sickle Safe
-              </Text>
-            </View>
+      {/* Very Subtle Light Overlay for "Happy" vibe */}
+      <LinearGradient
+        colors={['rgba(255,255,255,0.2)', 'rgba(255,255,255,0.05)', 'rgba(255,255,255,0.6)']}
+        className="absolute inset-0"
+      />
+
+      <SafeAreaView className="flex-1 px-8 py-8 justify-between">
+        {/* Top Section - Logo (Tripled Size, No BG) */}
+        <View className="items-center mt-6">
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{ width: width * 0.8, height: 160 }}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Hero Section */}
+        <View className="mb-4">
+          <View className="relative">
+            <Text className="text-[54px] font-black text-gray-900 leading-[0.9] tracking-tighter mb-6">
+              Live{'\n'}
+              <Text className="text-red-600">With{'\n'}</Text>
+              Confidence.
+            </Text>
+          </View>
+          <Text className="text-lg text-gray-700 font-bold leading-relaxed max-w-[280px]">
+            Your premium companion for daily wellness and instant emergency response.
+          </Text>
+        </View>
+
+        {/* Action Section */}
+        <View className="w-full">
+          <View className="flex-row items-center gap-2 mb-8">
+            <Heart size={16} color="#EF4444" fill="#EF4444" />
+            <Text className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Designed for the Community</Text>
           </View>
 
-          {/* Main Content */}
-          <View className="items-center text-center space-y-6 mb-8">
-            <Text className="font-serif text-5xl font-semibold leading-tight text-slate-900 text-center">
-              Welcome to{'\n'}
-              <Text className="italic text-red-600">Sickle Safe</Text>
-            </Text>
-            <Text className="text-xl text-slate-700 leading-relaxed max-w-xs text-center">
-              Your companion for daily wellness and emergency response. We're here to help you live confidently.
-            </Text>
-          </View>
-
-          {/* Action Buttons */}
-          <View className="w-full mb-6">
+          <View className="space-y-4">
             <Link href="/(onboarding)/community" asChild>
-              <Pressable className="w-full flex-row items-center justify-center py-4 bg-red-500 rounded-full shadow-lg active:scale-95 transition-transform">
-                <Text className="text-white font-bold text-lg">Begin</Text>
-                <ArrowRight size={20} color="#ffffff" className="ml-2" />
+              <Pressable className="w-full bg-red-600 py-6 rounded-[24px] shadow-xl shadow-red-900/20 active:scale-[0.98] relative overflow-hidden">
+                <View className="flex-row items-center justify-center">
+                  <Text className="text-white font-black text-xl tracking-wide">Continue Journey</Text>
+                  <View className="ml-3 bg-white/20 p-1.5 rounded-full">
+                    <ArrowRight size={24} color="#ffffff" />
+                  </View>
+                </View>
               </Pressable>
             </Link>
 
-            <View className="mt-6 items-center">
-              <Text className="text-sm text-slate-600">
-                Already have an account?{' '}
-                {/* <Link href="/(auth)/login"> */}
-                <Text className="font-semibold text-slate-900 underline">
-                  Log in
-                </Text>
-                {/* </Link> */}
+            <View className="items-center pt-2">
+              <Text className="text-gray-600 font-bold text-sm">
+                Existing account? <Text className="text-gray-900 underline font-black">Log in</Text>
               </Text>
             </View>
           </View>
-        </SafeAreaView>
-      </ImageBackground>
+
+          {/* Custom Progress Indicator */}
+          <View className="flex-row gap-1.5 mt-10 justify-center">
+            <View className="w-8 h-2.5 rounded-full bg-red-600" />
+            <View className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+            <View className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+          </View>
+        </View>
+      </SafeAreaView>
     </View>
   );
 }

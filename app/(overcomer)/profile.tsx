@@ -98,7 +98,7 @@ export default function ProfileScreen() {
               <Text className="text-xl font-bold text-gray-900">Maya Thompson</Text>
               <View className="flex-row items-center mt-1.5 flex-wrap gap-2">
                 <View className="bg-violet-50 px-2.5 py-1 rounded-md border border-violet-100">
-                  <Text className="text-violet-700 text-[10px] font-bold uppercase tracking-wider">Warrior</Text>
+                  <Text className="text-violet-700 text-[10px] font-bold uppercase tracking-wider">Overcomer</Text>
                 </View>
                 <Text className="text-gray-400 text-xs">Member since Oct 2023</Text>
               </View>

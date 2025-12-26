@@ -18,7 +18,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.sicklesafe.app",
       "infoPlist": {
-        "NSCameraUsageDescription": "This app uses the camera to scan QR codes for connecting with Warriors.",
+        "NSCameraUsageDescription": "This app uses the camera to scan QR codes for connecting with Overcomers.",
         "NSLocationWhenInUseUsageDescription": "This app needs your location during a crisis to share with your Circle of Care.",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs background location access to track your location during a crisis.",
         "NSFaceIDUsageDescription": "This app uses Face ID to securely unlock your Medical ID."

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import {
     Calendar,
     Heart,
@@ -16,6 +17,7 @@ import { StatusBar } from 'expo-status-bar';
 
 export default function VolunteerDashboard() {
     const insets = useSafeAreaInsets();
+    const router = useRouter();
 
     const stats = [
         { label: 'Hours', value: '42', icon: Clock, color: '#8B5CF6' },
@@ -70,7 +72,10 @@ export default function VolunteerDashboard() {
                             })}
                         </View>
 
-                        <Pressable className="bg-gray-50 py-3.5 rounded-2xl border border-gray-100 items-center active:bg-gray-100">
+                        <Pressable
+                            onPress={() => router.push('/(volunteer)/resume')}
+                            className="bg-gray-50 py-3.5 rounded-2xl border border-gray-100 items-center active:bg-gray-100"
+                        >
                             <Text className="text-gray-900 font-bold text-sm">View Volunteer Resume</Text>
                         </Pressable>
                     </View>
@@ -80,12 +85,15 @@ export default function VolunteerDashboard() {
                 <View className="px-6 mb-8">
                     <View className="flex-row items-center justify-between mb-4">
                         <Text className="text-gray-900 font-bold text-xl">Active Missions</Text>
-                        <Pressable>
+                        <Pressable onPress={() => router.push('/(volunteer)/events')}>
                             <Text className="text-violet-600 font-bold text-sm">See All</Text>
                         </Pressable>
                     </View>
 
-                    <Pressable className="bg-white border border-gray-100 rounded-[32px] p-5 shadow-sm mb-4">
+                    <Pressable
+                        onPress={() => router.push('/(volunteer)/missions/1')}
+                        className="bg-white border border-gray-100 rounded-[32px] p-5 shadow-sm mb-4"
+                    >
                         <View className="flex-row justify-between items-start mb-4">
                             <View className="bg-violet-50 px-3 py-1 rounded-full border border-violet-100">
                                 <Text className="text-violet-600 text-[10px] font-bold uppercase">Urgent • 2h left</Text>
@@ -102,13 +110,19 @@ export default function VolunteerDashboard() {
                                 <MapPin size={14} color="#9CA3AF" />
                                 <Text className="text-gray-400 text-xs ml-1">Central Hospital</Text>
                             </View>
-                            <Pressable className="bg-violet-600 px-5 py-2 rounded-2xl">
+                            <Pressable
+                                onPress={() => router.push('/(volunteer)/missions/1')}
+                                className="bg-violet-600 px-5 py-2 rounded-2xl"
+                            >
                                 <Text className="text-white font-bold text-xs text-center">Join</Text>
                             </Pressable>
                         </View>
                     </Pressable>
 
-                    <Pressable className="bg-gray-50 border border-gray-100 rounded-[32px] p-5">
+                    <Pressable
+                        onPress={() => router.push('/(volunteer)/missions/2')}
+                        className="bg-gray-50 border border-gray-100 rounded-[32px] p-5"
+                    >
                         <View className="flex-row items-center gap-4">
                             <View className="w-12 h-12 bg-white rounded-2xl items-center justify-center shadow-sm border border-violet-100">
                                 <Calendar size={22} color="#8B5CF6" />
@@ -127,7 +141,11 @@ export default function VolunteerDashboard() {
                     <Text className="text-gray-900 font-bold text-xl mb-4">Community Highlights</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="overflow-visible -mx-2">
                         {[1, 2, 3].map((i) => (
-                            <Pressable key={i} className="w-64 bg-white border border-gray-100 rounded-[32px] p-4 m-2 shadow-sm">
+                            <Pressable
+                                key={i}
+                                onPress={() => router.push(`/(volunteer)/highlights/${i}`)}
+                                className="w-64 bg-white border border-gray-100 rounded-[32px] p-4 m-2 shadow-sm"
+                            >
                                 <View className="h-32 bg-gray-100 rounded-2xl mb-4 overflow-hidden">
                                     <Image
                                         source={{ uri: `https://images.unsplash.com/photo-${1515023677547 + i}-51f16da88c0a?auto=format&fit=crop&q=80&w=400` }}

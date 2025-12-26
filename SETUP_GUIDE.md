@@ -113,7 +113,7 @@ a
 ### Test the Flow:
 1. Tap "Begin" → Community Showcase screen
 2. Tap "Get Started" → Role Selection screen
-3. Select "The Warrior" → Tap "Continue"
+3. Select "The Overcomer" → Tap "Continue"
 4. You'll go through 3 onboarding screens
 5. Final screen: Dashboard with Crisis Alert button
 
@@ -227,7 +227,7 @@ Once the app is running, try these:
 ### ✅ Navigation
 - Tap "Begin" → Should go to Community screen
 - Tap "Get Started" → Should go to Role Selection
-- Select "The Warrior" → Onboarding flow starts
+- Select "The Overcomer" → Onboarding flow starts
 
 ### ✅ Medical ID
 - From Dashboard, navigate to Medical ID (you'll need to add a button or manually navigate)
@@ -289,7 +289,7 @@ Once the app is running:
 1. **Explore the onboarding flow** (Welcome → Community → Role → Dashboard)
 2. **Read IMPLEMENTATION_NOTES.md** for missing features to build
 3. **Test on a physical device** (scan QR code with Expo Go app)
-4. **Start building missing screens** (Connect to Warrior, Crisis Mode, etc.)
+4. **Start building missing screens** (Connect to Overcomer, Crisis Mode, etc.)
 
 ---
 

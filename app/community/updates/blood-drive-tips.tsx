@@ -12,7 +12,7 @@ export default function BloodDriveTipsScreen() {
     const TIPS = [
         { icon: <Users size={18} color="#3B82F6" />, title: 'Local Partnerships', text: 'Engage with churches, schools, and local businesses early. They are your primary sources of donors.' },
         { icon: <ClipboardList size={18} color="#F59E0B" />, title: 'Clear Logistics', text: 'Ensure you have a designated resting area with snacks. Donor comfort is key to repeat attendance.' },
-        { icon: <Lightbulb size={18} color="#EF4444" />, title: 'Messaging Matters', text: 'Focus on the impact—one donation can save three lives. Share personal Warrior stories to connect.' },
+        { icon: <Lightbulb size={18} color="#EF4444" />, title: 'Messaging Matters', text: 'Focus on the impact—one donation can save three lives. Share personal Overcomer stories to connect.' },
     ];
 
     return (

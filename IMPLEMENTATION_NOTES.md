@@ -6,10 +6,10 @@ This document provides specific implementation guidance for features identified 
 
 ## 🔴 CRITICAL: Missing Screens to Build Next
 
-### 1. Connect to Warrior Screen (Helper Onboarding)
-**Path**: `app/(onboarding)/helper/connect-warrior.tsx`
+### 1. Connect to Overcomer Screen (Helper Onboarding)
+**Path**: `app/(onboarding)/helper/connect-overcomer.tsx`
 
-**Purpose**: Final step of Helper onboarding. Allows Helpers to join a Warrior's Circle of Care.
+**Purpose**: Final step of Helper onboarding. Allows Helpers to join a Overcomer's Circle of Care.
 
 **Features Needed**:
 ```typescript
@@ -17,7 +17,7 @@ This document provides specific implementation guidance for features identified 
 
 1. QR Code Scanner
    - Use expo-camera or expo-barcode-scanner
-   - Scan Warrior's QR code (generated in Settings)
+   - Scan Overcomer's QR code (generated in Settings)
    - Automatically sends connection request
 
 2. Invite Code Input
@@ -37,13 +37,13 @@ router.replace('/(helper)'); // Go to Helper main app
 import { CameraView } from 'expo-camera';
 import { useState } from 'react';
 
-export default function ConnectWarriorScreen() {
+export default function ConnectOvercomerScreen() {
   const [method, setMethod] = useState<'qr' | 'code'>('qr');
   const [hasPermission, setHasPermission] = useState(null);
 
   const handleQRScan = (data: string) => {
-    // Parse QR data: { warriorId: 'uuid', inviteCode: 'ABC123' }
-    // Call API: POST /helpers/connect with warriorId
+    // Parse QR data: { overcomerId: 'uuid', inviteCode: 'ABC123' }
+    // Call API: POST /helpers/connect with overcomerId
     // Show success toast, navigate to helper app
   };
 
@@ -55,7 +55,7 @@ export default function ConnectWarriorScreen() {
 
 ---
 
-### 2. Crisis Mode Dashboard (Warrior)
+### 2. Crisis Mode Dashboard (Overcomer)
 **Path**: `app/crisis/active.tsx` (Modal presentation)
 
 **Purpose**: Transform the normal Dashboard into a high-urgency crisis UI when alert is triggered.
@@ -168,7 +168,7 @@ export default function ResolutionModal() {
     // Save to Wellness Log
     await saveWellnessLog({ type: 'crisis_resolution', painLevel, notes });
 
-    router.replace('/(warrior)'); // Return to normal Dashboard
+    router.replace('/(overcomer)'); // Return to normal Dashboard
   };
 
   return (
@@ -276,7 +276,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 ## 🟢 MEDIUM PRIORITY: Additional Screens
 
 ### Wellness Log Screen
-**Path**: `app/(warrior)/log.tsx` (Replace placeholder)
+**Path**: `app/(overcomer)/log.tsx` (Replace placeholder)
 
 **Features**:
 - Daily entries: Pain level, hydration, meds taken, mood
@@ -289,7 +289,7 @@ import BottomSheet from '@gorhom/bottom-sheet';
 ---
 
 ### Settings/Profile Screen
-**Path**: `app/(warrior)/profile.tsx` (Replace placeholder)
+**Path**: `app/(overcomer)/profile.tsx` (Replace placeholder)
 
 **Sections**:
 1. **Account**: Name, email, phone, avatar
@@ -549,10 +549,10 @@ export default function RootLayout() {
 ### 3. Send Crisis Alert
 ```typescript
 // services/crisis.ts
-export async function triggerCrisisAlert(warriorId: string, location: Location) {
+export async function triggerCrisisAlert(overcomerId: string, location: Location) {
   // Call backend API to create crisis
   const crisis = await api.post('/crises', {
-    warriorId,
+    overcomerId,
     location,
     triggeredAt: new Date().toISOString()
   });
@@ -646,7 +646,7 @@ async function startCrisisLocationTracking() {
 ```typescript
 interface User {
   id: string;
-  role: 'warrior' | 'helper' | 'volunteer';
+  role: 'overcomer' | 'helper' | 'volunteer';
   email: string;
   phone: string;
   profile: {
@@ -656,7 +656,7 @@ interface User {
     avatarUrl?: string;
     timezone: string;
   };
-  medicalProfile?: MedicalProfile; // Only for Warriors
+  medicalProfile?: MedicalProfile; // Only for Overcomers
   circle: string[]; // IDs of Helpers
   createdAt: string;
   lastActive: string;
@@ -707,7 +707,7 @@ interface MedicalProfile {
 ```typescript
 interface Task {
   id: string;
-  createdBy: string; // Warrior ID
+  createdBy: string; // Overcomer ID
   title: string;
   description: string;
   priority: 'critical' | 'urgent' | 'routine';
@@ -741,7 +741,7 @@ interface Task {
 ```typescript
 interface Crisis {
   id: string;
-  warriorId: string;
+  overcomerId: string;
   triggeredAt: string;
   resolvedAt?: string;
   status: 'active' | 'resolved' | 'false-alarm';
@@ -804,11 +804,11 @@ interface WellnessLog {
    ```
 
 2. **Test onboarding flow**:
-   - Welcome → Community → Role Selection → Warrior flow → Dashboard
+   - Welcome → Community → Role Selection → Overcomer flow → Dashboard
    - Welcome → Community → Role Selection → Helper flow → (Missing screen)
 
 3. **Build missing screens** (in this order):
-   - Connect to Warrior (Helper onboarding blocker)
+   - Connect to Overcomer (Helper onboarding blocker)
    - Crisis Mode Dashboard
    - Crisis Resolution Modal
    - Delegation List

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView } from 'react-native';
+import { View, Text, Pressable, ScrollView, Image, Dimensions, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Heart, Users, HandHeart, ArrowRight } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Video, ResizeMode } from 'expo-av';
 
-type Role = 'warrior' | 'helper' | 'volunteer';
+const { width } = Dimensions.get('window');
+
+type Role = 'overcomer' | 'helper' | 'volunteer';
 
 interface RoleData {
   title: string;
@@ -16,40 +20,42 @@ interface RoleData {
   bgColor: string;
 }
 
-const rolesData: Record<Role, RoleData> = {
-  warrior: {
-    title: 'The Warrior (Patient/Self-Manager)',
-    subtitle: 'I am living with Sickle Cell',
-    description: 'Track pain crises, hydration, and manage your health journey with personalized insights and reminders.',
-    icon: Heart,
-    color: '#2563eb',
-    bgColor: '#dbeafe',
-  },
-  helper: {
-    title: 'The Helper (Guardian or Carer)',
-    subtitle: 'I am a Caregiver / Guardian',
-    description: 'Monitor loved ones, receive alerts, and coordinate care with shared health logs and communication tools.',
-    icon: Users,
-    color: '#059669',
-    bgColor: '#d1fae5',
-  },
-  volunteer: {
-    title: 'The Volunteer (Supporter)',
-    subtitle: 'I am a Community Volunteer',
-    description: 'Connect with patients and support community events, contributing to a stronger network of care and awareness.',
-    icon: HandHeart,
-    color: '#ea580c',
-    bgColor: '#fed7aa',
-  },
-};
+// RoleSelectionScreen moved rolesData inside
 
 export default function RoleSelectionScreen() {
-  const [selectedRole, setSelectedRole] = useState<Role>('warrior');
-  const router = useRouter();
+  console.log('RoleSelectionScreen rendering...');
+  const [selectedRole, setSelectedRole] = useState<Role>('overcomer');
+
+  const rolesData: Record<Role, RoleData> = {
+    overcomer: {
+      title: 'The Overcomer',
+      subtitle: 'Patient / Self-Manager',
+      description: 'Track pain crises, hydration, and manage your health journey with personalized insights.',
+      icon: Heart,
+      color: '#EF4444',
+      bgColor: '#FEF2F2',
+    },
+    helper: {
+      title: 'The Helper',
+      subtitle: 'Guardian or Carer',
+      description: 'Monitor loved ones, receive alerts, and coordinate care with shared health logs.',
+      icon: Users,
+      color: '#10B981',
+      bgColor: '#ECFDF5',
+    },
+    volunteer: {
+      title: 'The Volunteer',
+      subtitle: 'Community Supporter',
+      description: 'Connect with patients and support community events, contributing to a stronger network of care.',
+      icon: HandHeart,
+      color: '#3B82F6',
+      bgColor: '#EFF6FF',
+    },
+  };
 
   const handleContinue = () => {
-    if (selectedRole === 'warrior') {
-      router.push('/(onboarding)/warrior/productivity');
+    if (selectedRole === 'overcomer') {
+      router.push('/(onboarding)/overcomer/productivity');
     } else if (selectedRole === 'helper') {
       router.push('/(onboarding)/helper/real-time-alerts');
     } else {
@@ -60,94 +66,116 @@ export default function RoleSelectionScreen() {
   const currentRoleData = rolesData[selectedRole];
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white">
       <StatusBar style="dark" />
 
+      {/* Video Background */}
+      <Video
+        source={{ uri: 'https://assets.mixkit.co/videos/preview/mixkit-diverse-group-of-people-talking-and-gesticulating-41310-large.mp4' }}
+        rate={1.0}
+        volume={0}
+        isMuted={true}
+        resizeMode={ResizeMode.COVER}
+        shouldPlay
+        isLooping
+        style={StyleSheet.absoluteFill}
+      />
+
+      <LinearGradient
+        colors={['rgba(255,255,255,0.6)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.9)']}
+        className="absolute inset-0"
+      />
+
       <SafeAreaView className="flex-1">
-        {/* Progress Bar */}
-        <View className="px-6 mb-6">
-          <View className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-            <View className="h-full w-1/4 bg-violet-600 rounded-full" />
+        {/* Logo at Top (Triple Size, No BG) */}
+        <View className="items-center mt-2">
+          <Image
+            source={require('../../assets/logo.png')}
+            style={{ width: width * 0.55, height: 90 }}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Sub-Progress - Step 3 of 3 */}
+        <View className="px-8 mt-4 mb-4">
+          <View className="flex-row gap-1.5 justify-center">
+            <View className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+            <View className="w-2.5 h-2.5 rounded-full bg-gray-300" />
+            <View className="w-8 h-2.5 rounded-full bg-red-600" />
           </View>
         </View>
 
         {/* Content */}
-        <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false}>
           {/* Header */}
-          <View className="mb-8">
-            <Text className="text-3xl font-bold mb-3 tracking-tight text-gray-900">
-              Welcome to{'\n'}
-              <Text className="text-violet-600">Sickle Safe</Text>
+          <View className="mb-6">
+            <Text className="text-4xl font-black text-gray-900 leading-none tracking-tighter mb-4">
+              Step Into Your{'\n'}
+              <Text className="text-red-500">New Role</Text>
             </Text>
-            <Text className="text-lg text-gray-600 leading-relaxed">
-              Please select your role to customize your experience.
+            <Text className="text-base text-gray-700 font-bold leading-relaxed">
+              Select how you'll be participating in the community.
             </Text>
           </View>
 
-          {/* Role Cards (Horizontal Scroll) */}
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mb-6 -mx-6 px-6"
-            contentContainerStyle={{ paddingRight: 24 }}
-          >
+          {/* Role Cards */}
+          <View className="space-y-4 mb-6">
             {(Object.keys(rolesData) as Role[]).map((role) => {
               const roleData = rolesData[role];
-              const Icon = roleData.icon;
+              // Temporarily replace Icon with a simple View to test for context issues
+              // const Icon = roleData.icon;
               const isSelected = selectedRole === role;
 
               return (
                 <Pressable
                   key={role}
                   onPress={() => setSelectedRole(role)}
-                  className={`w-32 h-36 mr-4 rounded-xl border-2 ${isSelected ? 'border-violet-600 bg-violet-50' : 'border-gray-200 bg-white'
-                    } shadow-sm`}
+                  className={`p-5 rounded-[32px] border-2 flex-row items-center ${isSelected ? 'border-red-600 bg-white shadow-xl' : 'border-gray-200 bg-white/40'
+                    }`}
                 >
-                  <View className="flex-1 items-center justify-center p-4">
-                    <View
-                      className="w-14 h-14 rounded-full items-center justify-center mb-2"
-                      style={{ backgroundColor: roleData.bgColor }}
-                    >
-                      <Icon size={28} color={roleData.color} />
-                    </View>
-                    <Text className={`font-bold text-base text-center ${isSelected ? 'text-gray-900' : 'text-gray-600'
-                      }`}>
-                      {role === 'warrior' ? 'The Warrior' : role === 'helper' ? 'The Helper' : 'The Volunteer'}
+                  <View
+                    className="w-14 h-14 rounded-2xl items-center justify-center mr-4"
+                    style={{ backgroundColor: roleData.bgColor }}
+                  >
+                    <View className="w-6 h-6 rounded-full" style={{ backgroundColor: roleData.color }} />
+                  </View>
+                  <View className="flex-1">
+                    <Text className={`font-black text-lg ${isSelected ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {roleData.title}
                     </Text>
+                    <Text className={`font-bold text-[10px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-red-600' : 'text-gray-400'}`}>
+                      {roleData.subtitle}
+                    </Text>
+                  </View>
+                  <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${isSelected ? 'border-red-600 bg-red-600' : 'border-gray-300'}`}>
+                    {isSelected && <View className="w-2 h-2 rounded-full bg-white" />}
                   </View>
                 </Pressable>
               );
             })}
-          </ScrollView>
+          </View>
 
           {/* Description Panel */}
-          <View className="flex-1 bg-white p-6 rounded-2xl shadow-md mb-8">
-            <Text className="font-bold text-xl text-gray-900 mb-2">
-              {currentRoleData.title}
-            </Text>
-            <Text className="font-medium text-violet-600 mb-3">
-              {currentRoleData.subtitle}
-            </Text>
-            <Text className="text-base text-gray-600 leading-relaxed">
+          <View className="bg-red-50 p-6 rounded-3xl border border-red-100 mb-8">
+            <Text className="text-gray-700 text-sm leading-relaxed font-bold">
               {currentRoleData.description}
             </Text>
           </View>
         </ScrollView>
 
         {/* Bottom CTA */}
-        <View className="px-6 pb-6">
+        <View className="px-8 pb-10">
           <Pressable
             onPress={handleContinue}
-            className="w-full bg-violet-600 py-4 rounded-2xl shadow-lg active:scale-95"
+            className="w-full bg-red-600 py-6 rounded-[24px] shadow-xl shadow-red-900/20 active:scale-[0.98] relative overflow-hidden"
           >
             <View className="flex-row items-center justify-center">
-              <Text className="text-white font-semibold text-lg">Continue</Text>
-              <ArrowRight size={20} color="#ffffff" className="ml-2" />
+              <Text className="text-white font-black text-xl tracking-wide">Enter Dashboard</Text>
+              <View className="ml-3 bg-white/20 p-1.5 rounded-full">
+                <ArrowRight size={24} color="#ffffff" />
+              </View>
             </View>
           </Pressable>
-          <Text className="text-center text-xs text-gray-500 mt-4">
-            Your role helps us personalize emergency features.
-          </Text>
         </View>
       </SafeAreaView>
     </View>

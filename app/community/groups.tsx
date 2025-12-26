@@ -13,13 +13,13 @@ export default function CommunityGroupsScreen() {
     const GROUPS = [
         {
             id: 1,
-            name: 'Atlanta Warriors',
+            name: 'Atlanta Overcomers',
             members: '1.2k',
-            description: 'Local support group for warriors in the Atlanta area.',
+            description: 'Local support group for overcomers in the Atlanta area.',
             image: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=400',
             category: 'Location',
             isJoined: true,
-            route: '/community/groups-detail/atlanta-warriors'
+            route: '/community/groups-detail/atlanta-overcomers'
         },
         {
             id: 2,

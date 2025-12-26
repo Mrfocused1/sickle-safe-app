@@ -55,7 +55,7 @@ export default function CaregiverDashboard() {
                         </Pressable>
                     </View>
 
-                    {/* Warrior Status Card - Clean Light Theme */}
+                    {/* Overcomer Status Card - Clean Light Theme */}
                     <View className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-100">
                         <View className="flex-row justify-between items-start mb-6">
                             <View className="flex-row items-center">
