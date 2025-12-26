@@ -17,7 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddCarePlanModal from '../../components/AddCarePlanModal';
-import WellnessLogModal from '../../components/WellnessLogModal';
+import AppBottomSheet from '../../components/AppBottomSheet';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -288,14 +288,14 @@ export default function DashboardScreen() {
           }}
         />
 
-        <WellnessLogModal
+        <AppBottomSheet
           visible={activeTask !== null}
           onClose={() => setActiveTask(null)}
           type="task"
           task={activeTask || undefined}
         />
 
-        <WellnessLogModal
+        <AppBottomSheet
           visible={showWellnessSummary}
           onClose={() => setShowWellnessSummary(false)}
           type="wellness_summary"

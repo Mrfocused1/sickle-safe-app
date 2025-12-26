@@ -15,7 +15,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { PostActionSheet, ActionItem } from '../../components/PostActionSheet';
 import { LinearGradient } from 'expo-linear-gradient';
-import WellnessLogModal from '../../components/WellnessLogModal';
+import AppBottomSheet from '../../components/AppBottomSheet';
 
 const POSTS = [
     {
@@ -317,7 +317,7 @@ export default function VolunteerCommunity() {
                 actions={updateActions}
                 title={`Update: ${selectedUpdateTitle}`}
             />
-            <WellnessLogModal
+            <AppBottomSheet
                 visible={showIdeaModal}
                 onClose={() => setShowIdeaModal(false)}
                 type="idea"

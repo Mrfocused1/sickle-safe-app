@@ -5,7 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import CrisisLogModal from '../../components/CrisisLogModal';
-import WellnessLogModal from '../../components/WellnessLogModal';
+import AppBottomSheet from '../../components/AppBottomSheet';
 import { useRouter } from 'expo-router';
 
 export default function LogScreen() {
@@ -13,7 +13,8 @@ export default function LogScreen() {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState('Today, 25 Dec');
   const [showCrisisModal, setShowCrisisModal] = useState(false);
-  const [wellnessModalType, setWellnessModalType] = useState<'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | null>(null);
+  const [activeSheetType, setActiveSheetType] = useState<'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | null>(null);
+  
 
   const handleAction = (label: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -122,7 +123,7 @@ export default function LogScreen() {
             color="#f59e0b"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setWellnessModalType('pain');
+              setActiveSheetType('pain');
             }}
           />
 
@@ -134,7 +135,7 @@ export default function LogScreen() {
             color="#3b82f6"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setWellnessModalType('hydration');
+              setActiveSheetType('hydration');
             }}
           />
 
@@ -146,7 +147,7 @@ export default function LogScreen() {
             color="#a855f7"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setWellnessModalType('meds');
+              setActiveSheetType('meds');
             }}
           />
 
@@ -158,7 +159,7 @@ export default function LogScreen() {
             color="#10b981"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setWellnessModalType('mood');
+              setActiveSheetType('mood');
             }}
           />
 
@@ -172,7 +173,7 @@ export default function LogScreen() {
             color="#f43f5e"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setWellnessModalType('triggers');
+              setActiveSheetType('triggers');
             }}
           />
 
@@ -184,7 +185,7 @@ export default function LogScreen() {
             color="#ef4444"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setWellnessModalType('crisis');
+              setActiveSheetType('crisis');
             }}
           />
 
@@ -210,10 +211,10 @@ export default function LogScreen() {
         onClose={() => setShowCrisisModal(false)}
       />
 
-      <WellnessLogModal
-        visible={wellnessModalType !== null}
-        onClose={() => setWellnessModalType(null)}
-        type={wellnessModalType}
+      <AppBottomSheet
+        visible={activeSheetType !== null}
+        onClose={() => setActiveSheetType(null)}
+        type={activeSheetType}
       />
     </View>
   );

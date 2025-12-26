@@ -18,23 +18,26 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | null;
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | null;
 
-interface WellnessLogModalProps {
+interface AppBottomSheetProps {
     visible: boolean;
     onClose: () => void;
     type: MetricType;
     task?: { title: string; description: string; priority: string };
     member?: { name: string; role: string; priority: string; avatar: string; status: string; isEmergency: boolean };
+    activity?: { title: string; detail: string; time: string; color: string; icon: string };
 }
 
-export default function WellnessLogModal({ visible, onClose, type, task, member }: WellnessLogModalProps) {
+export default function AppBottomSheet({ visible, onClose, type, task, member, activity }: AppBottomSheetProps) {
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
+    const [activeType, setActiveType] = useState<MetricType>(type);
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         if (visible) {
+            setActiveType(type || 'log_selection');
             Animated.timing(fadeAnim, {
                 toValue: 1,
                 duration: 300,
@@ -48,7 +51,7 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
     }, [visible]);
 
     const getHeaderInfo = () => {
-        switch (type) {
+        switch (activeType) {
             case 'pain':
                 return { title: 'Pain Level', icon: 'favorite', color: '#f59e0b' };
             case 'hydration':
@@ -69,6 +72,14 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
                 return { title: member?.name || 'Member', icon: 'person', color: '#8b5cf6' };
             case 'idea':
                 return { title: 'Share Idea', icon: 'lightbulb', color: '#3b82f6' };
+            case 'group':
+                return { title: 'New Community Group', icon: 'groups', color: '#8b5cf6' };
+            case 'log_selection':
+                return { title: 'Wellness Log', icon: 'add-circle', color: '#6366f1' };
+            case 'community_actions':
+                return { title: 'Community Actions', icon: 'groups', color: '#8b5cf6' };
+            case 'activity_detail':
+                return { title: activity?.title || 'Update Detail', icon: activity?.icon || 'history', color: activity?.color || '#374151' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -77,7 +88,7 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
     const header = getHeaderInfo();
 
     const renderContent = () => {
-        switch (type) {
+        switch (activeType) {
             case 'pain':
                 return (
                     <View style={styles.contentSection}>
@@ -358,6 +369,117 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
                         </View>
                     </View>
                 );
+            case 'group':
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>Propose a Group</Text>
+                        <TextInput
+                            style={styles.smallInput}
+                            placeholder="Group name (e.g. 'NYC Support')..."
+                            placeholderTextColor="#94a3b8"
+                            value={value}
+                            onChangeText={setValue}
+                        />
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Purpose & Category</Text>
+                        <TextInput
+                            style={[styles.smallInput, { height: 80, paddingTop: 12 }]}
+                            placeholder="What should this group focus on?"
+                            placeholderTextColor="#94a3b8"
+                            multiline
+                            textAlignVertical="top"
+                            value={notes}
+                            onChangeText={setNotes}
+                        />
+                        <View style={[styles.gridContainer, { marginTop: 16 }]}>
+                            {['Support', 'Medical', 'Daily Wins', 'Advocacy'].map((cat) => (
+                                <Pressable
+                                    key={cat}
+                                    onPress={() => setNotes(prev => prev.includes('#' + cat) ? prev : prev + ' #' + cat)}
+                                    style={styles.gridButton}
+                                >
+                                    <Text style={styles.gridText}>{cat}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    </View>
+                );
+            case 'log_selection':
+                const LOG_TYPES = [
+                    { id: 'hydration', label: 'Hydration', icon: 'water-drop', color: '#3b82f6', bg: '#eff6ff' },
+                    { id: 'pain', label: 'Pain Level', icon: 'favorite', color: '#f59e0b', bg: '#fffbeb' },
+                    { id: 'meds', label: 'Medications', icon: 'medication', color: '#a855f7', bg: '#faf5ff' },
+                    { id: 'mood', label: 'Mood', icon: 'mood', color: '#10b981', bg: '#f0fdf4' },
+                    { id: 'triggers', label: 'Triggers', icon: 'warning', color: '#f43f5e', bg: '#fff1f2' },
+                    { id: 'crisis', label: 'Crisis', icon: 'crisis-alert', color: '#ef4444', bg: '#fef2f2' },
+                    { id: 'group', label: 'Propose Group', icon: 'groups', color: '#8b5cf6', bg: '#f5f3ff' },
+                ];
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>What would you like to log?</Text>
+                        <View style={styles.logSelectorGrid}>
+                            {LOG_TYPES.map((item) => (
+                                <Pressable
+                                    key={item.id}
+                                    onPress={() => setActiveType(item.id as MetricType)}
+                                    style={styles.logTypeCard}
+                                >
+                                    <View style={[styles.logTypeIcon, { backgroundColor: item.bg }]}>
+                                        <MaterialIcons name={item.icon as any} size={28} color={item.color} />
+                                    </View>
+                                    <Text style={styles.logTypeLabel}>{item.label}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    </View>
+                );
+            case 'community_actions':
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>Group Management</Text>
+                        <View style={styles.logSelectorGrid}>
+                            {[
+                                { id: 'group', label: 'Propose Group', icon: 'add-business', color: '#8b5cf6', bg: '#f5f3ff' },
+                                { id: 'events', label: 'Find Events', icon: 'event', color: '#3b82f6', bg: '#eff6ff' },
+                                { id: 'my_groups', label: 'My Groups', icon: 'group-work', color: '#10b981', bg: '#f0fdf4' },
+                                { id: 'guidelines', label: 'Guidelines', icon: 'verified-user', color: '#f59e0b', bg: '#fffbeb' },
+                            ].map((item) => (
+                                <Pressable
+                                    key={item.id}
+                                    onPress={() => {
+                                        if (item.id === 'group') setActiveType('group');
+                                        else alert(`${item.label} coming soon!`);
+                                    }}
+                                    style={styles.logTypeCard}
+                                >
+                                    <View style={[styles.logTypeIcon, { backgroundColor: item.bg }]}>
+                                        <MaterialIcons name={item.icon as any} size={28} color={item.color} />
+                                    </View>
+                                    <Text style={styles.logTypeLabel}>{item.label}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    </View>
+                );
+            case 'activity_detail':
+                return (
+                    <View style={styles.contentSection}>
+                        <View style={[styles.taskDetailCard, { borderColor: activity?.color + '20', backgroundColor: activity?.color + '05' }]}>
+                            <Text style={[styles.sectionLabel, { marginBottom: 8, color: activity?.color }]}>Summary</Text>
+                            <Text style={[styles.taskDescription, { fontSize: 18, color: '#0f172a' }]}>{activity?.detail}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16 }}>
+                                <MaterialIcons name="access-time" size={14} color="#64748b" />
+                                <Text style={{ fontSize: 13, color: '#64748b', marginLeft: 4 }}>Logged {activity?.time}</Text>
+                            </View>
+                        </View>
+
+                        <Text style={styles.sectionLabel}>Context</Text>
+                        <View style={styles.insightBox}>
+                            <Text style={styles.insightText}>
+                                This update was recorded automatically. For more information or to modify this entry, please visit the full history reports.
+                            </Text>
+                        </View>
+                    </View>
+                );
             default:
                 return null;
         }
@@ -391,8 +513,14 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
                                 <MaterialIcons name={header.icon as any} size={28} color={header.color} />
                             </View>
                             <View style={styles.headerText}>
-                                <Text style={styles.headerTitle}>Log {header.title}</Text>
-                                <Text style={styles.headerSub}>Recording for Today, 25 Dec</Text>
+                                <Text style={styles.headerTitle}>{activeType === 'member' ? header.title : activeType === 'community_actions' ? 'Community Hub' : 'Log ' + header.title}</Text>
+                                <Text style={styles.headerSub}>
+                                    {activeType === 'member' ? member?.status + ' • ' + member?.role :
+                                        activeType === 'idea' ? 'Share with the community' :
+                                            activeType === 'group' ? 'Start a new chapter' :
+                                                activeType === 'community_actions' ? 'Manage your community' :
+                                                    'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                </Text>
                             </View>
                             <Pressable onPress={onClose} style={styles.closeButton}>
                                 <MaterialIcons name="close" size={24} color="#94a3b8" />
@@ -415,15 +543,17 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
                                 />
                             </View>
 
-                            <Pressable
-                                onPress={() => {
-                                    alert(type === 'idea' ? 'Idea posted to community!' : 'Entry Saved!');
-                                    onClose();
-                                }}
-                                style={[styles.saveButton, { backgroundColor: header.color }]}
-                            >
-                                <Text style={styles.saveButtonText}>{type === 'idea' ? 'Post to Community' : 'Save Entry'}</Text>
-                            </Pressable>
+                            {activeType !== 'activity_detail' && (
+                                <Pressable
+                                    onPress={() => {
+                                        alert(activeType === 'idea' ? 'Idea posted to community!' : activeType === 'group' ? 'Group proposal sent!' : 'Entry Saved!');
+                                        onClose();
+                                    }}
+                                    style={[styles.saveButton, { backgroundColor: header.color }]}
+                                >
+                                    <Text style={styles.saveButtonText}>{activeType === 'idea' ? 'Post to Community' : activeType === 'group' ? 'Send Proposal' : 'Save Entry'}</Text>
+                                </Pressable>
+                            )}
                         </ScrollView>
                     </View>
                 </KeyboardAvoidingView>
@@ -773,5 +903,33 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
         color: '#1e293b',
+    },
+    logSelectorGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 12,
+        marginTop: 8,
+    },
+    logTypeCard: {
+        width: (width - 60) / 2,
+        backgroundColor: '#f8fafc',
+        borderRadius: 24,
+        padding: 16,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
+    },
+    logTypeIcon: {
+        width: 64,
+        height: 64,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 12,
+    },
+    logTypeLabel: {
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#334155',
     },
 });

@@ -27,7 +27,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, router, useNavigation } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import WellnessLogModal from '../components/WellnessLogModal';
+import AppBottomSheet from '../components/AppBottomSheet';
 
 const { width } = Dimensions.get('window');
 
@@ -298,7 +298,7 @@ export default function CircleOfCareScreen() {
                 </View>
             </ScrollView>
 
-            <WellnessLogModal
+            <AppBottomSheet
                 visible={activeMember !== null}
                 onClose={() => setActiveMember(null)}
                 type="member"

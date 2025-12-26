@@ -4,11 +4,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Search, Plus, Users, Shield, Heart, MapPin, ChevronRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+import AppBottomSheet from '../../components/AppBottomSheet';
 
 export default function CommunityGroupsScreen() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
+    const [showSheet, setShowSheet] = useState(false);
 
     const GROUPS = [
         {
@@ -80,6 +82,7 @@ export default function CommunityGroupsScreen() {
                         </Pressable>
                         <Text className="text-xl font-bold text-gray-900">Community Groups</Text>
                         <Pressable
+                            onPress={() => setShowSheet(true)}
                             className="w-10 h-10 bg-violet-600 rounded-full items-center justify-center shadow-lg"
                         >
                             <Plus size={20} color="#fff" />
@@ -151,6 +154,12 @@ export default function CommunityGroupsScreen() {
                     ))}
                 </View>
             </ScrollView>
+
+            <AppBottomSheet
+                visible={showSheet}
+                onClose={() => setShowSheet(false)}
+                type="community_actions"
+            />
         </View>
     );
 }
