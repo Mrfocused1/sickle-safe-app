@@ -113,7 +113,7 @@ const MemberCard = ({ member, index, onShowDetails }: { member: any, index: numb
         >
             <Pressable
                 onPress={handlePress}
-                className="bg-white rounded-3xl p-5 mb-4 shadow-sm border border-gray-100 flex-row items-center active:bg-gray-50"
+                className="bg-white rounded-[24px] p-5 mb-4 shadow-sm border border-gray-100 flex-row items-center active:bg-gray-50 active:scale-[0.98]"
             >
                 <View className="relative w-16 h-16">
                     <View className="absolute inset-0 bg-gray-100 rounded-2xl items-center justify-center">

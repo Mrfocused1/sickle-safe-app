@@ -81,20 +81,20 @@ export default function DashboardScreen() {
         className="bg-white rounded-[24px] p-5 border-l-[6px] shadow-sm mb-4 active:bg-gray-50 active:scale-[0.98] border-gray-100"
         style={{ borderLeftColor: borderColor }}
       >
-        <View className="flex-row items-start">
-          <View className="mt-1 mr-3">
-            <View className="w-5 h-5 rounded border-2 border-gray-300" />
+        <View className="flex-row items-center">
+          <View className="w-10 h-10 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: bgColor + '40' }}>
+            <MaterialIcons name={priority === 'critical' ? 'priority-high' : 'assignment'} size={20} color={textColor} />
           </View>
           <View className="flex-1">
-            <View className="flex-row justify-between items-start mb-1">
-              <Text className="text-base font-medium text-gray-900 flex-1">{title}</Text>
-              <View className="px-2 py-1 rounded" style={{ backgroundColor: bgColor }}>
+            <View className="flex-row justify-between items-center mb-1">
+              <Text className="text-base font-bold text-gray-900 flex-1">{title}</Text>
+              <View className="px-2 py-0.5 rounded-lg" style={{ backgroundColor: bgColor }}>
                 <Text className="text-[10px] font-bold uppercase tracking-wide" style={{ color: textColor }}>
                   {priority.replace('_', ' ')}
                 </Text>
               </View>
             </View>
-            <Text className="text-xs text-gray-500" numberOfLines={1}>
+            <Text className="text-gray-500 text-xs font-medium" numberOfLines={1}>
               {description}
             </Text>
           </View>
@@ -243,8 +243,8 @@ export default function DashboardScreen() {
 
             {/* Care Plan */}
             <View className="mb-8">
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-lg font-semibold text-gray-900">Care Plan</Text>
+              <View className="flex-row justify-between items-center mb-4 px-1">
+                <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Active Care Plan</Text>
                 <Pressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

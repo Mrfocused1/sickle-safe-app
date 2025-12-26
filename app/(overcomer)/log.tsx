@@ -14,7 +14,7 @@ export default function LogScreen() {
   const [currentDate, setCurrentDate] = useState('Today, 25 Dec');
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [activeSheetType, setActiveSheetType] = useState<'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | null>(null);
-  
+
 
   const handleAction = (label: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -30,11 +30,11 @@ export default function LogScreen() {
         <MaterialIcons name={icon} size={28} color={color} />
       </View>
       <View className="ml-4 flex-1">
-        <Text className="text-gray-900 font-extrabold text-base">{label}</Text>
+        <Text className="text-gray-900 font-bold text-base">{label}</Text>
         <Text className="text-gray-500 text-xs mt-0.5 font-medium">{status}</Text>
       </View>
       <View className="items-end gap-1">
-        <Text className="text-gray-900 font-black text-base">{value}</Text>
+        <Text className="text-gray-900 font-bold text-base">{value}</Text>
         <MaterialIcons name="chevron-right" size={20} color="#cbd5e1" />
       </View>
     </Pressable>
@@ -87,31 +87,31 @@ export default function LogScreen() {
         </View>
 
         <View className="px-6 py-8">
-          {/* Summary Stats */}
           <View className="flex-row gap-3 mb-8">
-            <View className="flex-1 bg-gray-50 p-5 rounded-[24px] border border-gray-100 items-center">
+            <View className="flex-1 bg-white p-5 rounded-[24px] border border-gray-100 items-center shadow-sm">
               <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Avg Pain</Text>
-              <Text className="text-2xl font-black text-gray-900">2.4</Text>
+              <Text className="text-2xl font-bold text-gray-900">2.4</Text>
               <View className="h-1 w-8 bg-amber-500/20 rounded-full mt-3 overflow-hidden">
                 <View className="h-full w-[24%] bg-amber-500" />
               </View>
             </View>
-            <View className="flex-1 bg-gray-50 p-5 rounded-[24px] border border-gray-100 items-center">
+            <View className="flex-1 bg-white p-5 rounded-[24px] border border-gray-100 items-center shadow-sm">
               <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Water</Text>
-              <Text className="text-2xl font-black text-gray-900">1.8L</Text>
+              <Text className="text-2xl font-bold text-gray-900">1.8L</Text>
               <View className="h-1 w-8 bg-blue-500/20 rounded-full mt-3 overflow-hidden">
                 <View className="h-full w-[72%] bg-blue-500" />
               </View>
             </View>
-            <View className="flex-1 bg-gray-50 p-5 rounded-[24px] border border-gray-100 items-center">
+            <View className="flex-1 bg-white p-5 rounded-[24px] border border-gray-100 items-center shadow-sm">
               <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Meds</Text>
-              <Text className="text-2xl font-black text-gray-900">3/4</Text>
+              <Text className="text-2xl font-bold text-gray-900">3/4</Text>
               <View className="h-1 w-8 bg-purple-500/20 rounded-full mt-3 overflow-hidden">
                 <View className="h-full w-[75%] bg-purple-500" />
               </View>
             </View>
           </View>
-
+          
+          
           {/* Log Sections */}
           <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 ml-1">Metrics & Wellness</Text>
 

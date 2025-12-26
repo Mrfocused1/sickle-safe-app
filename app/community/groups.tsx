@@ -123,9 +123,9 @@ export default function CommunityGroupsScreen() {
                         <Pressable
                             key={group.id}
                             onPress={() => router.push(group.route as any)}
-                            className="bg-white rounded-[32px] p-4 border border-gray-100 shadow-sm mb-6 flex-row active:bg-gray-50"
+                            className="bg-white rounded-[24px] p-5 border border-gray-100 shadow-sm mb-4 flex-row active:bg-gray-50 active:scale-[0.98]"
                         >
-                            <View className="w-24 h-24 rounded-2xl overflow-hidden mr-4">
+                            <View className="w-20 h-20 rounded-2xl overflow-hidden mr-4">
                                 <Image source={{ uri: group.image }} className="w-full h-full" />
                             </View>
                             <View className="flex-1 justify-center">

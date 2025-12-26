@@ -173,8 +173,8 @@ export default function VolunteerCommunity() {
                     <View className="flex-row gap-4 h-[200px]">
                         {/* Find Groups Card */}
                         <Pressable
-                            onPress={() => router.push('/community/groups')}
-                            className="flex-1 rounded-[32px] overflow-hidden shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                            onPress={() => router.push('/community/groups' as any)}
+                            className="flex-1 rounded-[24px] overflow-hidden shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                             style={{
                                 shadowColor: '#8B5CF6',
                                 shadowOffset: { width: 0, height: 8 },
@@ -197,9 +197,9 @@ export default function VolunteerCommunity() {
                                     <Users size={28} color="#7C3AED" />
                                 </View>
                                 <View>
-                                    <Text className="text-gray-900 font-black text-2xl leading-tight">Find{'\n'}Groups</Text>
+                                    <Text className="text-gray-900 font-bold text-2xl leading-tight">Find{'\n'}Groups</Text>
                                     <View className="bg-white/40 self-start px-3 py-1.5 rounded-full mt-3 border border-white/20">
-                                        <Text className="text-violet-700 text-[10px] font-black uppercase tracking-wider">Join Local Teams</Text>
+                                        <Text className="text-violet-700 text-[10px] font-bold uppercase tracking-wider">Join Local Teams</Text>
                                     </View>
                                 </View>
                             </View>
@@ -211,7 +211,7 @@ export default function VolunteerCommunity() {
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                                 setShowIdeaModal(true);
                             }}
-                            className="flex-1 rounded-[32px] overflow-hidden shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                            className="flex-1 rounded-[24px] overflow-hidden shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                             style={{
                                 shadowColor: '#3B82F6',
                                 shadowOffset: { width: 0, height: 8 },
@@ -234,9 +234,9 @@ export default function VolunteerCommunity() {
                                     <Lightbulb size={28} color="#2563EB" />
                                 </View>
                                 <View>
-                                    <Text className="text-gray-900 font-black text-2xl leading-tight">Share{'\n'}Idea</Text>
+                                    <Text className="text-gray-900 font-bold text-2xl leading-tight">Share{'\n'}Idea</Text>
                                     <View className="bg-white/40 self-start px-3 py-1.5 rounded-full mt-3 border border-white/20">
-                                        <Text className="text-blue-700 text-[10px] font-black uppercase tracking-wider">Start Discussion</Text>
+                                        <Text className="text-blue-700 text-[10px] font-bold uppercase tracking-wider">Start Discussion</Text>
                                     </View>
                                 </View>
                             </View>
@@ -252,7 +252,7 @@ export default function VolunteerCommunity() {
                         <Pressable
                             key={post.id}
                             onPress={() => router.push(post.route as any)}
-                            className="mb-6 bg-white rounded-[32px] p-5 shadow-sm border border-gray-100 active:bg-gray-50"
+                            className="bg-white rounded-[24px] p-5 mb-6 shadow-sm border border-gray-100 active:bg-gray-50 active:scale-[0.98]"
                         >
                             <View className="flex-row items-center justify-between mb-4">
                                 <View className="flex-row items-center">
