@@ -13,7 +13,15 @@ import Animated, {
   withTiming,
   runOnJS,
   interpolate,
-  Extrapolate
+  Extrapolate,
+  useAnimatedReaction,
+  MeasuredDimensions,
+  measure,
+  useAnimatedRef,
+  Layout,
+  FadeIn,
+  FadeOut,
+  SequencedTransition
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddCarePlanModal from '../../components/AddCarePlanModal';
@@ -27,6 +35,57 @@ export default function DashboardScreen() {
   const [activeTask, setActiveTask] = React.useState<any>(null);
   const [activeType, setActiveType] = React.useState<any>('task');
   const [showWellnessSummary, setShowWellnessSummary] = React.useState(false);
+  const [tasks, setTasks] = React.useState([
+    {
+      id: '1',
+      title: "Emergency Bag Check",
+      description: "Ensure hospital bag has updated insurance card and warm clothes.",
+      priority: "critical",
+      assignedTo: "Marcus",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"
+    },
+    {
+      id: '2',
+      title: "Prescription Refill",
+      description: "Hydroxyurea supply running low.",
+      priority: "needs_help",
+      assignedTo: "Sarah",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200"
+    },
+    {
+      id: '3',
+      title: "Evening Walk",
+      description: "Light 15 min walk if pain level is below 4.",
+      priority: "personal"
+    }
+  ]);
+
+  const handleAddTask = (newTask: { title: string, description: string, priority: string }) => {
+    const taskWithId = {
+      ...newTask,
+      id: Math.random().toString(36).substr(2, 9),
+    };
+    setTasks(prev => [taskWithId, ...prev]);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  };
+
+  const handleDeleteTask = (id: string) => {
+    setTasks(prev => prev.filter(t => t.id !== id));
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+  };
+
+  const handleOrderChange = (from: number, to: number) => {
+    const newTo = Math.max(0, Math.min(to, tasks.length - 1));
+    if (from === newTo) return;
+
+    setTasks(prev => {
+      const result = [...prev];
+      const [removed] = result.splice(from, 1);
+      result.splice(newTo, 0, removed);
+      return result;
+    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
 
   // Slider Logic
   const translateX = useSharedValue(0);
@@ -68,54 +127,136 @@ export default function DashboardScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
-  const TaskItem = ({ title, description, priority, assignedTo, avatar }: { title: string; description: string; priority: string, assignedTo?: string, avatar?: string }) => {
+  const SwippableDraggableItem = ({ item, index, onIdDelete, onOrderChange, allTasksLength }: any) => {
+    const { title, description, priority, assignedTo, avatar } = item;
+    const translateX = useSharedValue(0);
+    const translateY = useSharedValue(0);
+    const isDragging = useSharedValue(false);
+    const isSwipping = useSharedValue(false);
+    const context = useSharedValue({ y: 0 });
+
     const borderColor = priority === 'critical' ? '#ef4444' : priority === 'needs_help' ? '#f59e0b' : '#10b981';
     const bgColor = priority === 'critical' ? '#fee2e2' : priority === 'needs_help' ? '#fef3c7' : '#d1fae5';
     const textColor = priority === 'critical' ? '#b91c1c' : priority === 'needs_help' ? '#92400e' : '#065f46';
 
+    const swipeGesture = Gesture.Pan()
+      .activeOffsetX([-10, 10])
+      .failOffsetY([-5, 5])
+      .onUpdate((event) => {
+        if (!isDragging.value) {
+          translateX.value = Math.min(0, event.translationX);
+          isSwipping.value = true;
+        }
+      })
+      .onEnd((event) => {
+        if (translateX.value < -80) {
+          translateX.value = withSpring(-100);
+        } else {
+          translateX.value = withSpring(0);
+        }
+        isSwipping.value = false;
+      });
+
+    const dragGesture = Gesture.Pan()
+      .onBegin(() => {
+        isDragging.value = true;
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
+      })
+      .onUpdate((event) => {
+        translateY.value = event.translationY;
+      })
+      .onEnd(() => {
+        const threshold = 60; // Approximate card height
+        const shift = Math.round(translateY.value / threshold);
+        if (shift !== 0) {
+          runOnJS(onOrderChange)(index, index + shift);
+        }
+        translateY.value = withSpring(0);
+        isDragging.value = false;
+      });
+
+    const longPressGesture = Gesture.LongPress()
+      .minDuration(400)
+      .onStart(() => {
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Heavy);
+        isDragging.value = true;
+      });
+    
+
+    const animatedStyle = useAnimatedStyle(() => ({
+      transform: [
+        { translateX: translateX.value },
+        { translateY: translateY.value },
+        { scale: isDragging.value ? 1.05 : 1 },
+      ],
+      zIndex: isDragging.value ? 1000 : 1,
+      shadowOpacity: withSpring(isDragging.value ? 0.2 : 0),
+      backgroundColor: isDragging.value ? '#fff' : 'transparent',
+    }));
+
     return (
-      <Pressable
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          setActiveTask({ title, description, priority });
-          setActiveType('manage_task');
-        }}
-        className="bg-white rounded-[24px] p-5 border-l-[6px] shadow-sm mb-4 active:bg-gray-50 active:scale-[0.98] border-gray-100"
-        style={{ borderLeftColor: borderColor }}
-      >
-        <View className="flex-row items-center">
-          <View className="w-10 h-10 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: bgColor + '40' }}>
-            <MaterialIcons name={priority === 'critical' ? 'priority-high' : 'assignment'} size={20} color={textColor} />
-          </View>
-          <View className="flex-1">
-            <View className="flex-row justify-between items-center mb-1">
-              <Text className="text-base font-bold text-gray-900 flex-1">{title}</Text>
-              <View className="px-2 py-0.5 rounded-lg" style={{ backgroundColor: bgColor }}>
-                <Text className="text-[10px] font-bold uppercase tracking-wide" style={{ color: textColor }}>
-                  {priority.replace('_', ' ')}
-                </Text>
-              </View>
-            </View>
-            <Text className="text-gray-500 text-xs font-medium" numberOfLines={1}>
-              {description}
-            </Text>
-            <Text style={{ color: '#64748b' }} className="text-[10px] font-medium mt-1">
-              {assignedTo ? `Assigned to ${assignedTo}` : 'Tap to assign a helper'}
-            </Text>
-          </View>
-          {avatar && (
-            <Image source={{ uri: avatar }} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
-          )}
-          {!avatar && assignedTo === undefined && (
-            <View className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 items-center justify-center">
-              <MaterialIcons name="person-add" size={14} color="#94a3b8" />
-            </View>
-          )}
+      <View style={{ marginBottom: 16 }}>
+        {/* Delete Background */}
+        <View className="absolute right-0 top-0 bottom-0 w-24 bg-red-500 rounded-[24px] items-center justify-center">
+          <Pressable onPress={() => onIdDelete(item.id)}>
+            <MaterialIcons name="delete-outline" size={28} color="white" />
+          </Pressable>
         </View>
-      </Pressable>
+
+        <GestureDetector gesture={Gesture.Simultaneous(dragGesture, longPressGesture, swipeGesture)}>
+          <Animated.View
+            layout={Layout.springify().damping(15)}
+            entering={FadeIn}
+            exiting={FadeOut}
+            style={animatedStyle}
+          >
+            <Pressable
+              onPress={() => {
+                if (translateX.value === 0) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setActiveTask(item);
+                  setActiveType('manage_task');
+                } else {
+                  translateX.value = withSpring(0);
+                }
+              }}
+              className="bg-white rounded-[24px] p-5 border-l-[6px] shadow-sm border-gray-100"
+              style={{ borderLeftColor: borderColor }}
+            >
+              <View className="flex-row items-center">
+                <View className="w-10 h-10 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: bgColor + '40' }}>
+                  <MaterialIcons name={priority === 'critical' ? 'priority-high' : 'assignment'} size={20} color={textColor} />
+                </View>
+                <View className="flex-1">
+                  <View className="flex-row justify-between items-center mb-1">
+                    <Text className="text-base font-bold text-gray-900 flex-1">{title}</Text>
+                    <View className="px-2 py-0.5 rounded-lg" style={{ backgroundColor: bgColor }}>
+                      <Text className="text-[10px] font-bold uppercase tracking-wide" style={{ color: textColor }}>
+                        {priority.replace('_', ' ')}
+                      </Text>
+                    </View>
+                  </View>
+                  <Text className="text-gray-500 text-xs font-medium" numberOfLines={1}>
+                    {description}
+                  </Text>
+                  <Text style={{ color: '#64748b' }} className="text-[10px] font-medium mt-1">
+                    {assignedTo ? `Assigned to ${assignedTo}` : 'Tap to assign a helper'}
+                  </Text>
+                </View>
+                {avatar ? (
+                  <Image source={{ uri: avatar }} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
+                ) : (
+                  <View className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 items-center justify-center">
+                    <MaterialIcons name="person-add" size={14} color="#94a3b8" />
+                  </View>
+                )}
+              </View>
+            </Pressable>
+          </Animated.View>
+        </GestureDetector>
+      </View>
     );
   };
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View className="flex-1 bg-gray-100">
@@ -134,7 +275,7 @@ export default function DashboardScreen() {
                 className="w-10 h-10 rounded-full bg-gray-200 border-2 border-white overflow-hidden shadow-sm active:scale-95"
               >
                 <Image
-                  source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCORMa38YShjxWXHcbH-MfY1UZF9LvIjHefqm4MnmpLYEROxwh8VpTJetiR_BPF_Kt4A676WuCNDwR6TmAHY5CN6SnaFzheHF0M5FtIlw80jCm2wH4NOcOa-IqaDBuomapbokmokeLN4wPVLAKg_jiKNzkeDzcjGH0r2qvVI1wF9rSlEq-KXsGO67Ujocu1a-guDc9qfSpuY_B_7PiQhy4P-zUFKocITqdWQuKu6QB8e9zr2Z-7vDyE00NRn5JxUXrBpBU36ttjbSZi' }}
+                  source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCORMa38YShjxWXHcbH-MfY1UZF9LvIjHefqm4MnmpLYEROxwh8VpTJetiR_BPF_Kt4A676WuCNDwR6TmAHY5CN6SnaFzheHF0M5FtIlw80jCm2wH4NOcOa-IqaDBUomapbokmokeLN4wPVLAKg_jiKNzkeDzcjGH0r2qvVI1wF9rSlEq-KXsGO67Ujocu1a-guDc9qfSpuY_B_7PiQhy4P-zUFKocITqdWQuKu6QB8e9zr2Z-7vDyE00NRn5JxUXrBpBU36ttjbSZi' }}
                   className="w-full h-full"
                   resizeMode="cover"
                 />
@@ -271,26 +412,18 @@ export default function DashboardScreen() {
 
               {/* Task Items */}
               <View>
-                <TaskItem
-                  title="Emergency Bag Check"
-                  description="Ensure hospital bag has updated insurance card and warm clothes."
-                  priority="critical"
-                  assignedTo="Marcus"
-                  avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"
-                />
-                <TaskItem
-                  title="Prescription Refill"
-                  description="Hydroxyurea supply running low."
-                  priority="needs_help"
-                  assignedTo="Sarah"
-                  avatar="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200"
-                />
-                <TaskItem
-                  title="Evening Walk"
-                  description="Light 15 min walk if pain level is below 4."
-                  priority="personal"
-                />
+                {tasks.map((task, index) => (
+                  <SwippableDraggableItem
+                    key={task.id}
+                    item={task}
+                    index={index}
+                    allTasksLength={tasks.length}
+                    onIdDelete={handleDeleteTask}
+                    onOrderChange={handleOrderChange}
+                  />
+                ))}
               </View>
+
             </View>
           </ScrollView>
         </SafeAreaView>
@@ -298,11 +431,7 @@ export default function DashboardScreen() {
         <AddCarePlanModal
           visible={isAddCarePlanVisible}
           onClose={() => setIsAddCarePlanVisible(false)}
-          onAdd={(task) => {
-            console.log('New Task:', task);
-            // Here you would typically update the state or call an API
-            alert(`New Task Added: ${task.title}`);
-          }}
+          onAdd={handleAddTask}
         />
 
         <AppBottomSheet
