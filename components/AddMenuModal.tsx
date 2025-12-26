@@ -2,6 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet, Dimensions, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
+
+import * as Haptics from 'expo-haptics';
 import { CountUp, AnimatedProgress } from './SummaryAnimations';
 
 const { width, height } = Dimensions.get('window');
@@ -15,6 +18,7 @@ interface AddMenuModalProps {
 export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuModalProps) {
   const scaleAnim1 = useRef(new Animated.Value(0)).current;
   const scaleAnim2 = useRef(new Animated.Value(0)).current;
+  const scaleAnim3 = useRef(new Animated.Value(0)).current;
   const scaleAnim4 = useRef(new Animated.Value(0)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
@@ -41,6 +45,12 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
           friction: 7,
           useNativeDriver: true,
         }),
+        Animated.spring(scaleAnim3, {
+          toValue: 1,
+          tension: 100,
+          friction: 7,
+          useNativeDriver: true,
+        }),
         Animated.spring(scaleAnim4, {
           toValue: 1,
           tension: 100,
@@ -53,6 +63,7 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
       backdropOpacity.setValue(0);
       scaleAnim1.setValue(0);
       scaleAnim2.setValue(0);
+      scaleAnim3.setValue(0);
       scaleAnim4.setValue(0);
     }
   }, [visible]);
@@ -70,6 +81,11 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
         useNativeDriver: true,
       }),
       Animated.timing(scaleAnim2, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim3, {
         toValue: 0,
         duration: 150,
         useNativeDriver: true,
@@ -187,7 +203,7 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
           </Pressable>
         </Animated.View>
 
-        {/* Item 2 - Center Up - Log Wellness */}
+        {/* Item 2 - Center Up-Left - Log Wellness */}
         <Animated.View
           style={[
             styles.menuItem,
@@ -211,6 +227,30 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
           </Pressable>
         </Animated.View>
 
+        {/* Item 3 - Center Up-Right - Education */}
+        <Animated.View
+          style={[
+            styles.menuItem,
+            styles.item3Position,
+            {
+              transform: [{ scale: scaleAnim3 }],
+            },
+          ]}
+        >
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              handleClose();
+              router.push('/education');
+            }}
+            style={styles.actionButton}
+          >
+            <View style={[styles.iconContainer, styles.orangeIcon]}>
+              <Feather name="book-open" size={32} color="#ffffff" />
+            </View>
+            <Text style={styles.label}>Education</Text>
+          </Pressable>
+        </Animated.View>
 
         {/* Item 4 - Far Right - New Post */}
         <Animated.View
@@ -277,16 +317,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   item1Position: {
-    bottom: 130,
-    left: width / 2 - 130,
+    bottom: 100,
+    left: width / 2 - 140,
   },
   item2Position: {
-    bottom: 200,
-    left: width / 2 - 32,
+    bottom: 210,
+    left: width / 2 - 100,
+  },
+  item3Position: {
+    bottom: 210,
+    left: width / 2 + 36,
   },
   item4Position: {
-    bottom: 130,
-    left: width / 2 + 66,
+    bottom: 100,
+    left: width / 2 + 76,
   },
   actionButton: {
     alignItems: 'center',
@@ -322,6 +366,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#8B5CF6',
     borderWidth: 2,
     borderColor: '#C4B5FD',
+  },
+  orangeIcon: {
+    backgroundColor: '#F59E0B',
+    borderWidth: 2,
+    borderColor: '#FDE68A',
   },
   label: {
     marginTop: 8,
@@ -451,4 +500,3 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#9ca3af',
   },
-});

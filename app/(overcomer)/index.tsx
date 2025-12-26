@@ -42,7 +42,11 @@ export default function DashboardScreen() {
       description: "Ensure hospital bag has updated insurance card and warm clothes.",
       priority: "critical",
       assignedTo: "Marcus",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
+      comments: [
+        { author: 'Marcus', text: 'Just checked, we need more warm socks.', time: '2h ago' },
+        { author: 'Maya', text: 'I added some to the laundry pile.', time: '1h ago' }
+      ]
     },
     {
       id: '2',
@@ -50,7 +54,10 @@ export default function DashboardScreen() {
       description: "Hydroxyurea supply running low.",
       priority: "needs_help",
       assignedTo: "Sarah",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200"
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200",
+      comments: [
+        { author: 'Sarah', text: 'I can pick this up tomorrow after work.', time: '3h ago' }
+      ]
     },
     {
       id: '3',
@@ -141,47 +148,46 @@ export default function DashboardScreen() {
 
     const swipeGesture = Gesture.Pan()
       .activeOffsetX([-10, 10])
-      .failOffsetY([-5, 5])
+      .failOffsetY([-10, 10])
       .onUpdate((event) => {
         if (!isDragging.value) {
-          translateX.value = Math.min(0, event.translationX);
-          isSwipping.value = true;
+          // Strictly horizontal and only to the left
+          translateX.value = Math.max(-100, Math.min(0, event.translationX));
         }
       })
       .onEnd((event) => {
-        if (translateX.value < -80) {
+        if (translateX.value < -60) {
           translateX.value = withSpring(-100);
         } else {
           translateX.value = withSpring(0);
         }
-        isSwipping.value = false;
       });
 
     const dragGesture = Gesture.Pan()
+      .activateAfterLongPress(400)
+      .activeOffsetY([-10, 10])
+      .failOffsetX([-10, 10])
       .onBegin(() => {
         isDragging.value = true;
-        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Medium);
+        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Heavy);
       })
       .onUpdate((event) => {
+        // Strictly vertical
         translateY.value = event.translationY;
       })
       .onEnd(() => {
-        const threshold = 60; // Approximate card height
+        const threshold = 80; // Adjusted for better stability
         const shift = Math.round(translateY.value / threshold);
         if (shift !== 0) {
           runOnJS(onOrderChange)(index, index + shift);
         }
         translateY.value = withSpring(0);
         isDragging.value = false;
+      })
+      .onFinalize(() => {
+        isDragging.value = false;
       });
 
-    const longPressGesture = Gesture.LongPress()
-      .minDuration(400)
-      .onStart(() => {
-        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Heavy);
-        isDragging.value = true;
-      });
-    
 
     const animatedStyle = useAnimatedStyle(() => ({
       transform: [
@@ -190,26 +196,39 @@ export default function DashboardScreen() {
         { scale: isDragging.value ? 1.05 : 1 },
       ],
       zIndex: isDragging.value ? 1000 : 1,
-      shadowOpacity: withSpring(isDragging.value ? 0.2 : 0),
+      borderRadius: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowRadius: 15,
+      shadowOpacity: withSpring(isDragging.value ? 0.15 : 0),
       backgroundColor: isDragging.value ? '#fff' : 'transparent',
     }));
 
+
+    const deleteButtonStyle = useAnimatedStyle(() => ({
+      opacity: interpolate(translateX.value, [-20, 0], [1, 0], Extrapolate.CLAMP),
+      pointerEvents: translateX.value < -20 ? 'auto' : 'none',
+    }));
     return (
       <View style={{ marginBottom: 16 }}>
         {/* Delete Background */}
-        <View className="absolute right-0 top-0 bottom-0 w-24 bg-red-500 rounded-[24px] items-center justify-center">
+        <Animated.View
+          style={deleteButtonStyle}
+          className="absolute right-0 top-0 bottom-0 w-24 bg-red-500 rounded-[24px] items-center justify-center"
+        >
           <Pressable onPress={() => onIdDelete(item.id)}>
             <MaterialIcons name="delete-outline" size={28} color="white" />
           </Pressable>
-        </View>
+        </Animated.View>
 
-        <GestureDetector gesture={Gesture.Simultaneous(dragGesture, longPressGesture, swipeGesture)}>
+
+        <GestureDetector gesture={Gesture.Exclusive(dragGesture, swipeGesture)}>
           <Animated.View
             layout={Layout.springify().damping(15)}
-            entering={FadeIn}
             exiting={FadeOut}
             style={animatedStyle}
           >
+
             <Pressable
               onPress={() => {
                 if (translateX.value === 0) {
@@ -228,26 +247,14 @@ export default function DashboardScreen() {
                   <MaterialIcons name={priority === 'critical' ? 'priority-high' : 'assignment'} size={20} color={textColor} />
                 </View>
                 <View className="flex-1">
-                  <View className="flex-row justify-between items-center mb-1">
-                    <Text className="text-base font-bold text-gray-900 flex-1">{title}</Text>
-                    <View className="px-2 py-0.5 rounded-lg" style={{ backgroundColor: bgColor }}>
-                      <Text className="text-[10px] font-bold uppercase tracking-wide" style={{ color: textColor }}>
-                        {priority.replace('_', ' ')}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text className="text-gray-500 text-xs font-medium" numberOfLines={1}>
-                    {description}
-                  </Text>
-                  <Text style={{ color: '#64748b' }} className="text-[10px] font-medium mt-1">
-                    {assignedTo ? `Assigned to ${assignedTo}` : 'Tap to assign a helper'}
-                  </Text>
+                  <Text className="text-base font-bold text-gray-900">{title}</Text>
                 </View>
-                {avatar ? (
-                  <Image source={{ uri: avatar }} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
-                ) : (
-                  <View className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 items-center justify-center">
-                    <MaterialIcons name="person-add" size={14} color="#94a3b8" />
+
+                {/* Comment Count Badge */}
+                {item.comments && item.comments.length > 0 && (
+                  <View className="flex-row items-center bg-gray-50 px-3 py-1.5 rounded-full">
+                    <MaterialIcons name="chat-bubble-outline" size={14} color="#64748b" />
+                    <Text className="text-xs font-bold text-gray-500 ml-1.5">{item.comments.length}</Text>
                   </View>
                 )}
               </View>

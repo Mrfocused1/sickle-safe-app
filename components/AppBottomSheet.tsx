@@ -25,7 +25,13 @@ interface AppBottomSheetProps {
     visible: boolean;
     onClose: () => void;
     type: MetricType;
-    task?: { title: string; description: string; priority: string };
+    task?: {
+        id?: string;
+        title: string;
+        description: string;
+        priority: string;
+        comments?: Array<{ author: string; text: string; time: string; }>;
+    };
     member?: { name: string; role: string; priority: string; avatar: string; status: string; isEmergency: boolean };
     activity?: { title: string; detail: string; time: string; color: string; icon: string };
     mission?: { title: string; detail: string; time: string; location?: string; status?: string };
@@ -35,6 +41,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
 
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
+    const [selectedHelpers, setSelectedHelpers] = useState<string[]>([]);
     const [activeType, setActiveType] = useState<MetricType>(type);
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -50,6 +57,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             fadeAnim.setValue(0);
             setValue('');
             setNotes('');
+            setSelectedHelpers([]);
         }
     }, [visible]);
 
@@ -641,28 +649,94 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                 { name: 'Marcus', role: 'Spouse', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200' },
                                 { name: 'Linda', role: 'Mom', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200' },
                                 { name: 'Request Help', role: 'Open to anyone', avatar: null }
-                            ].map((helper) => (
-                                <Pressable
-                                    key={helper.name}
-                                    onPress={() => setValue(helper.name)}
-                                    style={styles.actionBox}
-                                >
-                                    <View style={[styles.memberAvatarWrapper, { width: 50, height: 50, marginBottom: 8, opacity: value === helper.name ? 1 : 0.6 }]}>
-                                        {helper.avatar ? (
-                                            <Image source={{ uri: helper.avatar }} style={[styles.memberAvatarLarge, { width: 50, height: 50 }]} />
-                                        ) : (
-                                            <View style={[styles.actionIconCircle, { width: 50, height: 50, margin: 0, backgroundColor: '#eff6ff' }]}>
-                                                <MaterialIcons name="help" size={24} color="#3b82f6" />
-                                            </View>
-                                        )}
-                                        {value === helper.name && (
-                                            <View style={[styles.statusIndicator, { backgroundColor: '#10b981', bottom: -2, right: -2 }]} />
-                                        )}
-                                    </View>
-                                    <Text style={[styles.actionLabelText, value === helper.name && { color: '#f59e0b', fontWeight: '700' }]}>{helper.name}</Text>
-                                </Pressable>
-                            ))}
+                            ].map((helper) => {
+                                const isSelected = selectedHelpers.includes(helper.name);
+                                const isRequest = helper.name === 'Request Help';
+
+                                const toggleSelection = () => {
+                                    setSelectedHelpers(prev =>
+                                        prev.includes(helper.name)
+                                            ? prev.filter(h => h !== helper.name)
+                                            : [...prev, helper.name]
+                                    );
+                                };
+
+                                return (
+                                    <Pressable
+                                        key={helper.name}
+                                        onPress={toggleSelection}
+                                        style={[
+                                            styles.actionBox,
+                                            isRequest && {
+                                                borderWidth: 2,
+                                                borderStyle: 'dotted',
+                                                borderColor: isSelected ? '#10b981' : '#e2e8f0',
+                                                backgroundColor: isSelected ? '#ecfdf5' : 'transparent',
+                                                borderRadius: 24,
+                                            }
+                                        ]}
+                                    >
+                                        <View style={[styles.memberAvatarWrapper, { width: 50, height: 50, marginBottom: 8, opacity: isSelected || isRequest ? 1 : 0.6 }]}>
+                                            {helper.avatar ? (
+                                                <Image source={{ uri: helper.avatar }} style={[styles.memberAvatarLarge, { width: 50, height: 50 }]} />
+                                            ) : (
+                                                <View style={[
+                                                    styles.actionIconCircle,
+                                                    {
+                                                        width: 50,
+                                                        height: 50,
+                                                        margin: 0,
+                                                        backgroundColor: isSelected ? '#10b98120' : '#f8fafc',
+                                                        borderWidth: isRequest ? 0 : 1,
+                                                        borderColor: '#f1f5f9'
+                                                    }
+                                                ]}>
+                                                    <MaterialIcons
+                                                        name={isRequest ? "add" : "help"}
+                                                        size={24}
+                                                        color={isRequest ? "#10b981" : "#3b82f6"}
+                                                    />
+                                                </View>
+                                            )}
+                                            {isSelected && !isRequest && (
+                                                <View style={[styles.statusIndicator, { backgroundColor: '#10b981', bottom: -2, right: -2 }]} />
+                                            )}
+                                        </View>
+                                        <Text style={[
+                                            styles.actionLabelText,
+                                            isSelected && { color: isRequest ? '#10b981' : '#f59e0b', fontWeight: '800' }
+                                        ]}>{helper.name}</Text>
+                                    </Pressable>
+                                );
+                            })}
+
                         </View>
+
+                        {task?.comments && task.comments.length > 0 && (
+                            <View style={{ marginTop: 24 }}>
+                                <Text style={styles.sectionLabel}>Comments ({task?.comments?.length})</Text>
+                                <View style={{ backgroundColor: '#f8fafc', borderRadius: 20, padding: 16 }}>
+                                    {task?.comments?.slice(0, 2).map((comment, i) => (
+                                        <View key={i} style={{ marginBottom: i === 0 && (task?.comments?.length || 0) > i + 1 ? 12 : 0 }}>
+
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                                                <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>{comment.author}</Text>
+                                                <Text style={{ fontSize: 11, color: '#94a3b8' }}>{comment.time}</Text>
+                                            </View>
+                                            <Text style={{ fontSize: 14, color: '#475569', lineHeight: 20 }} numberOfLines={2}>
+                                                {comment.text}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                    {task.comments.length > 2 && (
+                                        <Pressable style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
+                                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#6366f1', flex: 1 }}>View all {task.comments.length} comments</Text>
+                                            <MaterialIcons name="chevron-right" size={20} color="#6366f1" />
+                                        </Pressable>
+                                    )}
+                                </View>
+                            </View>
+                        )}
                     </View>
                 );
             case 'request_task':
@@ -1179,13 +1253,12 @@ const styles = StyleSheet.create({
     },
     actionBox: {
         flex: 1,
-        backgroundColor: '#f8fafc',
+        backgroundColor: 'transparent',
         borderRadius: 24,
         padding: 20,
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#f1f5f9',
     },
+
     actionIconCircle: {
         width: 56,
         height: 56,
@@ -1198,7 +1271,9 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontWeight: '700',
         color: '#1e293b',
+        textAlign: 'center',
     },
+
     logSelectorGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
