@@ -15,10 +15,13 @@ import {
 } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import Animated from 'react-native-reanimated';
+import AppBottomSheet from '../../components/AppBottomSheet';
+import * as Haptics from 'expo-haptics';
 
 export default function VolunteerDashboard() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
+    const [activeMission, setActiveMission] = React.useState<any>(null);
 
     const stats = [
         { label: 'Hours', value: '42', icon: Clock, color: '#8B5CF6' },
@@ -92,8 +95,17 @@ export default function VolunteerDashboard() {
                     </View>
 
                     <Pressable
-                        onPress={() => router.push('/(volunteer)/missions/1')}
-                        className="bg-white border border-gray-100 rounded-[32px] p-5 shadow-sm mb-4"
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setActiveMission({
+                                title: 'Blood Drive Support',
+                                detail: 'Help with registration and refreshments at the central hospital blood drive.',
+                                time: 'Today • 2:00 PM - 6:00 PM',
+                                location: 'Central Hospital',
+                                status: 'Urgent • 2h left'
+                            });
+                        }}
+                        className="bg-white border border-gray-100 rounded-[24px] p-5 shadow-sm mb-4 active:bg-gray-50 active:scale-[0.98]"
                     >
                         <View className="flex-row justify-between items-start mb-4">
                             <View className="bg-violet-50 px-3 py-1 rounded-full border border-violet-100">
@@ -121,8 +133,17 @@ export default function VolunteerDashboard() {
                     </Pressable>
 
                     <Pressable
-                        onPress={() => router.push('/(volunteer)/missions/2')}
-                        className="bg-gray-50 border border-gray-100 rounded-[32px] p-5"
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setActiveMission({
+                                title: 'Awareness Talk',
+                                detail: 'Joining our monthly community session to share experiences and build awareness.',
+                                time: 'Saturday, Dec 28 • 10:00 AM',
+                                location: 'Community Center',
+                                status: 'Open Mission'
+                            });
+                        }}
+                        className="bg-gray-50 border border-gray-100 rounded-[24px] p-5 mb-4 active:bg-gray-100 active:scale-[0.98]"
                     >
                         <View className="flex-row items-center gap-4">
                             <View className="w-12 h-12 bg-white rounded-2xl items-center justify-center shadow-sm border border-violet-100">
@@ -148,15 +169,14 @@ export default function VolunteerDashboard() {
                                 className="w-64 mb-2 mr-4"
                             >
                                 <Animated.View
-                                    sharedTransitionTag={`card-${i}`}
-                                    className="bg-white border border-gray-100 rounded-[32px] p-4 shadow-sm"
+                                    className="bg-white border border-gray-100 rounded-[24px] p-4 shadow-sm"
                                 >
                                     <View className="h-32 bg-gray-100 rounded-2xl mb-4 overflow-hidden">
                                         <Animated.Image
-                                            sharedTransitionTag={`image-${i}`}
                                             source={{ uri: `https://images.unsplash.com/photo-${1515023677547 + i}-51f16da88c0a?auto=format&fit=crop&q=80&w=400` }}
                                             className="w-full h-full"
                                         />
+                                        
                                     </View>
                                     <View>
                                         <Text className="text-gray-900 font-bold text-base mb-1">Gala for Hope 2024</Text>
@@ -179,6 +199,13 @@ export default function VolunteerDashboard() {
                 </View>
 
             </ScrollView>
+
+            <AppBottomSheet
+                visible={activeMission !== null}
+                onClose={() => setActiveMission(null)}
+                type="mission_detail"
+                mission={activeMission}
+            />
         </View>
     );
 }

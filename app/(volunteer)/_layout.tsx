@@ -4,7 +4,7 @@ import { View, Pressable, Animated } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 
-import VolunteerAddMenuModal from '../../components/VolunteerAddMenuModal';
+import AppBottomSheet from '../../components/AppBottomSheet';
 
 export default function VolunteerLayout() {
     const [showAddMenu, setShowAddMenu] = useState(false);
@@ -30,10 +30,10 @@ export default function VolunteerLayout() {
 
     return (
         <>
-            <VolunteerAddMenuModal
+            <AppBottomSheet
                 visible={showAddMenu}
                 onClose={() => setShowAddMenu(false)}
-                fabRotation={rotation}
+                type="volunteer_actions"
             />
             <Tabs
                 screenOptions={{

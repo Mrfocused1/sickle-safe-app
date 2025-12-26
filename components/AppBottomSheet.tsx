@@ -18,7 +18,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | null;
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | null;
+
 
 interface AppBottomSheetProps {
     visible: boolean;
@@ -27,9 +28,11 @@ interface AppBottomSheetProps {
     task?: { title: string; description: string; priority: string };
     member?: { name: string; role: string; priority: string; avatar: string; status: string; isEmergency: boolean };
     activity?: { title: string; detail: string; time: string; color: string; icon: string };
+    mission?: { title: string; detail: string; time: string; location?: string; status?: string };
 }
 
-export default function AppBottomSheet({ visible, onClose, type, task, member, activity }: AppBottomSheetProps) {
+export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission }: AppBottomSheetProps) {
+    
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
     const [activeType, setActiveType] = useState<MetricType>(type);
@@ -78,8 +81,12 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return { title: 'Wellness Log', icon: 'add-circle', color: '#6366f1' };
             case 'community_actions':
                 return { title: 'Community Actions', icon: 'groups', color: '#8b5cf6' };
-            case 'activity_detail':
-                return { title: activity?.title || 'Update Detail', icon: activity?.icon || 'history', color: activity?.color || '#374151' };
+            case 'volunteer_actions':
+                return { title: 'Volunteer Hub', icon: 'volunteer-activism', color: '#8b5cf6' };
+            case 'volunteer_log_hours':
+                return { title: 'Log Service Hours', icon: 'schedule', color: '#10b981' };
+            case 'mission_detail':
+                return { title: mission?.title || 'Mission Detail', icon: 'volunteer-activism', color: '#8b5cf6' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -460,7 +467,118 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         </View>
                     </View>
                 );
+            case 'volunteer_actions':
+                return (
+                    <View style={styles.contentSection}>
+                        {/* Impact Summary Quick View */}
+                        <View style={styles.summaryCard}>
+                            <View style={styles.summaryItem}>
+                                <View style={[styles.summaryIcon, { backgroundColor: '#f0f9ff' }]}>
+                                    <MaterialIcons name="schedule" size={20} color="#0ea5e9" />
+                                </View>
+                                <View style={styles.summaryInfo}>
+                                    <Text style={styles.summaryLabel}>Total Hours</Text>
+                                    <Text style={styles.summaryValue}>24.5 hrs</Text>
+                                </View>
+                                <View style={styles.summaryStatus}>
+                                    <Text style={[styles.statusText, { color: '#0ea5e9' }]}>+2.4</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.summaryItem}>
+                                <View style={[styles.summaryIcon, { backgroundColor: '#f5f3ff' }]}>
+                                    <MaterialIcons name="task-alt" size={20} color="#8b5cf6" />
+                                </View>
+                                <View style={styles.summaryInfo}>
+                                    <Text style={styles.summaryLabel}>Missions</Text>
+                                    <Text style={styles.summaryValue}>12 Done</Text>
+                                </View>
+                                <View style={styles.summaryStatus}>
+                                    <MaterialIcons name="check-circle" size={20} color="#8b5cf6" />
+                                </View>
+                            </View>
+                        </View>
+
+                        <Text style={styles.sectionLabel}>Quick Actions</Text>
+                        <View style={styles.logSelectorGrid}>
+                            {[
+                                { id: 'idea', label: 'Post Update', icon: 'image', color: '#8b5cf6', bg: '#f5f3ff' },
+                                { id: 'volunteer_log_hours', label: 'Log Hours', icon: 'schedule', color: '#10b981', bg: '#f0fdf4' },
+                                { id: 'group', label: 'New Event', icon: 'event', color: '#f59e0b', bg: '#fffbeb' },
+                            ].map((item) => (
+                                <Pressable
+                                    key={item.id}
+                                    onPress={() => setActiveType(item.id as MetricType)}
+                                    style={styles.logTypeCard}
+                                >
+                                    <View style={[styles.logTypeIcon, { backgroundColor: item.bg }]}>
+                                        <MaterialIcons name={item.icon as any} size={28} color={item.color} />
+                                    </View>
+                                    <Text style={styles.logTypeLabel}>{item.label}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    </View>
+                );
+            case 'volunteer_log_hours':
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>Hours Contributed</Text>
+                        <View style={styles.scaleContainer}>
+                            {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
+                                <Pressable
+                                    key={num}
+                                    onPress={() => setValue(num.toString())}
+                                    style={[
+                                        styles.scaleButton,
+                                        value === num.toString() && { backgroundColor: header.color, borderColor: header.color },
+                                    ]}
+                                >
+                                    <Text style={[styles.scaleText, value === num.toString() && { color: '#fff' }]}>{num}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Mission Category</Text>
+                        <View style={styles.gridContainer}>
+                            {['Support', 'Advocacy', 'Medical', 'Organizing'].map((cat) => (
+                                <Pressable
+                                    key={cat}
+                                    onPress={() => setNotes(prev => prev + ' ' + cat)}
+                                    style={styles.gridButton}
+                                >
+                                    <Text style={styles.gridText}>{cat}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    </View>
+                );
+            case 'mission_detail':
+                return (
+                    <View style={styles.contentSection}>
+                        <View style={[styles.taskDetailCard, { borderColor: '#8b5cf630', backgroundColor: '#8b5cf605' }]}>
+                            <View className="bg-violet-100 self-start px-3 py-1 rounded-full mb-3">
+                                <Text className="text-violet-700 text-[10px] font-bold uppercase">{mission?.status || 'Active Mission'}</Text>
+                            </View>
+                            <Text style={[styles.taskDescription, { fontSize: 18, color: '#0f172a', fontWeight: '700' }]}>{mission?.detail}</Text>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16 }}>
+                                <MaterialIcons name="schedule" size={14} color="#64748b" />
+                                <Text style={{ fontSize: 13, color: '#64748b', marginLeft: 4 }}>{mission?.time}</Text>
+                                <MaterialIcons name="place" size={14} color="#64748b" style={{ marginLeft: 16 }} />
+                                <Text style={{ fontSize: 13, color: '#64748b', marginLeft: 4 }}>{mission?.location}</Text>
+                            </View>
+                        </View>
+
+                        <Text style={styles.sectionLabel}>Requirements</Text>
+                        {['Official ID required', 'Must be 18+', 'Orientation completion'].map((req) => (
+                            <View key={req} style={styles.checkItem}>
+                                <MaterialIcons name="verified" size={20} color="#8b5cf6" />
+                                <Text style={[styles.checkLabel, { fontSize: 14 }]}>{req}</Text>
+                            </View>
+                        ))}
+                    </View>
+                );
             case 'activity_detail':
+                
                 return (
                     <View style={styles.contentSection}>
                         <View style={[styles.taskDetailCard, { borderColor: activity?.color + '20', backgroundColor: activity?.color + '05' }]}>
@@ -519,7 +637,9 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                         activeType === 'idea' ? 'Share with the community' :
                                             activeType === 'group' ? 'Start a new chapter' :
                                                 activeType === 'community_actions' ? 'Manage your community' :
-                                                    'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                                    activeType === 'volunteer_actions' ? 'Your impact dashboard' :
+                                                        activeType === 'volunteer_log_hours' ? 'Record service time' :
+                                                            'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                                 </Text>
                             </View>
                             <Pressable onPress={onClose} style={styles.closeButton}>
@@ -551,7 +671,13 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                     }}
                                     style={[styles.saveButton, { backgroundColor: header.color }]}
                                 >
-                                    <Text style={styles.saveButtonText}>{activeType === 'idea' ? 'Post to Community' : activeType === 'group' ? 'Send Proposal' : 'Save Entry'}</Text>
+                                    <Text style={styles.saveButtonText}>
+                                        {activeType === 'idea' ? 'Post to Community' :
+                                            activeType === 'group' ? 'Send Proposal' :
+                                                activeType === 'volunteer_log_hours' ? 'Save Service Log' :
+                                                    activeType === 'mission_detail' ? 'Join Mission' :
+                                                        'Save Entry'}
+                                    </Text>
                                 </Pressable>
                             )}
                         </ScrollView>
