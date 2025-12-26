@@ -106,7 +106,14 @@ export default function VolunteerOnboardingScreen() {
                 <View className="px-8 pb-10">
                     <Pressable
                         onPress={() => router.replace('/(volunteer)')}
-                        className="w-full bg-red-600 py-6 rounded-[24px] shadow-xl shadow-red-900/40 active:scale-[0.98] relative overflow-hidden"
+                        className="w-full bg-red-600 py-6 rounded-[24px] active:scale-[0.98] relative overflow-hidden"
+                        style={{
+                            shadowColor: '#7f1d1d',
+                            shadowOffset: { width: 0, height: 20 },
+                            shadowOpacity: 0.4,
+                            shadowRadius: 25,
+                            elevation: 10,
+                        }}
                     >
                         <LinearGradient
                             colors={['rgba(255,255,255,0.1)', 'transparent']}

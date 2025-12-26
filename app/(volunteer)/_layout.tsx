@@ -104,7 +104,6 @@ export default function VolunteerLayout() {
                         tabBarIcon: ({ color }) => <MaterialIcons name="settings" size={24} color={color} />,
                     }}
                 />
-                {/* Hidden screens - accessible via navigation but not shown in tabs */}
                 <Tabs.Screen
                     name="resume"
                     options={{
@@ -112,13 +111,13 @@ export default function VolunteerLayout() {
                     }}
                 />
                 <Tabs.Screen
-                    name="missions"
+                    name="highlights/[id]"
                     options={{
                         href: null,
                     }}
                 />
                 <Tabs.Screen
-                    name="highlights"
+                    name="missions/[id]"
                     options={{
                         href: null,
                     }}

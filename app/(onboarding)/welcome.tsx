@@ -65,7 +65,16 @@ export default function WelcomeScreen() {
 
           <View className="space-y-4">
             <Link href="/(onboarding)/community" asChild>
-              <Pressable className="w-full bg-red-600 py-6 rounded-[24px] shadow-xl shadow-red-900/20 active:scale-[0.98] relative overflow-hidden">
+              <Pressable
+                className="w-full bg-red-600 py-6 rounded-[24px] active:scale-[0.98] relative overflow-hidden"
+                style={{
+                  shadowColor: '#7f1d1d',
+                  shadowOffset: { width: 0, height: 20 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 25,
+                  elevation: 10,
+                }}
+              >
                 <View className="flex-row items-center justify-center">
                   <Text className="text-white font-black text-xl tracking-wide">Continue Journey</Text>
                   <View className="ml-3 bg-white/20 p-1.5 rounded-full">

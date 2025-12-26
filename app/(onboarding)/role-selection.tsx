@@ -130,8 +130,16 @@ export default function RoleSelectionScreen() {
                 <Pressable
                   key={role}
                   onPress={() => setSelectedRole(role)}
-                  className={`p-5 rounded-[32px] border-2 flex-row items-center ${isSelected ? 'border-red-600 bg-white shadow-xl' : 'border-gray-200 bg-white/40'
-                    }`}
+                  className={`p-5 rounded-[32px] border-2 flex-row items-center ${isSelected ? 'border-red-600 bg-white' : 'border-gray-200'}`}
+                  style={isSelected ? {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 20 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 25,
+                    elevation: 10,
+                  } : {
+                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                  }}
                 >
                   <View
                     className="w-14 h-14 rounded-2xl items-center justify-center mr-4"
@@ -167,7 +175,14 @@ export default function RoleSelectionScreen() {
         <View className="px-8 pb-10">
           <Pressable
             onPress={handleContinue}
-            className="w-full bg-red-600 py-6 rounded-[24px] shadow-xl shadow-red-900/20 active:scale-[0.98] relative overflow-hidden"
+            className="w-full bg-red-600 py-6 rounded-[24px] active:scale-[0.98] relative overflow-hidden"
+            style={{
+              shadowColor: '#7f1d1d',
+              shadowOffset: { width: 0, height: 20 },
+              shadowOpacity: 0.2,
+              shadowRadius: 25,
+              elevation: 10,
+            }}
           >
             <View className="flex-row items-center justify-center">
               <Text className="text-white font-black text-xl tracking-wide">Enter Dashboard</Text>

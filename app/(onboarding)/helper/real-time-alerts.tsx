@@ -105,7 +105,14 @@ export default function RealTimeAlertsScreen() {
         <View className="px-8 pb-10">
           <Pressable
             onPress={() => router.push('/(onboarding)/helper/actionable-support')}
-            className="w-full bg-red-600 py-6 rounded-[24px] shadow-xl shadow-red-900/40 active:scale-[0.98] relative overflow-hidden"
+            className="w-full bg-red-600 py-6 rounded-[24px] active:scale-[0.98] relative overflow-hidden"
+            style={{
+              shadowColor: '#7f1d1d',
+              shadowOffset: { width: 0, height: 20 },
+              shadowOpacity: 0.4,
+              shadowRadius: 25,
+              elevation: 10,
+            }}
           >
             <View className="flex-row items-center justify-center">
               <Text className="text-white font-black text-xl tracking-wide">Continue Journey</Text>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, Pressable, Image, Alert } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, ScrollView, TextInput, Pressable, Image, Alert, Animated, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
@@ -61,6 +61,47 @@ const POSTS = [
         route: '/community/updates/council-meeting'
     }
 ];
+
+// Animated Gradient Component
+const AnimatedCardBackground = ({ col1, col2 }: { col1: readonly [string, string, ...string[]], col2: readonly [string, string, ...string[]] }) => {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 4000,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(fadeAnim, {
+                    toValue: 0,
+                    duration: 4000,
+                    useNativeDriver: true,
+                })
+            ])
+        ).start();
+    }, []);
+
+    return (
+        <View style={StyleSheet.absoluteFill}>
+            <LinearGradient
+                colors={col1}
+                style={StyleSheet.absoluteFill}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+            />
+            <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
+                <LinearGradient
+                    colors={col2}
+                    style={StyleSheet.absoluteFill}
+                    start={{ x: 1, y: 0 }}
+                    end={{ x: 0, y: 1 }}
+                />
+            </Animated.View>
+        </View>
+    );
+};
 
 export default function VolunteerCommunity() {
     const insets = useSafeAreaInsets();
@@ -131,7 +172,7 @@ export default function VolunteerCommunity() {
                         {/* Find Groups Card */}
                         <Pressable
                             onPress={() => router.push('/community/groups')}
-                            className="flex-1 rounded-[32px] overflow-hidden shadow-sm"
+                            className="flex-1 rounded-[32px] overflow-hidden shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                             style={{
                                 shadowColor: '#8B5CF6',
                                 shadowOffset: { width: 0, height: 8 },
@@ -140,17 +181,17 @@ export default function VolunteerCommunity() {
                                 elevation: 8
                             }}
                         >
-                            <LinearGradient
-                                colors={['#F5F3FF', '#DDD6FE']}
-                                style={{ flex: 1, padding: 24, justifyContent: 'space-between' }}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                            >
+                            <View style={{ flex: 1, padding: 24, justifyContent: 'space-between' }}>
+                                <AnimatedCardBackground
+                                    col1={['#F5F3FF', '#DDD6FE']}
+                                    col2={['#EFEEFF', '#C4B5FD']}
+                                />
+
                                 <View className="absolute -right-4 -bottom-4 opacity-10">
                                     <Users size={120} color="#8B5CF6" />
                                 </View>
 
-                                <View className="w-14 h-14 bg-white/60 backdrop-blur-md rounded-2xl items-center justify-center border border-white/40">
+                                <View className="w-14 h-14 bg-white/60 backdrop-blur-md rounded-2xl items-center justify-center border border-white/40 shadow-sm">
                                     <Users size={28} color="#7C3AED" />
                                 </View>
                                 <View>
@@ -159,13 +200,13 @@ export default function VolunteerCommunity() {
                                         <Text className="text-violet-700 text-[10px] font-black uppercase tracking-wider">Join Local Teams</Text>
                                     </View>
                                 </View>
-                            </LinearGradient>
+                            </View>
                         </Pressable>
 
                         {/* Share Idea Card */}
                         <Pressable
                             onPress={() => router.push('/community/compose')}
-                            className="flex-1 rounded-[32px] overflow-hidden shadow-sm"
+                            className="flex-1 rounded-[32px] overflow-hidden shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                             style={{
                                 shadowColor: '#3B82F6',
                                 shadowOffset: { width: 0, height: 8 },
@@ -174,17 +215,17 @@ export default function VolunteerCommunity() {
                                 elevation: 8
                             }}
                         >
-                            <LinearGradient
-                                colors={['#EFF6FF', '#BFDBFE']}
-                                style={{ flex: 1, padding: 24, justifyContent: 'space-between' }}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 1 }}
-                            >
+                            <View style={{ flex: 1, padding: 24, justifyContent: 'space-between' }}>
+                                <AnimatedCardBackground
+                                    col1={['#EFF6FF', '#BFDBFE']}
+                                    col2={['#E0F2FE', '#93C5FD']}
+                                />
+
                                 <View className="absolute -right-4 -bottom-4 opacity-10">
                                     <Lightbulb size={120} color="#3B82F6" />
                                 </View>
 
-                                <View className="w-14 h-14 bg-white/60 backdrop-blur-md rounded-2xl items-center justify-center border border-white/40">
+                                <View className="w-14 h-14 bg-white/60 backdrop-blur-md rounded-2xl items-center justify-center border border-white/40 shadow-sm">
                                     <Lightbulb size={28} color="#2563EB" />
                                 </View>
                                 <View>
@@ -193,7 +234,7 @@ export default function VolunteerCommunity() {
                                         <Text className="text-blue-700 text-[10px] font-black uppercase tracking-wider">Start Discussion</Text>
                                     </View>
                                 </View>
-                            </LinearGradient>
+                            </View>
                         </Pressable>
                     </View>
                 </View>
