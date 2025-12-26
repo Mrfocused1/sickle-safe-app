@@ -165,6 +165,7 @@ export default function CircleOfCareScreen() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('All');
     const [activeMember, setActiveMember] = useState<any>(null);
+    const [activeType, setActiveType] = useState<any>('member');
 
     const insets = useSafeAreaInsets();
 
@@ -172,7 +173,8 @@ export default function CircleOfCareScreen() {
 
     const handleAddMember = () => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        alert('Add new member (Coming Soon)');
+        setActiveType('invite_member');
+        setActiveMember({}); // Trigger modal visibility
     };
 
     return (
@@ -261,7 +263,10 @@ export default function CircleOfCareScreen() {
                                 key={member.id}
                                 member={member}
                                 index={index}
-                                onShowDetails={(m) => setActiveMember(m)}
+                                onShowDetails={(m) => {
+                                    setActiveType('member');
+                                    setActiveMember(m);
+                                }}
                             />
                         ))
                     }
@@ -301,7 +306,7 @@ export default function CircleOfCareScreen() {
             <AppBottomSheet
                 visible={activeMember !== null}
                 onClose={() => setActiveMember(null)}
-                type="member"
+                type={activeType}
                 member={activeMember}
             />
         </View>

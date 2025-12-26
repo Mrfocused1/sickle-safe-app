@@ -24,7 +24,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export default function DashboardScreen() {
   const router = useRouter();
   const [isAddCarePlanVisible, setIsAddCarePlanVisible] = React.useState(false); // Force reload
-  const [activeTask, setActiveTask] = React.useState<{ title: string; description: string; priority: string } | null>(null);
+  const [activeTask, setActiveTask] = React.useState<any>(null);
+  const [activeType, setActiveType] = React.useState<any>('task');
   const [showWellnessSummary, setShowWellnessSummary] = React.useState(false);
 
   // Slider Logic
@@ -67,7 +68,7 @@ export default function DashboardScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
-  const TaskItem = ({ title, description, priority }: { title: string; description: string; priority: string }) => {
+  const TaskItem = ({ title, description, priority, assignedTo, avatar }: { title: string; description: string; priority: string, assignedTo?: string, avatar?: string }) => {
     const borderColor = priority === 'critical' ? '#ef4444' : priority === 'needs_help' ? '#f59e0b' : '#10b981';
     const bgColor = priority === 'critical' ? '#fee2e2' : priority === 'needs_help' ? '#fef3c7' : '#d1fae5';
     const textColor = priority === 'critical' ? '#b91c1c' : priority === 'needs_help' ? '#92400e' : '#065f46';
@@ -77,6 +78,7 @@ export default function DashboardScreen() {
         onPress={() => {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
           setActiveTask({ title, description, priority });
+          setActiveType('manage_task');
         }}
         className="bg-white rounded-[24px] p-5 border-l-[6px] shadow-sm mb-4 active:bg-gray-50 active:scale-[0.98] border-gray-100"
         style={{ borderLeftColor: borderColor }}
@@ -97,7 +99,18 @@ export default function DashboardScreen() {
             <Text className="text-gray-500 text-xs font-medium" numberOfLines={1}>
               {description}
             </Text>
+            <Text style={{ color: '#64748b' }} className="text-[10px] font-medium mt-1">
+              {assignedTo ? `Assigned to ${assignedTo}` : 'Tap to assign a helper'}
+            </Text>
           </View>
+          {avatar && (
+            <Image source={{ uri: avatar }} className="w-8 h-8 rounded-full border-2 border-white shadow-sm" />
+          )}
+          {!avatar && assignedTo === undefined && (
+            <View className="w-8 h-8 rounded-full bg-gray-50 border border-gray-100 items-center justify-center">
+              <MaterialIcons name="person-add" size={14} color="#94a3b8" />
+            </View>
+          )}
         </View>
       </Pressable>
     );
@@ -262,11 +275,15 @@ export default function DashboardScreen() {
                   title="Emergency Bag Check"
                   description="Ensure hospital bag has updated insurance card and warm clothes."
                   priority="critical"
+                  assignedTo="Marcus"
+                  avatar="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"
                 />
                 <TaskItem
                   title="Prescription Refill"
                   description="Hydroxyurea supply running low."
                   priority="needs_help"
+                  assignedTo="Sarah"
+                  avatar="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200"
                 />
                 <TaskItem
                   title="Evening Walk"
@@ -291,8 +308,8 @@ export default function DashboardScreen() {
         <AppBottomSheet
           visible={activeTask !== null}
           onClose={() => setActiveTask(null)}
-          type="task"
-          task={activeTask || undefined}
+          type={activeType}
+          task={activeTask}
         />
 
         <AppBottomSheet

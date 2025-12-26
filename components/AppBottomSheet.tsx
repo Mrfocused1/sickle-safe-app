@@ -18,7 +18,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | null;
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | null;
 
 
 interface AppBottomSheetProps {
@@ -32,7 +32,7 @@ interface AppBottomSheetProps {
 }
 
 export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission }: AppBottomSheetProps) {
-    
+
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
     const [activeType, setActiveType] = useState<MetricType>(type);
@@ -87,6 +87,12 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return { title: 'Log Service Hours', icon: 'schedule', color: '#10b981' };
             case 'mission_detail':
                 return { title: mission?.title || 'Mission Detail', icon: 'volunteer-activism', color: '#8b5cf6' };
+            case 'invite_member':
+                return { title: 'Invite Caregiver', icon: 'person-add', color: '#8b5cf6' };
+            case 'manage_task':
+                return { title: 'Task Details', icon: 'assignment', color: '#f59e0b' };
+            case 'request_task':
+                return { title: 'Help Needed', icon: 'handshake', color: '#3b82f6' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -577,8 +583,96 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         ))}
                     </View>
                 );
+            case 'invite_member':
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>Contact Method</Text>
+                        <View style={styles.gridContainer}>
+                            {['Phone Number', 'Email Address'].map((method) => (
+                                <Pressable
+                                    key={method}
+                                    onPress={() => setValue(method)}
+                                    style={[
+                                        styles.gridButton,
+                                        value === method && { backgroundColor: header.color, borderColor: header.color },
+                                    ]}
+                                >
+                                    <Text style={[styles.gridText, value === method && { color: '#fff' }]}>{method}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                        <TextInput
+                            style={[styles.smallInput, { marginTop: 24 }]}
+                            placeholder={value === 'Email Address' ? "caregiver@example.com" : "+1 (555) 000-0000"}
+                            placeholderTextColor="#94a3b8"
+                            keyboardType={value === 'Email Address' ? 'email-address' : 'phone-pad'}
+                        />
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Role / Relationship</Text>
+                        <TextInput
+                            style={styles.smallInput}
+                            placeholder="e.g. Primary Caregiver, Spouse, Parent"
+                            placeholderTextColor="#94a3b8"
+                        />
+                    </View>
+                );
+            case 'manage_task':
+                return (
+                    <View style={styles.contentSection}>
+                        <View style={[styles.taskDetailCard, { borderColor: '#f59e0b30', backgroundColor: '#fef3c705' }]}>
+                            <Text style={[styles.taskDescription, { fontSize: 18, color: '#0f172a', fontWeight: '700' }]}>{task?.title}</Text>
+                            <Text style={[styles.taskDescription, { marginTop: 8 }]}>{task?.description}</Text>
+                        </View>
+
+                        <Text style={styles.sectionLabel}>Assign to Helper</Text>
+                        <View style={styles.actionGrid}>
+                            {[
+                                { name: 'Marcus', role: 'Spouse', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200' },
+                                { name: 'Linda', role: 'Mom', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200' },
+                                { name: 'Request Help', role: 'Open to anyone', avatar: null }
+                            ].map((helper) => (
+                                <Pressable
+                                    key={helper.name}
+                                    onPress={() => setValue(helper.name)}
+                                    style={styles.actionBox}
+                                >
+                                    <View style={[styles.memberAvatarWrapper, { width: 50, height: 50, marginBottom: 8, opacity: value === helper.name ? 1 : 0.6 }]}>
+                                        {helper.avatar ? (
+                                            <Image source={{ uri: helper.avatar }} style={[styles.memberAvatarLarge, { width: 50, height: 50 }]} />
+                                        ) : (
+                                            <View style={[styles.actionIconCircle, { width: 50, height: 50, margin: 0, backgroundColor: '#eff6ff' }]}>
+                                                <MaterialIcons name="help" size={24} color="#3b82f6" />
+                                            </View>
+                                        )}
+                                        {value === helper.name && (
+                                            <View style={[styles.statusIndicator, { backgroundColor: '#10b981', bottom: -2, right: -2 }]} />
+                                        )}
+                                    </View>
+                                    <Text style={[styles.actionLabelText, value === helper.name && { color: '#f59e0b', fontWeight: '700' }]}>{helper.name}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    </View>
+                );
+            case 'request_task':
+                return (
+                    <View style={styles.contentSection}>
+                        <View style={[styles.taskDetailCard, { borderColor: '#3b82f630', backgroundColor: '#eff6ff05' }]}>
+                            <View className="bg-blue-100 self-start px-3 py-1 rounded-full mb-3">
+                                <Text className="text-blue-700 text-[10px] font-bold uppercase">Help Requested</Text>
+                            </View>
+                            <Text style={[styles.taskDescription, { fontSize: 18, color: '#0f172a', fontWeight: '700' }]}>{task?.title}</Text>
+                            <Text style={[styles.taskDescription, { marginTop: 8 }]}>{task?.description}</Text>
+                        </View>
+
+                        <View style={styles.insightBox}>
+                            <Text style={styles.insightText}>
+                                Maya has flagged this task as something she needs help with. By claiming this task, it will be moved to your assigned missions.
+                            </Text>
+                        </View>
+                    </View>
+                );
             case 'activity_detail':
-                
+
                 return (
                     <View style={styles.contentSection}>
                         <View style={[styles.taskDetailCard, { borderColor: activity?.color + '20', backgroundColor: activity?.color + '05' }]}>
@@ -639,7 +733,10 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                 activeType === 'community_actions' ? 'Manage your community' :
                                                     activeType === 'volunteer_actions' ? 'Your impact dashboard' :
                                                         activeType === 'volunteer_log_hours' ? 'Record service time' :
-                                                            'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                                            activeType === 'invite_member' ? 'Expand your circle' :
+                                                                activeType === 'manage_task' ? 'Delegate this task' :
+                                                                    activeType === 'request_task' ? 'Be a hero today' :
+                                                                        'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                                 </Text>
                             </View>
                             <Pressable onPress={onClose} style={styles.closeButton}>
@@ -676,7 +773,10 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                             activeType === 'group' ? 'Send Proposal' :
                                                 activeType === 'volunteer_log_hours' ? 'Save Service Log' :
                                                     activeType === 'mission_detail' ? 'Join Mission' :
-                                                        'Save Entry'}
+                                                        activeType === 'invite_member' ? 'Send Invitation' :
+                                                            activeType === 'manage_task' ? 'Assign Task' :
+                                                                activeType === 'request_task' ? 'Claim Task' :
+                                                                    'Save Entry'}
                                     </Text>
                                 </Pressable>
                             )}

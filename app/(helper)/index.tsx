@@ -32,7 +32,7 @@ const MAYA_MEMBER = {
     name: 'Maya Thompson',
     role: 'Overcomer',
     priority: 'Primary',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCORMa38YShjxWXHcbH-MfY1UZF9LvIjHefqm4MnmpLYEROxwh8VpTJetiR_BPF_Kt4A676WuCNDwR6TmAHY5CN6SnaFzheHF0M5FtIlw80jCm2wH4NOcOa-IqaDBuomapbokmokeLN4wPVLAKg_jiKNzkeDzcjGH0r2qvVI1wF9rSlEq-KXsGO67Ujocu1a-guDc9qfSpuY_B_7PiQhy4P-zUFKocITnDWQuKu6QB8e9zr2Z-7vDyE00NRn5JxUXrBpBU36ttjbSZi',
+    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCORMa38YShjxWXHcbH-MfY1UZF9LvIjHefqm4MnmpLYEROxwh8VpTJetiR_BPF_Kt4A676WuCNDwR6TmAHY5CN6SnaFzheHF0M5FtIlw80jCm2wH4NOcOa-IqaDBuomapbokmokeLN4wPVLAKg_jiKNzkeDzcjGH0r2qvVI1wF9rSlEq-KXsGO67Ujocu1a-guDc9qfSpuY_B_7PiQhy4P-zUFKocITN DWQuKu6QB8e9zr2Z-7vDyE00NRn5JxUXrBpBU36ttjbSZi',
     status: 'Stable',
     isEmergency: false
 };
@@ -42,6 +42,7 @@ export default function CaregiverDashboard() {
     const insets = useSafeAreaInsets();
     const [activeActivity, setActiveActivity] = React.useState<any>(null);
     const [activeType, setActiveType] = React.useState<any>(null);
+    const [activeTask, setActiveTask] = React.useState<any>(null);
 
     const handleAction = (id: string) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -94,7 +95,7 @@ export default function CaregiverDashboard() {
                                 <Phone size={18} color="#4B5563" />
                             </Pressable>
                         </View>
-                        
+
                         <View className="flex-row">
                             <View className="flex-1 bg-gray-50 rounded-2xl p-3 border border-gray-100 mr-2">
                                 <View className="flex-row items-center mb-2">
@@ -144,6 +145,36 @@ export default function CaregiverDashboard() {
                             </Pressable>
                         ))}
                     </View>
+                </View>
+
+                {/* Shared Tasks / Help Needed */}
+                <View className="px-6 mb-8">
+                    <View className="flex-row items-center justify-between mb-4 px-1">
+                        <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Help Requested</Text>
+                    </View>
+
+                    <Pressable
+                        onPress={() => {
+                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                            setActiveType('request_task');
+                            setActiveTask({
+                                title: 'Prescription Refill',
+                                description: 'Hydroxyurea supply is low. Needs to be picked up from the downtown pharmacy.'
+                            });
+                        }}
+                        className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100 flex-row items-center active:bg-gray-50 active:scale-[0.98]"
+                    >
+                        <View className="w-12 h-12 rounded-2xl bg-amber-50 items-center justify-center border border-amber-100 mr-4">
+                            <MaterialIcons name="shopping-basket" size={24} color="#f59e0b" />
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-gray-900 font-bold text-base">Prescription Refill</Text>
+                            <Text className="text-gray-500 text-xs">Downtown Pharmacy • Needs pickup</Text>
+                        </View>
+                        <View className="bg-amber-500 px-3 py-1.5 rounded-xl shadow-sm">
+                            <Text className="text-white font-bold text-[10px] uppercase">Claim</Text>
+                        </View>
+                    </Pressable>
                 </View>
 
                 {/* Activity Feed */}
@@ -208,9 +239,14 @@ export default function CaregiverDashboard() {
 
             <AppBottomSheet
                 visible={activeType !== null}
-                onClose={() => setActiveType(null)}
+                onClose={() => {
+                    setActiveType(null);
+                    setActiveTask(null);
+                }}
                 type={activeType}
-                member={activeType === 'member' ? MAYA_MEMBER : undefined}
+                activity={activeActivity}
+                member={MAYA_MEMBER}
+                task={activeTask}
             />
         </View>
     );
