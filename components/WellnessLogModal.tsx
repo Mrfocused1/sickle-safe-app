@@ -18,7 +18,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | null;
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | null;
 
 interface WellnessLogModalProps {
     visible: boolean;
@@ -67,6 +67,8 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
                 return { title: 'Daily Overview', icon: 'auto-graph', color: '#2563eb' };
             case 'member':
                 return { title: member?.name || 'Member', icon: 'person', color: '#8b5cf6' };
+            case 'idea':
+                return { title: 'Share Idea', icon: 'lightbulb', color: '#3b82f6' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -331,6 +333,31 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
                         </Pressable>
                     </View>
                 );
+            case 'idea':
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>What's on your mind?</Text>
+                        <TextInput
+                            style={styles.smallInput}
+                            placeholder="Enter a catchy title..."
+                            placeholderTextColor="#94a3b8"
+                            value={value}
+                            onChangeText={setValue}
+                        />
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Category</Text>
+                        <View style={styles.gridContainer}>
+                            {['Advocacy', 'Fundraising', 'Community', 'Innovation'].map((cat) => (
+                                <Pressable
+                                    key={cat}
+                                    onPress={() => setNotes(prev => prev.includes(cat) ? prev : prev + ' #' + cat)}
+                                    style={styles.gridButton}
+                                >
+                                    <Text style={styles.gridText}>{cat}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+                    </View>
+                );
             default:
                 return null;
         }
@@ -390,12 +417,12 @@ export default function WellnessLogModal({ visible, onClose, type, task, member 
 
                             <Pressable
                                 onPress={() => {
-                                    alert('Entry Saved!');
+                                    alert(type === 'idea' ? 'Idea posted to community!' : 'Entry Saved!');
                                     onClose();
                                 }}
                                 style={[styles.saveButton, { backgroundColor: header.color }]}
                             >
-                                <Text style={styles.saveButtonText}>Save Entry</Text>
+                                <Text style={styles.saveButtonText}>{type === 'idea' ? 'Post to Community' : 'Save Entry'}</Text>
                             </Pressable>
                         </ScrollView>
                     </View>

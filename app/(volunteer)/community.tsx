@@ -15,6 +15,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import { PostActionSheet, ActionItem } from '../../components/PostActionSheet';
 import { LinearGradient } from 'expo-linear-gradient';
+import WellnessLogModal from '../../components/WellnessLogModal';
 
 const POSTS = [
     {
@@ -109,6 +110,7 @@ export default function VolunteerCommunity() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showSheet, setShowSheet] = useState(false);
     const [selectedUpdateTitle, setSelectedUpdateTitle] = useState('');
+    const [showIdeaModal, setShowIdeaModal] = useState(false);
 
     const updateActions: ActionItem[] = [
         {
@@ -205,7 +207,10 @@ export default function VolunteerCommunity() {
 
                         {/* Share Idea Card */}
                         <Pressable
-                            onPress={() => router.push('/community/compose')}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setShowIdeaModal(true);
+                            }}
                             className="flex-1 rounded-[32px] overflow-hidden shadow-sm hover:scale-[1.02] active:scale-[0.98]"
                             style={{
                                 shadowColor: '#3B82F6',
@@ -311,6 +316,11 @@ export default function VolunteerCommunity() {
                 onClose={() => setShowSheet(false)}
                 actions={updateActions}
                 title={`Update: ${selectedUpdateTitle}`}
+            />
+            <WellnessLogModal
+                visible={showIdeaModal}
+                onClose={() => setShowIdeaModal(false)}
+                type="idea"
             />
         </View>
     );

@@ -14,6 +14,7 @@ import {
     ArrowRight
 } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+import Animated from 'react-native-reanimated';
 
 export default function VolunteerDashboard() {
     const insets = useSafeAreaInsets();
@@ -144,26 +145,34 @@ export default function VolunteerDashboard() {
                             <Pressable
                                 key={i}
                                 onPress={() => router.push(`/(volunteer)/highlights/${i}`)}
-                                className="w-64 bg-white border border-gray-100 rounded-[32px] p-4 m-2 shadow-sm"
+                                className="w-64 mb-2 mr-4"
                             >
-                                <View className="h-32 bg-gray-100 rounded-2xl mb-4 overflow-hidden">
-                                    <Image
-                                        source={{ uri: `https://images.unsplash.com/photo-${1515023677547 + i}-51f16da88c0a?auto=format&fit=crop&q=80&w=400` }}
-                                        className="w-full h-full"
-                                    />
-                                </View>
-                                <Text className="text-gray-900 font-bold text-base mb-1">Gala for Hope 2024</Text>
-                                <Text className="text-gray-500 text-xs leading-4">Thanks to our 50+ volunteers who made this event successful! We raised $20k...</Text>
-                                <View className="flex-row items-center mt-4">
-                                    <View className="flex-row -space-x-2">
-                                        {[1, 2, 3].map(j => (
-                                            <View key={j} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200">
-                                                <Image source={{ uri: `https://i.pravatar.cc/50?u=${j + i}` }} className="w-full h-full" />
-                                            </View>
-                                        ))}
+                                <Animated.View
+                                    sharedTransitionTag={`card-${i}`}
+                                    className="bg-white border border-gray-100 rounded-[32px] p-4 shadow-sm"
+                                >
+                                    <View className="h-32 bg-gray-100 rounded-2xl mb-4 overflow-hidden">
+                                        <Animated.Image
+                                            sharedTransitionTag={`image-${i}`}
+                                            source={{ uri: `https://images.unsplash.com/photo-${1515023677547 + i}-51f16da88c0a?auto=format&fit=crop&q=80&w=400` }}
+                                            className="w-full h-full"
+                                        />
                                     </View>
-                                    <Text className="text-[10px] text-gray-400 font-bold ml-2">+45 others</Text>
-                                </View>
+                                    <View>
+                                        <Text className="text-gray-900 font-bold text-base mb-1">Gala for Hope 2024</Text>
+                                        <Text className="text-gray-500 text-xs leading-4">Thanks to our 50+ volunteers who made this event successful! We raised $20k...</Text>
+                                        <View className="flex-row items-center mt-4">
+                                            <View className="flex-row -space-x-2">
+                                                {[1, 2, 3].map(j => (
+                                                    <View key={j} className="w-6 h-6 rounded-full border-2 border-white overflow-hidden bg-gray-200">
+                                                        <Image source={{ uri: `https://i.pravatar.cc/50?u=${j + i}` }} className="w-full h-full" />
+                                                    </View>
+                                                ))}
+                                            </View>
+                                            <Text className="text-[10px] text-gray-400 font-bold ml-2">+45 others</Text>
+                                        </View>
+                                    </View>
+                                </Animated.View>
                             </Pressable>
                         ))}
                     </ScrollView>

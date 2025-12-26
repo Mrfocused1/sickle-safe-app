@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet, Dimensions, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
+import { CountUp, AnimatedProgress } from './SummaryAnimations';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 interface AddMenuModalProps {
     visible: boolean;
@@ -97,6 +98,69 @@ export default function VolunteerAddMenuModal({ visible, onClose, fabRotation }:
                 <BlurView intensity={32} tint="light" style={StyleSheet.absoluteFill} />
             </View>
 
+            {/* At a Glance Summary - iOS Dashboard Style */}
+            <Animated.View
+                style={[
+                    styles.summaryContainer,
+                    {
+                        opacity: backdropOpacity,
+                        transform: [{
+                            translateY: backdropOpacity.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [40, 0]
+                            })
+                        }]
+                    }
+                ]}
+            >
+                <View style={styles.headerRow}>
+                    <Text style={styles.greetingText}>Hello, Volunteer</Text>
+                    <Text style={styles.dateText}>Friday, December 26</Text>
+                </View>
+
+                <View style={styles.widgetContainer}>
+                    {/* Hero Widget - Volunteer Hours */}
+                    <View style={[styles.widget, styles.heroWidget]}>
+                        <View style={styles.widgetHeader}>
+                            <View style={[styles.inlineIcon, { backgroundColor: '#F0F9FF' }]}>
+                                <Feather name="clock" size={14} color="#0EA5E9" />
+                            </View>
+                            <Text style={styles.widgetTitle}>Community Impact</Text>
+                        </View>
+                        <View style={styles.heroContent}>
+                            <CountUp to={24.5} suffix="" decimals={1} style={styles.heroValue} />
+                            <AnimatedProgress progress={0.7} color="#0EA5E9" delay={400} />
+                            <Text style={styles.heroSubtext}>Total Service Hours</Text>
+                        </View>
+                    </View>
+
+                    {/* Secondary Metrics Row */}
+                    <View style={styles.sideBySideRow}>
+                        <View style={[styles.widget, styles.smallWidget]}>
+                            <View style={styles.widgetHeader}>
+                                <View style={[styles.inlineIcon, { backgroundColor: '#F5F3FF' }]}>
+                                    <Feather name="users" size={12} color="#8B5CF6" />
+                                </View>
+                                <Text style={styles.smallWidgetTitle}>Missions</Text>
+                            </View>
+                            <CountUp to={12} suffix="" style={styles.smallWidgetValue} />
+                            <Text style={styles.smallWidgetSubtext}>Completed</Text>
+                        </View>
+
+                        <View style={[styles.widget, styles.smallWidget]}>
+                            <View style={styles.widgetHeader}>
+                                <View style={[styles.inlineIcon, { backgroundColor: '#FFF7ED' }]}>
+                                    <Feather name="star" size={12} color="#F97316" />
+                                </View>
+                                <Text style={styles.smallWidgetTitle}>Points</Text>
+                            </View>
+                            <CountUp to={850} suffix="" style={styles.smallWidgetValue} />
+                            <Text style={styles.smallWidgetSubtext}>Karma earned</Text>
+                        </View>
+                    </View>
+                </View>
+            </Animated.View>
+
             {/* Radial Menu */}
             <View style={styles.menuContainer}>
                 {/* Item 1 - Left - Post Update */}
@@ -117,7 +181,7 @@ export default function VolunteerAddMenuModal({ visible, onClose, fabRotation }:
                         style={styles.actionButton}
                     >
                         <View style={[styles.iconContainer, styles.violetIcon]}>
-                            <MaterialIcons name="post-add" size={32} color="#ffffff" />
+                            <Feather name="image" size={32} color="#ffffff" />
                         </View>
                         <Text style={styles.label}>Post</Text>
                     </Pressable>
@@ -141,9 +205,9 @@ export default function VolunteerAddMenuModal({ visible, onClose, fabRotation }:
                         style={styles.actionButton}
                     >
                         <View style={[styles.iconContainer, styles.greenIcon]}>
-                            <MaterialIcons name="schedule" size={32} color="#ffffff" />
+                            <Feather name="clock" size={32} color="#ffffff" />
                         </View>
-                        <Text style={styles.label}>Hours</Text>
+                        <Text style={styles.label}>Log Hours</Text>
                     </Pressable>
                 </Animated.View>
 
@@ -165,7 +229,7 @@ export default function VolunteerAddMenuModal({ visible, onClose, fabRotation }:
                         style={styles.actionButton}
                     >
                         <View style={[styles.iconContainer, styles.amberIcon]}>
-                            <MaterialIcons name="event" size={32} color="#ffffff" />
+                            <Feather name="calendar" size={32} color="#ffffff" />
                         </View>
                         <Text style={styles.label}>Event</Text>
                     </Pressable>
@@ -185,7 +249,7 @@ export default function VolunteerAddMenuModal({ visible, onClose, fabRotation }:
                     onPress={handleClose}
                     style={styles.clearButtonInner}
                 >
-                    <MaterialIcons name="add" size={28} color="#ffffff" />
+                    <Feather name="plus" size={28} color="#ffffff" />
                 </Pressable>
             </Animated.View>
         </Animated.View>
@@ -206,7 +270,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'flex-end',
         alignItems: 'center',
-        zIndex: 2,
+        zIndex: 3,
     },
     menuItem: {
         position: 'absolute',
@@ -280,5 +344,105 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.15,
         shadowRadius: 12,
         elevation: 8,
+    },
+    summaryContainer: {
+        position: 'absolute',
+        top: height * 0.12,
+        left: 16,
+        right: 16,
+        zIndex: 2,
+    },
+    headerRow: {
+        marginBottom: 24,
+        paddingHorizontal: 8,
+    },
+    greetingText: {
+        fontSize: 34,
+        fontWeight: '900',
+        color: '#111827',
+        letterSpacing: -1.2,
+    },
+    dateText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#374151',
+        marginTop: 2,
+        letterSpacing: -0.2,
+    },
+    widgetContainer: {
+        gap: 12,
+    },
+    widget: {
+        backgroundColor: 'rgba(255,255,255,0.7)',
+        borderRadius: 24,
+        padding: 20,
+        borderWidth: 1.5,
+        borderColor: 'rgba(255,255,255,0.8)',
+    },
+    heroWidget: {
+        width: '100%',
+        paddingBottom: 24,
+    },
+    widgetHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 16,
+    },
+    inlineIcon: {
+        width: 24,
+        height: 24,
+        borderRadius: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    widgetTitle: {
+        fontSize: 14,
+        fontWeight: '800',
+        color: '#4b5563',
+        letterSpacing: -0.3,
+    },
+    heroContent: {
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    heroValue: {
+        fontSize: 72,
+        fontWeight: '900',
+        color: '#111827',
+        letterSpacing: -3,
+        marginBottom: 4,
+    },
+    heroSubtext: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#6b7280',
+        marginTop: 12,
+    },
+    sideBySideRow: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    smallWidget: {
+        flex: 1,
+        padding: 18,
+    },
+    smallWidgetTitle: {
+        fontSize: 13,
+        fontWeight: '800',
+        color: '#4b5563',
+        letterSpacing: -0.2,
+    },
+    smallWidgetValue: {
+        fontSize: 26,
+        fontWeight: '900',
+        color: '#111827',
+        marginBottom: 4,
+        letterSpacing: -0.8,
+    },
+    smallWidgetSubtext: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#9ca3af',
     },
 });
