@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import CrisisLogModal from '../../components/CrisisLogModal';
+import WellnessLogModal from '../../components/WellnessLogModal';
 import { useRouter } from 'expo-router';
 
 export default function LogScreen() {
@@ -12,6 +13,7 @@ export default function LogScreen() {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState('Today, 25 Dec');
   const [showCrisisModal, setShowCrisisModal] = useState(false);
+  const [wellnessModalType, setWellnessModalType] = useState<'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | null>(null);
 
   const handleAction = (label: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -21,17 +23,17 @@ export default function LogScreen() {
   const LogItem = ({ icon, label, value, status, color, onPress }: any) => (
     <Pressable
       onPress={onPress}
-      className="bg-white rounded-3xl p-5 mb-4 shadow-sm border border-gray-100 flex-row items-center active:bg-gray-50 active:scale-[0.98] transition-transform"
+      className="bg-white rounded-[24px] p-5 mb-4 shadow-sm border border-gray-100 flex-row items-center active:bg-gray-50 active:scale-[0.98] transition-transform"
     >
-      <View className="w-12 h-12 rounded-2xl items-center justify-center shadow-sm" style={{ backgroundColor: `${color}15` }}>
-        <MaterialIcons name={icon} size={24} color={color} />
+      <View className="w-14 h-14 rounded-2xl items-center justify-center shadow-sm" style={{ backgroundColor: `${color}15` }}>
+        <MaterialIcons name={icon} size={28} color={color} />
       </View>
       <View className="ml-4 flex-1">
-        <Text className="text-gray-900 font-bold text-base">{label}</Text>
-        <Text className="text-gray-500 text-xs mt-0.5">{status}</Text>
+        <Text className="text-gray-900 font-extrabold text-base">{label}</Text>
+        <Text className="text-gray-500 text-xs mt-0.5 font-medium">{status}</Text>
       </View>
-      <View className="items-end">
-        <Text className="text-gray-900 font-bold text-base">{value}</Text>
+      <View className="items-end gap-1">
+        <Text className="text-gray-900 font-black text-base">{value}</Text>
         <MaterialIcons name="chevron-right" size={20} color="#cbd5e1" />
       </View>
     </Pressable>
@@ -85,21 +87,27 @@ export default function LogScreen() {
 
         <View className="px-6 py-8">
           {/* Summary Stats */}
-          <View className="flex-row gap-4 mb-8">
-            <View className="flex-1 bg-white p-5 rounded-3xl shadow-sm border border-gray-100 items-center">
-              <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Pain (Avg)</Text>
-              <Text className="text-2xl font-bold text-gray-900">2.4</Text>
-              <View className="h-1 w-8 bg-amber-500 rounded-full mt-2" />
+          <View className="flex-row gap-3 mb-8">
+            <View className="flex-1 bg-gray-50 p-5 rounded-[24px] border border-gray-100 items-center">
+              <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Avg Pain</Text>
+              <Text className="text-2xl font-black text-gray-900">2.4</Text>
+              <View className="h-1 w-8 bg-amber-500/20 rounded-full mt-3 overflow-hidden">
+                <View className="h-full w-[24%] bg-amber-500" />
+              </View>
             </View>
-            <View className="flex-1 bg-white p-5 rounded-3xl shadow-sm border border-gray-100 items-center">
-              <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Water</Text>
-              <Text className="text-2xl font-bold text-gray-900">1.8L</Text>
-              <View className="h-1 w-8 bg-blue-500 rounded-full mt-2" />
+            <View className="flex-1 bg-gray-50 p-5 rounded-[24px] border border-gray-100 items-center">
+              <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Water</Text>
+              <Text className="text-2xl font-black text-gray-900">1.8L</Text>
+              <View className="h-1 w-8 bg-blue-500/20 rounded-full mt-3 overflow-hidden">
+                <View className="h-full w-[72%] bg-blue-500" />
+              </View>
             </View>
-            <View className="flex-1 bg-white p-5 rounded-3xl shadow-sm border border-gray-100 items-center">
-              <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Meds</Text>
-              <Text className="text-2xl font-bold text-gray-900">3/4</Text>
-              <View className="h-1 w-8 bg-purple-500 rounded-full mt-2" />
+            <View className="flex-1 bg-gray-50 p-5 rounded-[24px] border border-gray-100 items-center">
+              <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Meds</Text>
+              <Text className="text-2xl font-black text-gray-900">3/4</Text>
+              <View className="h-1 w-8 bg-purple-500/20 rounded-full mt-3 overflow-hidden">
+                <View className="h-full w-[75%] bg-purple-500" />
+              </View>
             </View>
           </View>
 
@@ -112,7 +120,10 @@ export default function LogScreen() {
             value="Moderate"
             status="3 entries recorded"
             color="#f59e0b"
-            onPress={() => handleAction('Pain Logs')}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setWellnessModalType('pain');
+            }}
           />
 
           <LogItem
@@ -121,7 +132,10 @@ export default function LogScreen() {
             value="1.8L"
             status="72% of daily goal"
             color="#3b82f6"
-            onPress={() => handleAction('Water Logs')}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setWellnessModalType('hydration');
+            }}
           />
 
           <LogItem
@@ -130,7 +144,10 @@ export default function LogScreen() {
             value="On Track"
             status="Last: Hydroxyurea 8:00 AM"
             color="#a855f7"
-            onPress={() => handleAction('Meds Logs')}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setWellnessModalType('meds');
+            }}
           />
 
           <LogItem
@@ -139,42 +156,37 @@ export default function LogScreen() {
             value="Good"
             status="Stable energy reported"
             color="#10b981"
-            onPress={() => handleAction('Mood Logs')}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setWellnessModalType('mood');
+            }}
           />
 
           <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-6 mb-4 ml-1">Recorded Incidents</Text>
 
-          <View className="bg-white rounded-[32px] shadow-sm border border-gray-100 overflow-hidden mb-8">
-            <Pressable
-              onPress={() => handleAction('Triggers')}
-              className="px-5 py-4 flex-row items-center border-b border-gray-50 active:bg-gray-50"
-            >
-              <View className="w-10 h-10 rounded-xl bg-red-50 items-center justify-center">
-                <MaterialIcons name="warning" size={20} color="#f43f5e" />
-              </View>
-              <View className="ml-4 flex-1">
-                <Text className="text-gray-900 font-bold text-sm">Active Triggers</Text>
-                <Text className="text-gray-500 text-[10px]">Cold exposure reported at 11am</Text>
-              </View>
-              <View className="bg-red-500 px-2 py-0.5 rounded-lg">
-                <Text className="text-white text-[10px] font-black">1</Text>
-              </View>
-            </Pressable>
+          <LogItem
+            icon="warning"
+            label="Active Triggers"
+            value="1"
+            status="Cold exposure reported at 11am"
+            color="#f43f5e"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setWellnessModalType('triggers');
+            }}
+          />
 
-            <Pressable
-              onPress={() => handleAction('Crisis History')}
-              className="px-5 py-4 flex-row items-center active:bg-gray-50"
-            >
-              <View className="w-10 h-10 rounded-xl bg-orange-50 items-center justify-center">
-                <MaterialIcons name="crisis-alert" size={20} color="#ef4444" />
-              </View>
-              <View className="ml-4 flex-1">
-                <Text className="text-gray-900 font-bold text-sm">Crisis Episodes</Text>
-                <Text className="text-gray-500 text-[10px]">No crises reported in 14 days</Text>
-              </View>
-              <MaterialIcons name="chevron-right" size={20} color="#cbd5e1" />
-            </Pressable>
-          </View>
+          <LogItem
+            icon="crisis-alert"
+            label="Crisis Episodes"
+            value="None"
+            status="No crises reported in 14 days"
+            color="#ef4444"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setWellnessModalType('crisis');
+            }}
+          />
 
           {/* Action Button */}
           <Pressable
@@ -196,6 +208,12 @@ export default function LogScreen() {
       <CrisisLogModal
         visible={showCrisisModal}
         onClose={() => setShowCrisisModal(false)}
+      />
+
+      <WellnessLogModal
+        visible={wellnessModalType !== null}
+        onClose={() => setWellnessModalType(null)}
+        type={wellnessModalType}
       />
     </View>
   );

@@ -16,11 +16,16 @@ import Animated, {
   Extrapolate
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import AddCarePlanModal from '../../components/AddCarePlanModal';
+import WellnessLogModal from '../../components/WellnessLogModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const [isAddCarePlanVisible, setIsAddCarePlanVisible] = React.useState(false); // Force reload
+  const [activeTask, setActiveTask] = React.useState<{ title: string; description: string; priority: string } | null>(null);
+  const [showWellnessSummary, setShowWellnessSummary] = React.useState(false);
 
   // Slider Logic
   const translateX = useSharedValue(0);
@@ -60,6 +65,42 @@ export default function DashboardScreen() {
 
   const handleCrisisSlideStart = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  };
+
+  const TaskItem = ({ title, description, priority }: { title: string; description: string; priority: string }) => {
+    const borderColor = priority === 'critical' ? '#ef4444' : priority === 'needs_help' ? '#f59e0b' : '#10b981';
+    const bgColor = priority === 'critical' ? '#fee2e2' : priority === 'needs_help' ? '#fef3c7' : '#d1fae5';
+    const textColor = priority === 'critical' ? '#b91c1c' : priority === 'needs_help' ? '#92400e' : '#065f46';
+
+    return (
+      <Pressable
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setActiveTask({ title, description, priority });
+        }}
+        className="bg-white rounded-[24px] p-5 border-l-[6px] shadow-sm mb-4 active:bg-gray-50 active:scale-[0.98] border-gray-100"
+        style={{ borderLeftColor: borderColor }}
+      >
+        <View className="flex-row items-start">
+          <View className="mt-1 mr-3">
+            <View className="w-5 h-5 rounded border-2 border-gray-300" />
+          </View>
+          <View className="flex-1">
+            <View className="flex-row justify-between items-start mb-1">
+              <Text className="text-base font-medium text-gray-900 flex-1">{title}</Text>
+              <View className="px-2 py-1 rounded" style={{ backgroundColor: bgColor }}>
+                <Text className="text-[10px] font-bold uppercase tracking-wide" style={{ color: textColor }}>
+                  {priority.replace('_', ' ')}
+                </Text>
+              </View>
+            </View>
+            <Text className="text-xs text-gray-500" numberOfLines={1}>
+              {description}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    );
   };
 
   return (
@@ -146,7 +187,13 @@ export default function DashboardScreen() {
                 <Text className="text-sm font-medium text-blue-600">3/5 tasks</Text>
               </View>
 
-              <View className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <Pressable
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowWellnessSummary(true);
+                }}
+                className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 active:bg-gray-50 active:scale-[0.99]"
+              >
                 {/* Progress Circle */}
                 <View className="flex-row items-center mb-4">
                   <View className="relative w-16 h-16 mr-4">
@@ -171,109 +218,88 @@ export default function DashboardScreen() {
                 </View>
 
                 {/* Quick Actions */}
-                <View className="flex-row">
-                  <Pressable className="flex-row items-center px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg mr-2">
-                    <MaterialIcons name="water-drop" size={16} color="#2563eb" />
-                    <Text className="ml-2 text-sm font-medium text-blue-700">Water</Text>
+                <View className="flex-row gap-3">
+                  <Pressable className="flex-1 flex-row items-center px-4 py-3 bg-blue-50/50 border border-blue-100 rounded-2xl active:bg-blue-100">
+                    <View className="w-8 h-8 bg-blue-100 rounded-xl items-center justify-center mr-2">
+                      <MaterialIcons name="water-drop" size={16} color="#2563eb" />
+                    </View>
+                    <Text className="text-sm font-bold text-blue-700">Water</Text>
                   </Pressable>
-                  <Pressable className="flex-row items-center px-3 py-2 bg-purple-50 border border-purple-100 rounded-lg mr-2">
-                    <MaterialIcons name="medication" size={16} color="#7c3aed" />
-                    <Text className="ml-2 text-sm font-medium text-purple-700">Meds</Text>
+                  <Pressable className="flex-1 flex-row items-center px-4 py-3 bg-purple-50/50 border border-purple-100 rounded-2xl active:bg-purple-100">
+                    <View className="w-8 h-8 bg-purple-100 rounded-xl items-center justify-center mr-2">
+                      <MaterialIcons name="medication" size={16} color="#7c3aed" />
+                    </View>
+                    <Text className="text-sm font-bold text-purple-700">Meds</Text>
                   </Pressable>
-                  <Pressable className="flex-row items-center px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg opacity-50">
-                    <MaterialIcons name="mood" size={16} color="#6b7280" />
-                    <Text className="ml-2 text-sm font-medium text-gray-500">Mood</Text>
+                  <Pressable className="flex-1 flex-row items-center px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl opacity-50">
+                    <View className="w-8 h-8 bg-white rounded-xl items-center justify-center mr-2">
+                      <MaterialIcons name="mood" size={16} color="#6b7280" />
+                    </View>
+                    <Text className="text-sm font-bold text-gray-500">Mood</Text>
                   </Pressable>
                 </View>
-              </View>
+              </Pressable>
             </View>
 
             {/* Care Plan */}
             <View className="mb-8">
               <View className="flex-row justify-between items-center mb-3">
                 <Text className="text-lg font-semibold text-gray-900">Care Plan</Text>
-                <Pressable>
+                <Pressable
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setIsAddCarePlanVisible(true);
+                  }}
+                  hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                >
                   <MaterialIcons name="add-circle-outline" size={24} color="#6b7280" />
                 </Pressable>
               </View>
 
               {/* Task Items */}
               <View>
-                {/* Critical Task */}
-                <View className="bg-white rounded-xl p-4 border-l-4 border-l-red-500 shadow-sm mb-3">
-                  <View className="flex-row items-start">
-                    <View className="mt-1 mr-3">
-                      <View className="w-5 h-5 rounded border-2 border-gray-300" />
-                    </View>
-                    <View className="flex-1">
-                      <View className="flex-row justify-between items-start mb-1">
-                        <Text className="text-base font-medium text-gray-900 flex-1">
-                          Emergency Bag Check
-                        </Text>
-                        <View className="px-2 py-1 rounded bg-red-100 ml-2">
-                          <Text className="text-[10px] font-bold uppercase tracking-wide text-red-700">
-                            Critical
-                          </Text>
-                        </View>
-                      </View>
-                      <Text className="text-xs text-gray-500">
-                        Ensure hospital bag has updated insurance card and warm clothes.
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Needs Help Task */}
-                <View className="bg-white rounded-xl p-4 border-l-4 border-l-amber-500 shadow-sm mb-3">
-                  <View className="flex-row items-start">
-                    <View className="mt-1 mr-3">
-                      <View className="w-5 h-5 rounded border-2 border-gray-300" />
-                    </View>
-                    <View className="flex-1">
-                      <View className="flex-row justify-between items-start mb-1">
-                        <Text className="text-base font-medium text-gray-900 flex-1">
-                          Prescription Refill
-                        </Text>
-                        <View className="px-2 py-1 rounded bg-amber-100 ml-2">
-                          <Text className="text-[10px] font-bold uppercase tracking-wide text-amber-700">
-                            Needs Help
-                          </Text>
-                        </View>
-                      </View>
-                      <Text className="text-xs text-gray-500">
-                        Hydroxyurea supply running low.
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Personal Task */}
-                <View className="bg-white rounded-xl p-4 border-l-4 border-l-emerald-500 shadow-sm">
-                  <View className="flex-row items-start">
-                    <View className="mt-1 mr-3">
-                      <View className="w-5 h-5 rounded border-2 border-gray-300" />
-                    </View>
-                    <View className="flex-1">
-                      <View className="flex-row justify-between items-start mb-1">
-                        <Text className="text-base font-medium text-gray-900 flex-1">
-                          Evening Walk
-                        </Text>
-                        <View className="px-2 py-1 rounded bg-emerald-100 ml-2">
-                          <Text className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                            Personal
-                          </Text>
-                        </View>
-                      </View>
-                      <Text className="text-xs text-gray-500">
-                        Light 15 min walk if pain level is below 4.
-                      </Text>
-                    </View>
-                  </View>
-                </View>
+                <TaskItem
+                  title="Emergency Bag Check"
+                  description="Ensure hospital bag has updated insurance card and warm clothes."
+                  priority="critical"
+                />
+                <TaskItem
+                  title="Prescription Refill"
+                  description="Hydroxyurea supply running low."
+                  priority="needs_help"
+                />
+                <TaskItem
+                  title="Evening Walk"
+                  description="Light 15 min walk if pain level is below 4."
+                  priority="personal"
+                />
               </View>
             </View>
           </ScrollView>
         </SafeAreaView>
+
+        <AddCarePlanModal
+          visible={isAddCarePlanVisible}
+          onClose={() => setIsAddCarePlanVisible(false)}
+          onAdd={(task) => {
+            console.log('New Task:', task);
+            // Here you would typically update the state or call an API
+            alert(`New Task Added: ${task.title}`);
+          }}
+        />
+
+        <WellnessLogModal
+          visible={activeTask !== null}
+          onClose={() => setActiveTask(null)}
+          type="task"
+          task={activeTask || undefined}
+        />
+
+        <WellnessLogModal
+          visible={showWellnessSummary}
+          onClose={() => setShowWellnessSummary(false)}
+          type="wellness_summary"
+        />
       </View>
     </GestureHandlerRootView >
   );

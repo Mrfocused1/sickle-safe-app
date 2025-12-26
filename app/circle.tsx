@@ -27,6 +27,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, router, useNavigation } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import WellnessLogModal from '../components/WellnessLogModal';
 
 const { width } = Dimensions.get('window');
 
@@ -69,7 +70,7 @@ const CIRCLE_MEMBERS = [
     },
 ];
 
-const MemberCard = ({ member, index }: { member: any, index: number }) => {
+const MemberCard = ({ member, index, onShowDetails }: { member: any, index: number, onShowDetails: (m: any) => void }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(20)).current;
     const scaleAnim = useRef(new Animated.Value(0.95)).current;
@@ -100,7 +101,7 @@ const MemberCard = ({ member, index }: { member: any, index: number }) => {
 
     const handlePress = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        alert(`Managing ${member.name} (Coming Soon)`);
+        onShowDetails(member);
     };
 
     return (
@@ -163,6 +164,7 @@ const MemberCard = ({ member, index }: { member: any, index: number }) => {
 export default function CircleOfCareScreen() {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState('All');
+    const [activeMember, setActiveMember] = useState<any>(null);
 
     const insets = useSafeAreaInsets();
 
@@ -255,7 +257,12 @@ export default function CircleOfCareScreen() {
                             (activeTab === 'Support' && !member.isEmergency)
                         )
                         .map((member, index) => (
-                            <MemberCard key={member.id} member={member} index={index} />
+                            <MemberCard
+                                key={member.id}
+                                member={member}
+                                index={index}
+                                onShowDetails={(m) => setActiveMember(m)}
+                            />
                         ))
                     }
 
@@ -290,6 +297,13 @@ export default function CircleOfCareScreen() {
                     <View className="h-40" />
                 </View>
             </ScrollView>
+
+            <WellnessLogModal
+                visible={activeMember !== null}
+                onClose={() => setActiveMember(null)}
+                type="member"
+                member={activeMember}
+            />
         </View>
     );
 }
