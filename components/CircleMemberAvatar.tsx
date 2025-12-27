@@ -19,7 +19,7 @@ export function CircleMemberAvatar({ name, isOnline }: CircleMemberAvatarProps) 
                     <View className="absolute bottom-0 right-0 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full" />
                 )}
             </View>
-            <Text className="text-gray-900 text-xs font-medium mt-2" numberOfLines={1}>
+            <Text className="text-brand-dark text-brand-sub mt-2" numberOfLines={1}>
                 {name.split(' ')[0]}
             </Text>
         </Pressable>

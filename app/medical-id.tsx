@@ -42,7 +42,7 @@ export default function MedicalIDScreen() {
           >
             <ArrowLeft size={24} color="#1f2937" />
           </Pressable>
-          <Text className="text-lg font-bold tracking-tight text-gray-900">Medical ID</Text>
+          <Text className="text-brand-title text-brand-dark">Medical ID</Text>
           <Pressable className="p-2 rounded-full active:bg-gray-200">
             <Share2 size={24} color="#1f2937" />
           </Pressable>
@@ -61,7 +61,7 @@ export default function MedicalIDScreen() {
                   <Hospital size={20} color="#b91c1c" />
                 </View>
                 <View>
-                  <Text className="text-sm font-bold text-red-700 uppercase tracking-wider">
+                  <Text className="text-brand-muted text-brand-section text-red-700">
                     Sickle Cell Disease
                   </Text>
                   <Text className="text-xs text-gray-600">Type SS (Severe)</Text>
@@ -76,8 +76,8 @@ export default function MedicalIDScreen() {
             {/* Patient Info & QR Code */}
             <View className="flex-row items-start mb-6">
               <View className="flex-1">
-                <Text className="text-2xl font-bold mb-1 text-gray-900">Marcus Johnson</Text>
-                <Text className="text-sm text-gray-600 mb-3">DOB: Aug 14, 1998 (25y)</Text>
+                <Text className="text-brand-title text-brand-dark text-2xl mb-1">Marcus Johnson</Text>
+                <Text className="text-brand-muted text-[13px] mb-3">DOB: Aug 14, 1998 (25y)</Text>
                 <View className="flex-row flex-wrap gap-2">
                   <View className="px-2 py-1 bg-blue-50 border border-blue-100 rounded-md">
                     <Text className="text-xs font-medium text-blue-700">Blood Type: O+</Text>
@@ -103,7 +103,7 @@ export default function MedicalIDScreen() {
             <View className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
               <View>
                 <Text className="text-xs text-gray-500 mb-1">Emergency Contact</Text>
-                <Text className="text-sm font-semibold text-gray-900">Sarah Johnson</Text>
+                <Text className="text-brand-label text-brand-dark">Sarah Johnson</Text>
                 <Text className="text-xs text-red-600 font-medium">+1 (555) 012-3456</Text>
               </View>
               <View>
@@ -132,13 +132,13 @@ export default function MedicalIDScreen() {
           </View>
 
           {/* Medical Profile Sections */}
-          <Text className="text-base font-bold px-1 mb-4 text-gray-900">Medical Profile</Text>
+          <Text className="text-brand-muted text-brand-section mb-4 px-1">Medical Profile</Text>
 
           {/* Allergies */}
           <View className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-4">
             <View className="flex-row items-center mb-3">
               <AlertTriangle size={20} color="#f97316" />
-              <Text className="ml-3 font-semibold text-gray-900">Allergies & Reactions</Text>
+              <Text className="ml-3 text-brand-label text-brand-dark">Allergies & Reactions</Text>
             </View>
             <View className="space-y-2">
               <View className="flex-row items-start">
@@ -161,7 +161,7 @@ export default function MedicalIDScreen() {
             <View className="flex-row items-center justify-between mb-3">
               <View className="flex-row items-center">
                 <Stethoscope size={20} color="#3b82f6" />
-                <Text className="ml-3 font-semibold text-gray-900">Crisis Protocol</Text>
+                <Text className="ml-3 text-brand-label text-brand-dark">Crisis Protocol</Text>
               </View>
               <Pressable>
                 <Text className="text-xs text-blue-600 font-semibold uppercase tracking-wide">

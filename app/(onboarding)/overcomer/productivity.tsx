@@ -6,9 +6,10 @@ import { StatusBar } from 'expo-status-bar';
 import { Heart } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { BackButton, RadioSelection } from '../../../components/onboarding';
+import { BackButton, MultiSelection, TextInputField } from '../../../components/onboarding';
+import { Plus, X } from 'lucide-react-native';
 
-const sickleTypes = [
+const initialSickleTypes = [
   {
     value: 'hbss',
     label: 'HbSS (Sickle Cell Anemia)',
@@ -29,25 +30,41 @@ const sickleTypes = [
     label: 'HbS Beta0 Thalassemia',
     description: 'Similar severity to HbSS',
   },
-  {
-    value: 'other',
-    label: 'Other / Not Sure',
-    description: 'We can help you learn more',
-  },
 ];
 
 export default function SickleTypeScreen() {
-  const [sickleType, setSickleType] = useState('');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [customTypes, setCustomTypes] = useState<{ value: string; label: string; description: string }[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newTypeName, setNewTypeName] = useState('');
+
+  const sickleTypes = [...initialSickleTypes, ...customTypes];
+
+  const handleAddType = () => {
+    if (newTypeName.trim()) {
+      const value = newTypeName.toLowerCase().replace(/\s+/g, '-');
+      const newOption = {
+        value,
+        label: newTypeName.trim(),
+        description: 'Custom sickle cell type',
+      };
+      setCustomTypes([...customTypes, newOption]);
+      setSelectedTypes([...selectedTypes, value]);
+      setNewTypeName('');
+      setIsAdding(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
 
   const handleContinue = () => {
-    if (sickleType) {
+    if (selectedTypes.length > 0) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       // TODO: Save to profile
       router.push('/(onboarding)/overcomer/safety-net');
     }
   };
 
-  const isValid = sickleType.length > 0;
+  const isValid = selectedTypes.length > 0;
 
   return (
     <View style={styles.container}>
@@ -98,15 +115,53 @@ export default function SickleTypeScreen() {
             This helps us personalize your health tracking and provide relevant information.
           </Text>
 
-          {/* Radio Selection */}
+          {/* Multi Selection */}
           <View style={styles.inputSection}>
-            <RadioSelection
+            <MultiSelection
               label=""
               options={sickleTypes}
-              value={sickleType}
-              onChange={setSickleType}
+              selectedValues={selectedTypes}
+              onChange={setSelectedTypes}
               color="#EF4444"
             />
+
+            {isAdding ? (
+              <View style={styles.addingContainer}>
+                <TextInputField
+                  label="Other Type"
+                  value={newTypeName}
+                  onChange={setNewTypeName}
+                  placeholder="e.g. HbS/Hereditary Persistence"
+                  autoFocus
+                />
+                <View style={styles.addingActions}>
+                  <Pressable
+                    onPress={() => setIsAdding(false)}
+                    style={styles.cancelButton}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleAddType}
+                    disabled={!newTypeName.trim()}
+                    style={[
+                      styles.addButton,
+                      !newTypeName.trim() && styles.addButtonDisabled
+                    ]}
+                  >
+                    <Text style={styles.addButtonText}>Add</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setIsAdding(true)}
+                style={styles.addTypeButton}
+              >
+                <Plus size={20} color="#EF4444" strokeWidth={2.5} />
+                <Text style={styles.addTypeButtonText}>Add Other Type</Text>
+              </Pressable>
+            )}
           </View>
         </ScrollView>
 
@@ -236,6 +291,58 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '800',
+    color: '#fff',
+  },
+  addTypeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#FEF2F2',
+    borderStyle: 'dashed',
+    backgroundColor: '#fff',
+  },
+  addTypeButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#EF4444',
+    marginLeft: 8,
+  },
+  addingContainer: {
+    backgroundColor: '#FEF2F2',
+    padding: 16,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  addingActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 12,
+  },
+  cancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+  addButton: {
+    backgroundColor: '#EF4444',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  addButtonDisabled: {
+    backgroundColor: '#D1D5DB',
+  },
+  addButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
     color: '#fff',
   },
 });

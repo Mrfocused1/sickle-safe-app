@@ -136,8 +136,8 @@ export default function CommunityScreen() {
       {/* Custom Header */}
       <View className="px-6 py-4 flex-row items-center justify-between bg-white border-b border-gray-100">
         <View>
-          <Text className="text-2xl font-bold text-gray-900">Community</Text>
-          <Text className="text-gray-500 text-xs">Connect & Support</Text>
+          <Text className="text-brand-title text-brand-dark">Community</Text>
+          <Text className="text-brand-muted text-brand-sub">Connect & Support</Text>
         </View>
         <View className="flex-row items-center">
           <Pressable
@@ -170,7 +170,7 @@ export default function CommunityScreen() {
         {/* Your Circle Section */}
         <View className="mt-6 mb-6">
           <View className="px-6 flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900">Your Circle</Text>
+            <Text className="text-brand-title text-brand-dark">Your Circle</Text>
             <Pressable
               onPress={() => router.push('/circle')}
               className="active:opacity-70"
@@ -198,7 +198,7 @@ export default function CommunityScreen() {
 
         {/* Global Feed Section */}
         <View className="px-6 mb-4 flex-row items-center justify-between">
-          <Text className="text-lg font-bold text-gray-900">Community Feed</Text>
+          <Text className="text-brand-title text-brand-dark">Community Feed</Text>
           <Pressable
             onPress={() => router.push('/community/compose')}
             className="flex-row items-center px-3 py-1.5 bg-violet-50 rounded-full active:bg-violet-100"
@@ -219,14 +219,12 @@ export default function CommunityScreen() {
             <Pressable
               key={cat}
               onPress={() => handleCategoryPress(cat)}
-              className={`mr-3 px-5 py-2.5 rounded-full ${
-                activeCategory === cat ? 'bg-violet-600' : 'bg-white border border-gray-200'
-              }`}
+              className={`mr-3 px-5 py-2.5 rounded-full ${activeCategory === cat ? 'bg-violet-600' : 'bg-white border border-gray-200'
+                }`}
             >
               <Text
-                className={`font-semibold text-sm ${
-                  activeCategory === cat ? 'text-white' : 'text-gray-600'
-                }`}
+                className={`font-semibold text-sm ${activeCategory === cat ? 'text-white' : 'text-gray-600'
+                  }`}
               >
                 {cat}
               </Text>

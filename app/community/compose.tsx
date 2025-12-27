@@ -29,7 +29,7 @@ export default function ComposePostScreen() {
                 >
                     <ArrowLeft size={20} color="#1f2937" />
                 </Pressable>
-                <Text className="text-xl font-bold text-gray-900">New Post</Text>
+                <Text className="text-brand-title text-brand-dark">New Post</Text>
                 <Pressable
                     onPress={() => {
                         alert('Post Shared!');
@@ -53,8 +53,8 @@ export default function ComposePostScreen() {
                         />
                     </View>
                     <View className="ml-4">
-                        <Text className="text-gray-900 font-bold text-base">Maya Thompson</Text>
-                        <Text className="text-gray-400 text-xs">Posting to Public Feed</Text>
+                        <Text className="text-brand-dark text-brand-label">Maya Thompson</Text>
+                        <Text className="text-brand-muted text-brand-sub">Posting to Public Feed</Text>
                     </View>
                 </View>
 
@@ -72,7 +72,7 @@ export default function ComposePostScreen() {
 
                 {/* Categories */}
                 <View className="mt-8">
-                    <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4">Select Category</Text>
+                    <Text className="text-brand-muted text-brand-section mb-4">Select Category</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="overflow-visible">
                         <View className="flex-row gap-2">
                             {CATEGORIES.map((cat) => (

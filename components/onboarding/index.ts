@@ -2,6 +2,7 @@ export { default as SliderInput } from './SliderInput';
 export { default as CounterInput } from './CounterInput';
 export { default as RadioSelection } from './RadioSelection';
 export { default as ChipSelection } from './ChipSelection';
+export { default as MultiSelection } from './MultiSelection';
 export { default as TextInputField } from './TextInputField';
 export { default as WheelPicker } from './WheelPicker';
 export { default as BackButton } from './BackButton';

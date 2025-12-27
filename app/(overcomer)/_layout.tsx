@@ -42,11 +42,11 @@ export default function OvercomerLayout() {
             paddingHorizontal: 24,
             height: 88,
           },
-          tabBarActiveTintColor: '#b91c1c',
+          tabBarActiveTintColor: '#8B5CF6',
           tabBarInactiveTintColor: '#9ca3af',
           tabBarLabelStyle: {
             fontSize: 10,
-            fontWeight: '500',
+            fontWeight: '700',
             marginTop: 4,
           },
         }}

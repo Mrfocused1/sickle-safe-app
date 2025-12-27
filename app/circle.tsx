@@ -131,14 +131,14 @@ const MemberCard = ({ member, index, onShowDetails }: { member: any, index: numb
 
                 <View className="ml-4 flex-1">
                     <View className="flex-row items-center justify-between">
-                        <Text className="text-gray-900 font-bold text-base">{member.name}</Text>
+                        <Text className="text-brand-dark font-[800] text-[15px]">{member.name}</Text>
                         {member.isEmergency && (
                             <View className="bg-red-50 px-2 py-0.5 rounded-full">
                                 <Shield size={10} color="#EF4444" />
                             </View>
                         )}
                     </View>
-                    <Text className="text-gray-500 text-xs mt-0.5">{member.role}</Text>
+                    <Text className="text-brand-muted text-[12px] mt-0.5">{member.role}</Text>
 
                     <View className="flex-row items-center mt-3 space-x-3">
                         <Pressable className="bg-violet-50 p-2 rounded-xl active:bg-violet-100">
@@ -194,7 +194,7 @@ export default function CircleOfCareScreen() {
                         >
                             <ArrowLeft size={20} color="#374151" />
                         </Pressable>
-                        <Text className="text-xl font-bold text-gray-900">Circle of Care</Text>
+                        <Text className="text-brand-title text-brand-dark">Circle of Care</Text>
                         <Pressable
                             className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100 active:scale-95 transition-transform"
                             onPress={() => setShowSettings(true)}
@@ -212,8 +212,8 @@ export default function CircleOfCareScreen() {
                                 <Text className="text-white text-[10px] font-bold">{CIRCLE_MEMBERS.length}</Text>
                             </View>
                         </View>
-                        <Text className="text-gray-900 text-2xl font-bold">Support System</Text>
-                        <Text className="text-gray-500 text-xs text-center mt-1.5 px-10 leading-relaxed">
+                        <Text className="text-brand-title text-brand-dark text-2xl">Support System</Text>
+                        <Text className="text-brand-muted text-[12px] text-center mt-1.5 px-10 leading-relaxed">
                             Trusted individuals notified automatically during a health crisis
                         </Text>
                     </View>
@@ -242,7 +242,7 @@ export default function CircleOfCareScreen() {
                 {/* Members List */}
                 <View className="px-6 py-4">
                     <View className="flex-row items-center justify-between mb-4 px-2">
-                        <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">
+                        <Text className="text-brand-muted text-brand-section">
                             {activeTab} Members
                         </Text>
                         <Pressable

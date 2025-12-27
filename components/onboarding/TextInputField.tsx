@@ -11,6 +11,7 @@ interface TextInputFieldProps {
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   maxLength?: number;
+  autoFocus?: boolean;
 }
 
 export default function TextInputField({
@@ -22,6 +23,7 @@ export default function TextInputField({
   autoCapitalize = 'words',
   keyboardType = 'default',
   maxLength,
+  autoFocus = false,
 }: TextInputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -47,6 +49,7 @@ export default function TextInputField({
           autoCapitalize={autoCapitalize}
           keyboardType={keyboardType}
           maxLength={maxLength}
+          autoFocus={autoFocus}
         />
         {value.length > 0 && (
           <Pressable onPress={handleClear} style={styles.clearButton}>

@@ -136,10 +136,10 @@ export function CommunityPostCard({
                             <Text className={`${roleColors.text} font-bold text-lg`}>{user[0]}</Text>
                         </View>
                         <View className="ml-3">
-                            <Text className="text-gray-900 font-bold text-base">{user}</Text>
+                            <Text className="text-brand-dark text-brand-label">{user}</Text>
                             <View className="flex-row items-center">
-                                <Text className={`${roleColors.badge} text-xs font-semibold mr-2`}>{role}</Text>
-                                <Text className="text-gray-400 text-xs">• {time}</Text>
+                                <Text className={`${roleColors.badge} text-[13px] font-bold mr-2`}>{role}</Text>
+                                <Text className="text-brand-muted text-brand-sub">• {time}</Text>
                             </View>
                         </View>
                     </View>
@@ -157,11 +157,11 @@ export function CommunityPostCard({
 
                 {/* Category Tag */}
                 <View className="self-start px-2 py-0.5 bg-gray-100 rounded-md mb-3">
-                    <Text className="text-gray-600 text-[10px] font-bold uppercase tracking-wider">{category}</Text>
+                    <Text className="text-brand-muted text-brand-section">{category}</Text>
                 </View>
 
                 {/* Content */}
-                <Text className="text-gray-800 text-sm leading-relaxed mb-4">
+                <Text className="text-brand-dark text-brand-body">
                     {content}
                 </Text>
 

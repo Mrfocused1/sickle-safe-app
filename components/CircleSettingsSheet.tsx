@@ -307,9 +307,10 @@ const styles = StyleSheet.create({
         borderBottomColor: '#f1f5f9',
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#111827',
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#0f172a',
+        letterSpacing: -0.5,
     },
     closeButton: {
         width: 32,
@@ -327,9 +328,9 @@ const styles = StyleSheet.create({
         paddingTop: 20,
     },
     sectionTitle: {
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: '700',
-        color: '#6b7280',
+        color: '#64748b',
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 12,
@@ -363,12 +364,13 @@ const styles = StyleSheet.create({
     },
     settingTitle: {
         fontSize: 15,
-        fontWeight: '600',
-        color: '#111827',
+        fontWeight: '700',
+        color: '#0f172a',
     },
     settingSubtitle: {
-        fontSize: 12,
-        color: '#6b7280',
+        fontSize: 13,
+        fontWeight: '500',
+        color: '#64748b',
         marginTop: 2,
     },
     infoCard: {

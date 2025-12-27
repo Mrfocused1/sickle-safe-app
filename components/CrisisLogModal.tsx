@@ -40,8 +40,8 @@ export default function CrisisLogModal({ visible, onClose, onSave }: CrisisLogMo
         {/* Clean Professional Header */}
         <View className="bg-white px-6 pt-6 pb-4 border-b border-gray-100 flex-row items-center justify-between">
           <View>
-            <Text className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mb-1">Incident Report</Text>
-            <Text className="text-2xl font-extrabold text-gray-900">Crisis Log</Text>
+            <Text className="text-brand-muted text-brand-section mb-1">Incident Report</Text>
+            <Text className="text-brand-title text-brand-dark">Crisis Log</Text>
           </View>
           <Pressable
             onPress={onClose}
@@ -68,8 +68,8 @@ export default function CrisisLogModal({ visible, onClose, onSave }: CrisisLogMo
           {/* Pain Dial Card */}
           <View className="bg-white rounded-[32px] p-6 items-center shadow-sm border border-gray-200">
             <View className="items-center mb-6">
-              <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">Severity Assessment</Text>
-              <Text className="text-lg font-bold text-gray-900">Current Pain Level</Text>
+              <Text className="text-brand-muted text-brand-section mb-1">Severity Assessment</Text>
+              <Text className="text-brand-label text-brand-dark text-lg uppercase tracking-tight">Current Pain Level</Text>
             </View>
 
             {/* Pain Dial */}
@@ -106,7 +106,7 @@ export default function CrisisLogModal({ visible, onClose, onSave }: CrisisLogMo
           <View className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-200">
             <View className="flex-row items-center gap-2 mb-4">
               <MaterialIcons name="bolt" size={24} color="#EF4444" />
-              <Text className="font-bold text-lg text-gray-900">Potential Triggers</Text>
+              <Text className="text-brand-label text-brand-dark text-lg">Potential Triggers</Text>
             </View>
             <View className="flex-row flex-wrap gap-2">
               {['Cold Weather', 'Dehydration', 'Stress', 'Exertion', 'Altitude', 'Other'].map((trigger) => {
@@ -116,8 +116,8 @@ export default function CrisisLogModal({ visible, onClose, onSave }: CrisisLogMo
                     key={trigger}
                     onPress={() => toggleTrigger(trigger)}
                     className={`px-4 py-2.5 rounded-xl border ${isSelected
-                        ? 'bg-gray-900 border-gray-900'
-                        : 'bg-white border-gray-200'
+                      ? 'bg-gray-900 border-gray-900'
+                      : 'bg-white border-gray-200'
                       } shadow-sm active:scale-95 transition-transform`}
                   >
                     <Text
@@ -154,7 +154,7 @@ export default function CrisisLogModal({ visible, onClose, onSave }: CrisisLogMo
             }}
           >
             <MaterialIcons name="check" size={20} color="#ffffff" />
-            <Text className="text-white font-bold text-base">Submit Crisis Report</Text>
+            <Text className="text-white text-brand-button">Submit Crisis Report</Text>
           </Pressable>
 
         </ScrollView>

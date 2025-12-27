@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Sparkles } from 'lucide-react-native';
+import { User } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import OnboardingProgress from '../../components/OnboardingProgress';
 import { TextInputField, BackButton } from '../../components/onboarding';
@@ -42,7 +42,7 @@ export default function CommunityScreen() {
         >
           {/* Header with Back Button */}
           <View style={styles.header}>
-            <BackButton />
+            <BackButton label="" />
             <OnboardingProgress currentStep={2} variant="light" />
             <View style={styles.headerSpacer} />
           </View>
@@ -51,7 +51,6 @@ export default function CommunityScreen() {
           <View style={styles.content}>
             {/* Badge */}
             <View style={styles.badge}>
-              <Sparkles size={14} color="#EF4444" />
               <Text style={styles.badgeText}>Let's get to know you</Text>
             </View>
 
@@ -77,17 +76,14 @@ export default function CommunityScreen() {
               />
             </View>
 
-            {/* Preview */}
             {name.trim().length > 0 && (
               <View style={styles.previewCard}>
                 <View style={styles.previewAvatar}>
-                  <Text style={styles.previewInitial}>
-                    {name.trim().charAt(0).toUpperCase()}
-                  </Text>
+                  <User size={24} color="#fff" />
                 </View>
                 <View>
                   <Text style={styles.previewName}>{name.trim()}</Text>
-                  <Text style={styles.previewLabel}>Community Member</Text>
+                  <Text style={styles.previewLabel}>Sickle Safe Advocate</Text>
                 </View>
               </View>
             )}
@@ -163,10 +159,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   title: {
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#111827',
-    lineHeight: 42,
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#0f172a',
+    lineHeight: 38,
     letterSpacing: -1,
     marginBottom: 12,
   },
@@ -174,10 +170,10 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
-    color: '#6B7280',
-    lineHeight: 24,
+    color: '#64748b',
+    lineHeight: 22,
     marginBottom: 32,
   },
   inputSection: {
@@ -206,13 +202,13 @@ const styles = StyleSheet.create({
   },
   previewName: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#111827',
+    fontWeight: '800',
+    color: '#0f172a',
   },
   previewLabel: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#9CA3AF',
+    color: '#64748b',
     marginTop: 2,
   },
   bottomSection: {

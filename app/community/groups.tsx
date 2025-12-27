@@ -70,32 +70,36 @@ export default function CommunityGroupsScreen() {
             >
                 {/* Header */}
                 <View
-                    className="px-6 pb-6 border-b border-gray-100"
+                    className="px-6 pb-6 border-b border-gray-50"
                     style={{ paddingTop: insets.top + 10 }}
                 >
-                    <View className="flex-row items-center justify-between mb-8">
+                    <View className="flex-row items-center justify-between mb-6">
                         <Pressable
                             onPress={() => router.back()}
-                            className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100"
+                            className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100 active:scale-95"
                         >
-                            <ArrowLeft size={20} color="#1f2937" />
+                            <ArrowLeft size={20} color="#0f172a" />
                         </Pressable>
-                        <Text className="text-xl font-bold text-gray-900">Community Groups</Text>
                         <Pressable
                             onPress={() => setShowSheet(true)}
-                            className="w-10 h-10 bg-violet-600 rounded-full items-center justify-center shadow-lg"
+                            className="w-10 h-10 bg-violet-600 rounded-full items-center justify-center shadow-lg active:scale-95"
                         >
                             <Plus size={20} color="#fff" />
                         </Pressable>
                     </View>
 
+                    <View className="mb-6">
+                        <Text className="text-brand-muted text-brand-sub">Community</Text>
+                        <Text className="text-brand-title text-brand-dark">Groups</Text>
+                    </View>
+
                     {/* Search Bar */}
                     <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100">
-                        <Search size={20} color="#9CA3AF" />
+                        <Search size={20} color="#64748b" />
                         <TextInput
                             placeholder="Find groups to join..."
-                            className="flex-1 ml-3 text-base text-gray-900"
-                            placeholderTextColor="#9CA3AF"
+                            className="flex-1 ml-3 text-brand-label text-brand-dark"
+                            placeholderTextColor="#94a3b8"
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                         />
@@ -104,7 +108,7 @@ export default function CommunityGroupsScreen() {
 
                 {/* Categories */}
                 <View className="px-6 py-6">
-                    <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 ml-1">Suggested Categories</Text>
+                    <Text className="text-brand-muted text-brand-section mb-4 ml-1">Suggested Categories</Text>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="overflow-visible">
                         <View className="flex-row gap-3">
                             <CategoryChip icon={<MapPin size={14} color="#8B5CF6" />} label="Local" bgColor="bg-violet-50" textColor="text-violet-600" />
@@ -117,7 +121,7 @@ export default function CommunityGroupsScreen() {
 
                 {/* Groups List */}
                 <View className="px-6 pb-10">
-                    <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-6 ml-1">Discover Groups</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }} className="mb-6 ml-1">Discover Groups</Text>
 
                     {filteredGroups.map((group) => (
                         <Pressable
@@ -130,21 +134,21 @@ export default function CommunityGroupsScreen() {
                             </View>
                             <View className="flex-1 justify-center">
                                 <View className="flex-row items-center justify-between mb-1">
-                                    <Text className="text-gray-900 font-bold text-base">{group.name}</Text>
+                                    <Text className="text-brand-dark text-brand-label">{group.name}</Text>
                                     <View className="flex-row items-center gap-1">
-                                        <Users size={10} color="#9CA3AF" />
-                                        <Text className="text-gray-400 text-[10px] font-bold">{group.members}</Text>
+                                        <Users size={12} color="#64748b" />
+                                        <Text className="text-brand-muted text-brand-sub font-bold">{group.members}</Text>
                                     </View>
                                 </View>
-                                <Text className="text-gray-500 text-xs leading-relaxed mb-3" numberOfLines={2}>
+                                <Text className="text-brand-muted text-brand-sub mb-3" numberOfLines={2}>
                                     {group.description}
                                 </Text>
                                 <View className="flex-row items-center justify-between">
                                     <View className="bg-gray-50 px-2 py-1 rounded-md">
-                                        <Text className="text-gray-400 text-[8px] font-bold uppercase">{group.category}</Text>
+                                        <Text className="text-brand-muted text-[9px] font-bold uppercase tracking-wider">{group.category}</Text>
                                     </View>
                                     <Pressable className={`px-4 py-1.5 rounded-full ${group.isJoined ? 'bg-gray-100' : 'bg-violet-600'}`}>
-                                        <Text className={`text-[10px] font-bold ${group.isJoined ? 'text-gray-500' : 'text-white'}`}>
+                                        <Text className={`text-[11px] font-extrabold ${group.isJoined ? 'text-brand-muted' : 'text-white'}`}>
                                             {group.isJoined ? 'Joined' : 'Join'}
                                         </Text>
                                     </Pressable>
@@ -168,7 +172,7 @@ function CategoryChip({ icon, label, bgColor, textColor }: any) {
     return (
         <Pressable className={`${bgColor} px-4 py-3 rounded-2xl flex-row items-center gap-2 border border-white/20`}>
             {icon}
-            <Text className={`${textColor} font-bold text-xs`}>{label}</Text>
+            <Text className={`${textColor} text-brand-sub font-bold`}>{label}</Text>
         </Pressable>
     );
 }

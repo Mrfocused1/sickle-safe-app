@@ -375,9 +375,10 @@ const styles = StyleSheet.create({
         borderBottomColor: '#f1f5f9',
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#111827',
+        fontSize: 22,
+        fontWeight: '800',
+        color: '#0f172a',
+        letterSpacing: -0.5,
     },
     closeButton: {
         width: 32,
@@ -416,9 +417,9 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     userName: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '700',
-        color: '#111827',
+        color: '#0f172a',
     },
     roleRow: {
         flexDirection: 'row',
@@ -426,8 +427,8 @@ const styles = StyleSheet.create({
         marginTop: 2,
     },
     roleBadge: {
-        fontSize: 12,
-        fontWeight: '600',
+        fontSize: 13,
+        fontWeight: '500',
         marginRight: 6,
     },
     timeText: {
@@ -435,9 +436,10 @@ const styles = StyleSheet.create({
         color: '#9ca3af',
     },
     postContent: {
-        fontSize: 16,
-        lineHeight: 24,
-        color: '#374151',
+        fontSize: 15,
+        fontWeight: '600',
+        lineHeight: 22,
+        color: '#0f172a',
         marginBottom: 16,
     },
     postActions: {
@@ -462,9 +464,9 @@ const styles = StyleSheet.create({
         padding: 20,
     },
     commentsTitle: {
-        fontSize: 12,
+        fontSize: 14,
         fontWeight: '700',
-        color: '#6b7280',
+        color: '#64748b',
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 16,
@@ -497,9 +499,9 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     commentUserName: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#111827',
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#0f172a',
         marginRight: 8,
     },
     commentRole: {
@@ -507,9 +509,10 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     commentText: {
-        fontSize: 14,
+        fontSize: 15,
+        fontWeight: '600',
         lineHeight: 20,
-        color: '#4b5563',
+        color: '#0f172a',
         marginBottom: 8,
     },
     commentActions: {

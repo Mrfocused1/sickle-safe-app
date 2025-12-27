@@ -98,13 +98,13 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'idea':
                 return { title: 'Share Idea', icon: 'lightbulb', color: '#3b82f6' };
             case 'group':
-                return { title: 'New Community Group', icon: 'groups', color: '#8b5cf6' };
+                return { title: 'New Community Group', icon: 'groups', color: '#4f46e5' };
             case 'log_selection':
                 return { title: 'Wellness Log', icon: 'add-circle', color: '#6366f1' };
             case 'community_actions':
                 return { title: 'Community Actions', icon: 'groups', color: '#8b5cf6' };
             case 'volunteer_actions':
-                return { title: 'Volunteer Hub', icon: 'volunteer-activism', color: '#8b5cf6' };
+                return { title: 'Volunteer Hub', icon: 'volunteer-activism', color: '#4f46e5' };
             case 'volunteer_log_hours':
                 return { title: 'Log Service Hours', icon: 'schedule', color: '#10b981' };
             case 'mission_detail':
@@ -116,7 +116,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'request_task':
                 return { title: 'Help Needed', icon: 'handshake', color: '#3b82f6' };
             case 'view_care_plan':
-                return { title: 'Maya\'s Care Plan', icon: 'list-alt', color: '#8b5cf6' };
+                return { title: 'Maya\'s Care Plan', icon: 'list-alt', color: '#4f46e5' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -1125,7 +1125,7 @@ const styles = StyleSheet.create({
     scaleText: {
         fontSize: 18,
         fontWeight: '800',
-        color: '#475569',
+        color: '#0f172a',
     },
     gridContainer: {
         flexDirection: 'row',
@@ -1143,9 +1143,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     gridText: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '700',
-        color: '#475569',
+        color: '#334155',
     },
     checkItem: {
         flexDirection: 'row',
@@ -1159,8 +1159,8 @@ const styles = StyleSheet.create({
     },
     checkLabel: {
         fontSize: 15,
-        fontWeight: '600',
-        color: '#334155',
+        fontWeight: '700',
+        color: '#0f172a',
     },
     moodContainer: {
         flexDirection: 'row',

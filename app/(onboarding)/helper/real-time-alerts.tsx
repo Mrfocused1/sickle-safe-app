@@ -6,9 +6,10 @@ import { StatusBar } from 'expo-status-bar';
 import { Users } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { BackButton, RadioSelection, CounterInput } from '../../../components/onboarding';
+import { BackButton, MultiSelection, CounterInput, TextInputField } from '../../../components/onboarding';
+import { Plus } from 'lucide-react-native';
 
-const relationshipOptions = [
+const initialRelationshipOptions = [
   {
     value: 'parent',
     label: 'Parent / Guardian',
@@ -37,17 +38,38 @@ const relationshipOptions = [
 ];
 
 export default function RelationshipScreen() {
-  const [relationship, setRelationship] = useState('');
+  const [selectedRelationships, setSelectedRelationships] = useState<string[]>([]);
+  const [customRelationships, setCustomRelationships] = useState<{ value: string; label: string; description: string }[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [newRelationship, setNewRelationship] = useState('');
   const [lovedOnesCount, setLovedOnesCount] = useState(1);
 
+  const relationshipOptions = [...initialRelationshipOptions, ...customRelationships];
+
+  const handleAddRelationship = () => {
+    if (newRelationship.trim()) {
+      const value = newRelationship.toLowerCase().replace(/\s+/g, '-');
+      const newOption = {
+        value,
+        label: newRelationship.trim(),
+        description: 'Custom relationship type',
+      };
+      setCustomRelationships([...customRelationships, newOption]);
+      setSelectedRelationships([...selectedRelationships, value]);
+      setNewRelationship('');
+      setIsAdding(false);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
   const handleContinue = () => {
-    if (relationship) {
+    if (selectedRelationships.length > 0) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       router.push('/(onboarding)/helper/actionable-support');
     }
   };
 
-  const isValid = relationship.length > 0;
+  const isValid = selectedRelationships.length > 0;
 
   return (
     <View style={styles.container}>
@@ -100,13 +122,52 @@ export default function RelationshipScreen() {
 
           {/* Relationship Selection */}
           <View style={styles.inputSection}>
-            <RadioSelection
+            <MultiSelection
               label="What's your relationship?"
               options={relationshipOptions}
-              value={relationship}
-              onChange={setRelationship}
+              selectedValues={selectedRelationships}
+              onChange={setSelectedRelationships}
               color="#10B981"
             />
+
+            {isAdding ? (
+              <View style={styles.addingContainer}>
+                <TextInputField
+                  label="Other Relationship"
+                  value={newRelationship}
+                  onChange={setNewRelationship}
+                  placeholder="e.g. Grandma, Coach, etc."
+                  autoFocus
+                  color="#10B981"
+                />
+                <View style={styles.addingActions}>
+                  <Pressable
+                    onPress={() => setIsAdding(false)}
+                    style={styles.cancelButton}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={handleAddRelationship}
+                    disabled={!newRelationship.trim()}
+                    style={[
+                      styles.addButton,
+                      !newRelationship.trim() && styles.addButtonDisabled
+                    ]}
+                  >
+                    <Text style={styles.addButtonText}>Add</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => setIsAdding(true)}
+                style={styles.addOptionButton}
+              >
+                <Plus size={20} color="#10B981" strokeWidth={2.5} />
+                <Text style={styles.addOptionButtonText}>Add Other Option</Text>
+              </Pressable>
+            )}
           </View>
 
           {/* Number of people */}
@@ -249,6 +310,58 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '800',
+    color: '#fff',
+  },
+  addOptionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#ECFDF5',
+    borderStyle: 'dashed',
+    backgroundColor: '#fff',
+  },
+  addOptionButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#10B981',
+    marginLeft: 8,
+  },
+  addingContainer: {
+    backgroundColor: '#ECFDF5',
+    padding: 16,
+    borderRadius: 20,
+    marginTop: 8,
+  },
+  addingActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 12,
+  },
+  cancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+  addButton: {
+    backgroundColor: '#10B981',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  addButtonDisabled: {
+    backgroundColor: '#D1D5DB',
+  },
+  addButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
     color: '#fff',
   },
 });

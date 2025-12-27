@@ -247,7 +247,7 @@ export default function DashboardScreen() {
                   <MaterialIcons name={priority === 'critical' ? 'priority-high' : 'assignment'} size={20} color={textColor} />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-base font-bold text-gray-900">{title}</Text>
+                  <Text className="text-brand-label text-brand-dark">{title}</Text>
                 </View>
 
                 {/* Comment Count Badge */}
@@ -274,8 +274,8 @@ export default function DashboardScreen() {
           <View className="px-6 pb-4 pt-2">
             <View className="flex-row justify-between items-center">
               <View>
-                <Text className="text-sm text-gray-500">Good Morning,</Text>
-                <Text className="text-2xl font-bold tracking-tight text-gray-900">Maya</Text>
+                <Text className="text-brand-sub text-brand-muted">Good Morning,</Text>
+                <Text className="text-brand-title text-brand-dark">Maya</Text>
               </View>
               <Pressable
                 onPress={() => router.push('/profile')}
@@ -309,8 +309,8 @@ export default function DashboardScreen() {
                       <MaterialIcons name="medical-services" size={44} color="#ffffff" />
                     </View>
 
-                    <Text className="text-2xl font-bold text-white mb-1">Crisis Alert</Text>
-                    <Text className="text-red-100/80 text-sm font-medium mb-8 text-center px-6 leading-5">
+                    <Text className="text-brand-title text-white mb-1">Crisis Alert</Text>
+                    <Text className="text-red-100/80 text-brand-sub mb-8 text-center px-6 leading-5">
                       Slide the button below to notify emergency contacts
                     </Text>
 
@@ -344,8 +344,8 @@ export default function DashboardScreen() {
             {/* Daily Wellness */}
             <View className="mb-8">
               <View className="flex-row justify-between items-end mb-3">
-                <Text className="text-lg font-semibold text-gray-900">Daily Wellness</Text>
-                <Text className="text-sm font-medium text-blue-600">3/5 tasks</Text>
+                <Text className="text-brand-title text-brand-dark">Daily Wellness</Text>
+                <Text className="text-brand-sub font-bold text-blue-600">3/5 tasks</Text>
               </View>
 
               <Pressable
@@ -405,7 +405,7 @@ export default function DashboardScreen() {
             {/* Care Plan */}
             <View className="mb-8">
               <View className="flex-row justify-between items-center mb-4 px-1">
-                <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Active Care Plan</Text>
+                <Text className="text-brand-muted text-brand-section">Active Care Plan</Text>
                 <Pressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

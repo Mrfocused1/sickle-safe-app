@@ -40,7 +40,7 @@ export default function CaregiverLayout() {
                         height: 85,
                         paddingTop: 10,
                     },
-                    tabBarActiveTintColor: '#8B5CF6',
+                    tabBarActiveTintColor: '#4f46e5',
                     tabBarInactiveTintColor: '#9ca3af',
                     tabBarLabelStyle: {
                         fontSize: 10,

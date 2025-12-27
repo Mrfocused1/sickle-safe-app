@@ -17,7 +17,7 @@ import {
 import AppBottomSheet from '../../components/AppBottomSheet';
 
 const QUICK_ACTIONS = [
-    { id: 'log', label: 'Log Incident', icon: 'edit-calendar', color: '#8B5CF6' },
+    { id: 'log', label: 'Log Incident', icon: 'edit-calendar', color: '#4f46e5' },
     { id: 'meds', label: 'Meds', icon: 'medication', color: '#10B981' },
     { id: 'doctor', label: 'Contact', icon: 'call', color: '#3B82F6' },
 ];
@@ -60,8 +60,8 @@ export default function CaregiverDashboard() {
                 <View className="bg-white px-6 pb-6 rounded-b-[40px]" style={{ paddingTop: insets.top + 10 }}>
                     <View className="flex-row justify-between items-center mb-6">
                         <View>
-                            <Text className="text-gray-500 text-sm font-medium mb-1">Good Morning,</Text>
-                            <Text className="text-3xl font-bold text-gray-900">Marcus</Text>
+                            <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }} className="mb-1">Good Morning,</Text>
+                            <Text style={{ fontSize: 22, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 }}>Marcus</Text>
                         </View>
                         <Pressable className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center border border-gray-200">
                             <Image
@@ -82,10 +82,10 @@ export default function CaregiverDashboard() {
                                 />
                             </View>
                             <View className="flex-1">
-                                <Text className="text-gray-900 font-bold text-xl">Maya Thompson</Text>
+                                <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>Maya Thompson</Text>
                                 <View className="flex-row items-center mt-1">
                                     <View className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5" />
-                                    <Text className="text-gray-500 text-xs font-medium">Stable • Last update 2h ago</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>Stable • Last update 2h ago</Text>
                                 </View>
                             </View>
                             <Pressable
@@ -100,25 +100,25 @@ export default function CaregiverDashboard() {
                             <View className="flex-1 bg-gray-50 rounded-2xl p-3 border border-gray-100 mr-2">
                                 <View className="flex-row items-center mb-2">
                                     <Activity size={14} color="#EF4444" style={{ marginRight: 6 }} />
-                                    <Text className="text-gray-400 text-[9px] font-bold uppercase" numberOfLines={1}>Pain Lvl</Text>
+                                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }} numberOfLines={1}>Pain Lvl</Text>
                                 </View>
-                                <Text className="text-gray-900 text-xl font-bold">2<Text className="text-sm text-gray-400 font-normal">/10</Text></Text>
+                                <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>2<Text style={{ fontSize: 14, fontWeight: '400', color: '#64748b' }}>/10</Text></Text>
                             </View>
 
                             <View className="flex-1 bg-gray-50 rounded-2xl p-3 border border-gray-100 mx-1">
                                 <View className="flex-row items-center mb-2">
                                     <Droplets size={14} color="#3B82F6" style={{ marginRight: 6 }} />
-                                    <Text className="text-gray-400 text-[9px] font-bold uppercase" numberOfLines={1}>Hydration</Text>
+                                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }} numberOfLines={1}>Hydration</Text>
                                 </View>
-                                <Text className="text-gray-900 text-xl font-bold">85<Text className="text-sm text-gray-400 font-normal">%</Text></Text>
+                                <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>85<Text style={{ fontSize: 14, fontWeight: '400', color: '#64748b' }}>%</Text></Text>
                             </View>
 
                             <View className="flex-1 bg-gray-50 rounded-2xl p-3 border border-gray-100 ml-2">
                                 <View className="flex-row items-center mb-2">
                                     <HeartPulse size={14} color="#8B5CF6" style={{ marginRight: 6 }} />
-                                    <Text className="text-gray-400 text-[9px] font-bold uppercase" numberOfLines={1}>Vitals</Text>
+                                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }} numberOfLines={1}>Vitals</Text>
                                 </View>
-                                <Text className="text-gray-900 text-xl font-bold">98<Text className="text-sm text-gray-400 font-normal">bpm</Text></Text>
+                                <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>98<Text style={{ fontSize: 14, fontWeight: '400', color: '#64748b' }}>bpm</Text></Text>
                             </View>
                         </View>
                     </View>
@@ -126,7 +126,7 @@ export default function CaregiverDashboard() {
 
                 {/* Quick Actions */}
                 <View className="px-6 py-6">
-                    <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 ml-1">Quick Actions</Text>
+                    <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }} className="mb-4 ml-1">Quick Actions</Text>
                     <View className="flex-row gap-4">
                         {QUICK_ACTIONS.map((action) => (
                             <Pressable
@@ -141,7 +141,7 @@ export default function CaregiverDashboard() {
                                 >
                                     <MaterialIcons name={action.icon as any} size={24} color={action.color} />
                                 </View>
-                                <Text className="text-gray-900 font-bold text-xs text-center">{action.label}</Text>
+                                <Text style={{ fontSize: 12, fontWeight: '800', color: '#0f172a' }} className="text-center">{action.label}</Text>
                             </Pressable>
                         ))}
                     </View>
@@ -149,12 +149,12 @@ export default function CaregiverDashboard() {
 
                 <View className="px-6 mb-8">
                     <View className="flex-row items-center justify-between mb-4 px-1">
-                        <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Help Requested</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }}>Help Requested</Text>
                         <Pressable onPress={() => {
                             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                             setActiveType('view_care_plan');
                         }}>
-                            <Text className="text-violet-600 font-bold text-xs">See Full Plan</Text>
+                            <Text style={{ fontSize: 13, fontWeight: '700', color: '#4f46e5' }}>See Full Plan</Text>
                         </Pressable>
                     </View>
 
@@ -173,11 +173,11 @@ export default function CaregiverDashboard() {
                             <MaterialIcons name="shopping-basket" size={24} color="#f59e0b" />
                         </View>
                         <View className="flex-1">
-                            <Text className="text-gray-900 font-bold text-base">Prescription Refill</Text>
-                            <Text className="text-gray-500 text-xs">Downtown Pharmacy • Needs pickup</Text>
+                            <Text style={{ fontSize: 16, fontWeight: '800', color: '#0f172a' }}>Prescription Refill</Text>
+                            <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>Downtown Pharmacy • Needs pickup</Text>
                         </View>
                         <View className="bg-amber-500 px-3 py-1.5 rounded-xl shadow-sm">
-                            <Text className="text-white font-bold text-[10px] uppercase">Claim</Text>
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: '#fff', textTransform: 'uppercase' }}>Claim</Text>
                         </View>
                     </Pressable>
                 </View>
@@ -185,9 +185,9 @@ export default function CaregiverDashboard() {
                 {/* Activity Feed */}
                 <View className="px-6 mb-8">
                     <View className="flex-row items-center justify-between mb-4 px-1">
-                        <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">Recent Updates</Text>
+                        <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }}>Recent Updates</Text>
                         <Pressable onPress={() => handleAction('View All History')}>
-                            <Text className="text-violet-600 text-xs font-bold">View History</Text>
+                            <Text style={{ fontSize: 13, fontWeight: '700', color: '#4f46e5' }}>View History</Text>
                         </Pressable>
                     </View>
 
@@ -209,10 +209,10 @@ export default function CaregiverDashboard() {
                                 </View>
                                 <View className="flex-1">
                                     <View className="flex-row justify-between items-center mb-1">
-                                        <Text className="text-gray-900 font-bold text-base">{item.title}</Text>
-                                        <Text className="text-gray-400 text-[10px] font-bold">{item.time}</Text>
+                                        <Text style={{ fontSize: 16, fontWeight: '800', color: '#0f172a' }}>{item.title}</Text>
+                                        <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748b' }}>{item.time}</Text>
                                     </View>
-                                    <Text className="text-gray-500 text-xs font-medium">{item.detail}</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>{item.detail}</Text>
                                 </View>
                             </Pressable>
                         ))}

@@ -297,15 +297,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   greetingText: {
-    fontSize: 30,
-    fontWeight: '900',
-    color: '#111827',
-    letterSpacing: -1,
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0f172a',
+    letterSpacing: -0.5,
   },
   dateText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#6B7280',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#64748b',
     marginTop: 2,
   },
   statsRow: {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#6B7280',
+    color: '#64748b',
   },
   widget: {
     borderRadius: 20,
@@ -370,9 +370,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   widgetTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#4B5563',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#64748b',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   heroContent: {
     alignItems: 'center',
@@ -470,9 +472,9 @@ const styles = StyleSheet.create({
   },
   label: {
     marginTop: 6,
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#374151',
+    color: '#0f172a',
   },
   clearButton: {
     position: 'absolute',

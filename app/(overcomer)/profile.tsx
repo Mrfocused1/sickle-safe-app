@@ -38,8 +38,8 @@ const MenuItem = ({ icon, label, subLabel, onPress, isLast, isDestructive }: Men
         {icon}
       </View>
       <View className="ml-4 flex-1">
-        <Text className={`text-base font-semibold ${isDestructive ? 'text-red-500' : 'text-gray-900'}`}>{label}</Text>
-        {subLabel && <Text className="text-gray-500 text-xs mt-0.5">{subLabel}</Text>}
+        <Text className={`text-brand-label ${isDestructive ? 'text-red-500' : 'text-brand-dark'}`}>{label}</Text>
+        {subLabel && <Text className="text-brand-muted text-brand-sub mt-0.5">{subLabel}</Text>}
       </View>
     </View>
     {!isDestructive && <ChevronRight size={20} color="#cbd5e1" />}
@@ -51,8 +51,8 @@ const StatCard = ({ value, label, icon }: { value: string; label: string; icon: 
     <View className="mb-2">
       <MaterialIcons name={icon as any} size={20} color="#8B5CF6" />
     </View>
-    <Text className="text-gray-900 font-bold text-lg">{value}</Text>
-    <Text className="text-gray-500 text-[9px] uppercase font-bold tracking-tight text-center mt-0.5">{label}</Text>
+    <Text className="text-brand-dark text-brand-title">{value}</Text>
+    <Text className="text-brand-muted text-brand-section text-[9px] mt-0.5">{label}</Text>
   </View>
 );
 
@@ -70,7 +70,7 @@ export default function ProfileScreen() {
           className="bg-white pb-6 px-6 border-b border-gray-100"
         >
           <View className="flex-row items-center justify-between mb-8">
-            <Text className="text-3xl font-extrabold text-gray-900">Profile</Text>
+            <Text className="text-brand-title text-brand-dark">Profile</Text>
             <Pressable
               onPress={() => router.push('/settings/account')}
               className="px-4 py-2 rounded-full border border-gray-200 bg-gray-50 active:bg-gray-100"
@@ -93,12 +93,12 @@ export default function ProfileScreen() {
               </View>
             </View>
             <View className="ml-5 flex-1">
-              <Text className="text-xl font-bold text-gray-900">Maya Thompson</Text>
+              <Text className="text-brand-title text-brand-dark">Maya Thompson</Text>
               <View className="flex-row items-center mt-1.5 flex-wrap gap-2">
                 <View className="bg-violet-50 px-2.5 py-1 rounded-md border border-violet-100">
-                  <Text className="text-violet-700 text-[10px] font-bold uppercase tracking-wider">Overcomer</Text>
+                  <Text className="text-violet-700 text-brand-section text-[10px]">Overcomer</Text>
                 </View>
-                <Text className="text-gray-400 text-xs">Member since Oct 2023</Text>
+                <Text className="text-brand-muted text-brand-sub">Member since Oct 2023</Text>
               </View>
             </View>
           </View>
@@ -116,7 +116,7 @@ export default function ProfileScreen() {
 
           {/* Medical Section */}
           <View className="mb-8">
-            <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 ml-1">Medical Identity</Text>
+            <Text className="text-brand-muted text-brand-section mb-4 ml-1">Medical Identity</Text>
             <View className="bg-white rounded-3xl shadow-sm border border-gray-100 px-4 overflow-hidden">
               <MenuItem
                 icon={<CreditCard size={20} color="#8B5CF6" />}
@@ -142,7 +142,7 @@ export default function ProfileScreen() {
 
           {/* Community Section */}
           <View className="mb-8">
-            <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 ml-1">Connectivity</Text>
+            <Text className="text-brand-muted text-brand-section mb-4 ml-1">Connectivity</Text>
             <View className="bg-white rounded-3xl shadow-sm border border-gray-100 px-4 overflow-hidden">
               <MenuItem
                 icon={<Users size={20} color="#8B5CF6" />}
@@ -162,7 +162,7 @@ export default function ProfileScreen() {
 
           {/* Settings Section */}
           <View className="mb-8">
-            <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 ml-1">App Settings</Text>
+            <Text className="text-brand-muted text-brand-section mb-4 ml-1">App Settings</Text>
             <View className="bg-white rounded-3xl shadow-sm border border-gray-100 px-4 overflow-hidden">
               <MenuItem
                 icon={<Bell size={20} color="#64748b" />}

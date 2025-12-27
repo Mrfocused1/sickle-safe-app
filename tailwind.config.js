@@ -8,7 +8,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        brand: {
+          dark: "#0f172a",
+          muted: "#64748b",
+          border: "#f1f5f9",
+          bg: "#f8fafc",
+        },
         primary: {
+          // ... existing primary colors ...
           DEFAULT: "#8B5CF6", // Violet 600
           50: "#F5F3FF",
           100: "#EDE9FE",
@@ -60,6 +67,14 @@ module.exports = {
           800: "#92400E",
           900: "#78350F",
         },
+      },
+      fontSize: {
+        'brand-title': ['22px', { lineHeight: '28px', fontWeight: '800', letterSpacing: '-0.5px' }],
+        'brand-section': ['14px', { lineHeight: '20px', fontWeight: '700', letterSpacing: '1px' }],
+        'brand-body': ['15px', { lineHeight: '22px', fontWeight: '600' }],
+        'brand-label': ['15px', { lineHeight: '22px', fontWeight: '700' }],
+        'brand-sub': ['13px', { lineHeight: '18px', fontWeight: '500' }],
+        'brand-button': ['18px', { lineHeight: '24px', fontWeight: '800' }],
       },
       fontFamily: {
         sans: ["System"],

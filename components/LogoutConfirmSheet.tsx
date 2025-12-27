@@ -164,14 +164,16 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     title: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: '800',
-        color: '#111827',
+        color: '#0f172a',
         marginBottom: 8,
+        letterSpacing: -0.5,
     },
     subtitle: {
         fontSize: 15,
-        color: '#6b7280',
+        fontWeight: '500',
+        color: '#64748b',
         textAlign: 'center',
         lineHeight: 22,
         marginBottom: 20,
@@ -203,9 +205,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     cancelText: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: '#374151',
+        fontSize: 18,
+        fontWeight: '800',
+        color: '#64748b',
     },
     logoutButton: {
         flex: 1,
@@ -218,8 +220,8 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     logoutText: {
-        fontSize: 16,
-        fontWeight: '700',
+        fontSize: 18,
+        fontWeight: '800',
         color: '#ffffff',
     },
 });

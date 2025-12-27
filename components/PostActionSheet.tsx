@@ -109,7 +109,7 @@ export function PostActionSheet({ visible, onClose, actions, title }: PostAction
 
                     {title && (
                         <View className="px-6 pb-4 pt-2 border-b border-gray-100">
-                            <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">{title}</Text>
+                            <Text className="text-brand-muted text-brand-section">{title}</Text>
                         </View>
                     )}
 
@@ -134,7 +134,7 @@ export function PostActionSheet({ visible, onClose, actions, title }: PostAction
                                     />
                                 </View>
                                 <Text
-                                    className={`text-base font-semibold flex-1 ${action.isDestructive ? 'text-red-500' : 'text-gray-900'
+                                    className={`text-brand-label flex-1 ${action.isDestructive ? 'text-red-500' : 'text-brand-dark'
                                         }`}
                                 >
                                     {action.label}
@@ -149,7 +149,7 @@ export function PostActionSheet({ visible, onClose, actions, title }: PostAction
                             onPress={handleClose}
                             className="bg-gray-900 py-4 rounded-2xl items-center"
                         >
-                            <Text className="text-white font-bold text-base">Cancel</Text>
+                            <Text className="text-white text-brand-button">Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </Animated.View>
