@@ -14,6 +14,10 @@ export default function LogScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [activeSheetType, setActiveSheetType] = useState<'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | null>(null);
+  const [medications, setMedications] = useState(['Hydroxyurea (8:00 AM)', 'Folic Acid (8:00 AM)', 'Pain Relief (As needed)']);
+  const [checkedMeds, setCheckedMeds] = useState<string[]>([]);
+
+  const medsProgress = medications.length > 0 ? Math.round((checkedMeds.length / medications.length) * 100) : 0;
 
   const formatDate = (date: Date) => {
     const today = new Date();
@@ -136,14 +140,14 @@ export default function LogScreen() {
             </View>
             <View className="flex-1 bg-white p-5 rounded-[24px] border border-gray-100 items-center shadow-sm">
               <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Meds</Text>
-              <Text className="text-2xl font-bold text-gray-900">3/4</Text>
+              <Text className="text-2xl font-bold text-gray-900">{checkedMeds.length}/{medications.length}</Text>
               <View className="h-1 w-8 bg-purple-500/20 rounded-full mt-3 overflow-hidden">
-                <View className="h-full w-[75%] bg-purple-500" />
+                <View className="h-full bg-purple-500" style={{ width: `${medsProgress}%` }} />
               </View>
             </View>
           </View>
-          
-          
+
+
           {/* Log Sections */}
           <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 ml-1">Metrics & Wellness</Text>
 
@@ -174,8 +178,8 @@ export default function LogScreen() {
           <LogItem
             icon="medication"
             label="Medications"
-            value="On Track"
-            status="Last: Hydroxyurea 8:00 AM"
+            value={`${checkedMeds.length}/${medications.length}`}
+            status={checkedMeds.length === medications.length ? "All taken!" : `${medications.length - checkedMeds.length} remaining`}
             color="#a855f7"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -254,6 +258,11 @@ export default function LogScreen() {
         visible={activeSheetType !== null}
         onClose={() => setActiveSheetType(null)}
         type={activeSheetType}
+        medsData={{ list: medications, checked: checkedMeds }}
+        onMedsUpdate={(list, checked) => {
+          setMedications(list);
+          setCheckedMeds(checked);
+        }}
       />
     </View>
   );

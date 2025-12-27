@@ -35,19 +35,29 @@ interface AppBottomSheetProps {
     member?: { name: string; role: string; priority: string; avatar: string; status: string; isEmergency: boolean };
     activity?: { title: string; detail: string; time: string; color: string; icon: string };
     mission?: { title: string; detail: string; time: string; location?: string; status?: string };
+    medsData?: { list: string[], checked: string[] };
+    onMedsUpdate?: (list: string[], checked: string[]) => void;
 }
 
-export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission }: AppBottomSheetProps) {
+export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, medsData, onMedsUpdate }: AppBottomSheetProps) {
 
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
     const [selectedHelpers, setSelectedHelpers] = useState<string[]>([]);
     const [activeType, setActiveType] = useState<MetricType>(type);
+    const [medications, setMedications] = useState(['Hydroxyurea (8:00 AM)', 'Folic Acid (8:00 AM)', 'Pain Relief (As needed)']);
+    const [newMed, setNewMed] = useState('');
+    const [showAddMed, setShowAddMed] = useState(false);
+    const [checkedMeds, setCheckedMeds] = useState<string[]>([]);
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         if (visible) {
             setActiveType(type || 'log_selection');
+            if (medsData) {
+                setMedications(medsData.list);
+                setCheckedMeds(medsData.checked);
+            }
             Animated.timing(fadeAnim, {
                 toValue: 1,
                 duration: 300,
@@ -156,18 +166,73 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return (
                     <View style={styles.contentSection}>
                         <Text style={styles.sectionLabel}>Medications Checklist</Text>
-                        {['Hydroxyurea (8:00 AM)', 'Folic Acid (8:00 AM)', 'Pain Relief (As needed)'].map((med) => (
+                        {medications.map((med) => (
                             <Pressable
                                 key={med}
-                                onPress={() => { }}
+                                onPress={() => {
+                                    const newList = checkedMeds.includes(med)
+                                        ? checkedMeds.filter(m => m !== med)
+                                        : [...checkedMeds, med];
+                                    setCheckedMeds(newList);
+                                    if (onMedsUpdate) onMedsUpdate(medications, newList);
+                                }}
                                 style={styles.checkItem}
                             >
                                 <View style={styles.checkbox}>
-                                    <MaterialIcons name="check-box-outline-blank" size={24} color="#cbd5e1" />
+                                    <MaterialIcons
+                                        name={checkedMeds.includes(med) ? "check-box" : "check-box-outline-blank"}
+                                        size={24}
+                                        color={checkedMeds.includes(med) ? header.color : "#cbd5e1"}
+                                    />
                                 </View>
-                                <Text style={styles.checkLabel}>{med}</Text>
+                                <Text style={[styles.checkLabel, checkedMeds.includes(med) && { color: header.color, textDecorationLine: 'line-through', opacity: 0.6 }]}>{med}</Text>
                             </Pressable>
                         ))}
+
+                        {showAddMed ? (
+                            <View style={{ marginTop: 16, gap: 12 }}>
+                                <TextInput
+                                    style={styles.smallInput}
+                                    placeholder="Enter medication name & time..."
+                                    placeholderTextColor="#94a3b8"
+                                    value={newMed}
+                                    onChangeText={setNewMed}
+                                    autoFocus
+                                />
+                                <View style={{ flexDirection: 'row', gap: 12 }}>
+                                    <Pressable
+                                        onPress={() => {
+                                            if (newMed.trim()) {
+                                                const newList = [...medications, newMed.trim()];
+                                                setMedications(newList);
+                                                if (onMedsUpdate) onMedsUpdate(newList, checkedMeds);
+                                                setNewMed('');
+                                                setShowAddMed(false);
+                                            }
+                                        }}
+                                        style={[styles.gridButton, { backgroundColor: '#000', borderColor: '#000', paddingVertical: 12 }]}
+                                    >
+                                        <Text style={[styles.gridText, { color: '#fff' }]}>Add</Text>
+                                    </Pressable>
+                                    <Pressable
+                                        onPress={() => setShowAddMed(false)}
+                                        style={[styles.gridButton, { paddingVertical: 12 }]}
+                                    >
+                                        <Text style={styles.gridText}>Cancel</Text>
+                                    </Pressable>
+                                </View>
+                            </View>
+                        ) : (
+                            <Pressable
+                                onPress={() => setShowAddMed(true)}
+                                style={[styles.checkItem, { borderBottomWidth: 0, opacity: 0.8 }]}
+                            >
+                                <View style={[styles.checkbox, { backgroundColor: header.color + '15', borderRadius: 8, padding: 4 }]}>
+                                    <MaterialIcons name="add" size={20} color={header.color} />
+                                </View>
+                                <Text style={[styles.checkLabel, { color: header.color, fontWeight: '700' }]}>Add more medicine</Text>
+                            </Pressable>
+                        )}
                     </View>
                 );
             case 'mood':
