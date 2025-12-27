@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Image, TextInput } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import CrisisLogModal from '../../components/CrisisLogModal';
 import AppBottomSheet from '../../components/AppBottomSheet';
 import { useRouter } from 'expo-router';
+import { healthLogStorage } from '../../services/healthLogStorage';
+import { DailyHealthLog, DailyLogSummary, PainEntry, HydrationEntry, MoodEntry, TriggerEntry, CrisisEpisode, MoodLevel } from '../../types/healthLog';
 
 export default function LogScreen() {
   const insets = useSafeAreaInsets();
@@ -14,10 +15,102 @@ export default function LogScreen() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [activeSheetType, setActiveSheetType] = useState<'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | null>(null);
-  const [medications, setMedications] = useState(['Hydroxyurea (8:00 AM)', 'Folic Acid (8:00 AM)', 'Pain Relief (As needed)']);
-  const [checkedMeds, setCheckedMeds] = useState<string[]>([]);
+  const [dailyLog, setDailyLog] = useState<DailyHealthLog | null>(null);
+  const [summary, setSummary] = useState<DailyLogSummary | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Derived state for medications (for backward compatibility)
+  const medications = dailyLog?.medications.list ?? [];
+  const checkedMeds = dailyLog?.medications.checked ?? [];
   const medsProgress = medications.length > 0 ? Math.round((checkedMeds.length / medications.length) * 100) : 0;
+
+  // Load daily log when date changes
+  useEffect(() => {
+    loadDailyLog();
+  }, [selectedDate]);
+
+  const loadDailyLog = async () => {
+    setIsLoading(true);
+    try {
+      const log = await healthLogStorage.getDailyLog(selectedDate);
+      setDailyLog(log);
+      setSummary(healthLogStorage.computeSummary(log));
+    } catch (error) {
+      console.error('Failed to load daily log:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Callback handlers for each metric
+  const handlePainUpdate = async (level: number, notes?: string) => {
+    if (!dailyLog) return;
+    const entry: PainEntry = {
+      level,
+      timestamp: new Date().toISOString(),
+      notes,
+    };
+    const updatedLog = { ...dailyLog, pain: [...dailyLog.pain, entry] };
+    await healthLogStorage.saveDailyLog(updatedLog);
+    setDailyLog(updatedLog);
+    setSummary(healthLogStorage.computeSummary(updatedLog));
+  };
+
+  const handleHydrationUpdate = async (amount: string, notes?: string) => {
+    if (!dailyLog) return;
+    const entry: HydrationEntry = {
+      amount,
+      timestamp: new Date().toISOString(),
+      notes,
+    };
+    const updatedLog = { ...dailyLog, hydration: [...dailyLog.hydration, entry] };
+    await healthLogStorage.saveDailyLog(updatedLog);
+    setDailyLog(updatedLog);
+    setSummary(healthLogStorage.computeSummary(updatedLog));
+  };
+
+  const handleMedsUpdate = async (list: string[], checked: string[]) => {
+    if (!dailyLog) return;
+    const updatedLog = { ...dailyLog, medications: { list, checked } };
+    await healthLogStorage.saveDailyLog(updatedLog);
+    await healthLogStorage.saveDefaultMedications(list);
+    setDailyLog(updatedLog);
+    setSummary(healthLogStorage.computeSummary(updatedLog));
+  };
+
+  const handleMoodUpdate = async (level: MoodLevel, notes?: string) => {
+    if (!dailyLog) return;
+    const entry: MoodEntry = {
+      level,
+      timestamp: new Date().toISOString(),
+      notes,
+    };
+    const updatedLog = { ...dailyLog, mood: [...dailyLog.mood, entry] };
+    await healthLogStorage.saveDailyLog(updatedLog);
+    setDailyLog(updatedLog);
+    setSummary(healthLogStorage.computeSummary(updatedLog));
+  };
+
+  const handleTriggersUpdate = async (triggers: string[], notes?: string) => {
+    if (!dailyLog) return;
+    const entry: TriggerEntry = {
+      triggers,
+      timestamp: new Date().toISOString(),
+      notes,
+    };
+    const updatedLog = { ...dailyLog, triggers: [...dailyLog.triggers, entry] };
+    await healthLogStorage.saveDailyLog(updatedLog);
+    setDailyLog(updatedLog);
+    setSummary(healthLogStorage.computeSummary(updatedLog));
+  };
+
+  const handleCrisisUpdate = async (episode: CrisisEpisode) => {
+    if (!dailyLog) return;
+    const updatedLog = { ...dailyLog, crisisEpisodes: [...dailyLog.crisisEpisodes, episode] };
+    await healthLogStorage.saveDailyLog(updatedLog);
+    setDailyLog(updatedLog);
+    setSummary(healthLogStorage.computeSummary(updatedLog));
+  };
 
   const formatDate = (date: Date) => {
     const today = new Date();
@@ -126,16 +219,20 @@ export default function LogScreen() {
           <View className="flex-row gap-3 mb-8">
             <View className="flex-1 bg-white p-5 rounded-[24px] border border-gray-100 items-center shadow-sm">
               <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Avg Pain</Text>
-              <Text className="text-2xl font-bold text-gray-900">2.4</Text>
+              <Text className="text-2xl font-bold text-gray-900">
+                {summary?.avgPain !== null ? summary?.avgPain.toFixed(1) : '--'}
+              </Text>
               <View className="h-1 w-8 bg-amber-500/20 rounded-full mt-3 overflow-hidden">
-                <View className="h-full w-[24%] bg-amber-500" />
+                <View className="h-full bg-amber-500" style={{ width: `${(summary?.avgPain ?? 0) * 10}%` }} />
               </View>
             </View>
             <View className="flex-1 bg-white p-5 rounded-[24px] border border-gray-100 items-center shadow-sm">
               <Text className="text-gray-400 text-[9px] font-bold uppercase tracking-widest mb-2">Water</Text>
-              <Text className="text-2xl font-bold text-gray-900">1.8L</Text>
+              <Text className="text-2xl font-bold text-gray-900">
+                {((summary?.totalHydration ?? 0) / 1000).toFixed(1)}L
+              </Text>
               <View className="h-1 w-8 bg-blue-500/20 rounded-full mt-3 overflow-hidden">
-                <View className="h-full w-[72%] bg-blue-500" />
+                <View className="h-full bg-blue-500" style={{ width: `${Math.min(((summary?.totalHydration ?? 0) / (summary?.hydrationGoal ?? 2500)) * 100, 100)}%` }} />
               </View>
             </View>
             <View className="flex-1 bg-white p-5 rounded-[24px] border border-gray-100 items-center shadow-sm">
@@ -154,8 +251,8 @@ export default function LogScreen() {
           <LogItem
             icon="favorite"
             label="Pain Level"
-            value="Moderate"
-            status="3 entries recorded"
+            value={summary?.avgPain !== null ? (summary.avgPain <= 3 ? 'Low' : summary.avgPain <= 6 ? 'Moderate' : 'High') : '--'}
+            status={dailyLog?.pain.length ? `${dailyLog.pain.length} ${dailyLog.pain.length === 1 ? 'entry' : 'entries'} recorded` : 'No entries yet'}
             color="#f59e0b"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -166,8 +263,8 @@ export default function LogScreen() {
           <LogItem
             icon="water-drop"
             label="Hydration"
-            value="1.8L"
-            status="72% of daily goal"
+            value={`${((summary?.totalHydration ?? 0) / 1000).toFixed(1)}L`}
+            status={`${Math.round(((summary?.totalHydration ?? 0) / (summary?.hydrationGoal ?? 2500)) * 100)}% of daily goal`}
             color="#3b82f6"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -190,8 +287,8 @@ export default function LogScreen() {
           <LogItem
             icon="mood"
             label="Mood & Energy"
-            value="Good"
-            status="Stable energy reported"
+            value={summary?.latestMood ?? '--'}
+            status={dailyLog?.mood.length ? `${dailyLog.mood.length} ${dailyLog.mood.length === 1 ? 'entry' : 'entries'} today` : 'No entries yet'}
             color="#10b981"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -204,8 +301,8 @@ export default function LogScreen() {
           <LogItem
             icon="warning"
             label="Active Triggers"
-            value="1"
-            status="Cold exposure reported at 11am"
+            value={(summary?.triggerCount ?? 0).toString()}
+            status={summary?.triggerCount ? `${summary.triggerCount} trigger${summary.triggerCount === 1 ? '' : 's'} reported` : 'No triggers reported'}
             color="#f43f5e"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -216,8 +313,8 @@ export default function LogScreen() {
           <LogItem
             icon="crisis-alert"
             label="Crisis Episodes"
-            value="None"
-            status="No crises reported in 14 days"
+            value={(summary?.crisisCount ?? 0) === 0 ? 'None' : (summary?.crisisCount ?? 0).toString()}
+            status={(summary?.crisisCount ?? 0) === 0 ? 'No crises reported today' : `${summary?.crisisCount} episode${(summary?.crisisCount ?? 0) === 1 ? '' : 's'} today`}
             color="#ef4444"
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -252,6 +349,7 @@ export default function LogScreen() {
       <CrisisLogModal
         visible={showCrisisModal}
         onClose={() => setShowCrisisModal(false)}
+        onSave={handleCrisisUpdate}
       />
 
       <AppBottomSheet
@@ -259,10 +357,11 @@ export default function LogScreen() {
         onClose={() => setActiveSheetType(null)}
         type={activeSheetType}
         medsData={{ list: medications, checked: checkedMeds }}
-        onMedsUpdate={(list, checked) => {
-          setMedications(list);
-          setCheckedMeds(checked);
-        }}
+        onMedsUpdate={handleMedsUpdate}
+        onPainUpdate={handlePainUpdate}
+        onHydrationUpdate={handleHydrationUpdate}
+        onMoodUpdate={handleMoodUpdate}
+        onTriggersUpdate={handleTriggersUpdate}
       />
     </View>
   );

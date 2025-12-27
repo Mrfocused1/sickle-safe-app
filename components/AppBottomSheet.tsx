@@ -37,9 +37,13 @@ interface AppBottomSheetProps {
     mission?: { title: string; detail: string; time: string; location?: string; status?: string };
     medsData?: { list: string[], checked: string[] };
     onMedsUpdate?: (list: string[], checked: string[]) => void;
+    onPainUpdate?: (level: number, notes?: string) => void;
+    onHydrationUpdate?: (amount: string, notes?: string) => void;
+    onMoodUpdate?: (level: string, notes?: string) => void;
+    onTriggersUpdate?: (triggers: string[], notes?: string) => void;
 }
 
-export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, medsData, onMedsUpdate }: AppBottomSheetProps) {
+export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate }: AppBottomSheetProps) {
 
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
@@ -970,7 +974,35 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                             {activeType !== 'activity_detail' && (
                                 <Pressable
                                     onPress={() => {
-                                        alert(activeType === 'idea' ? 'Idea posted to community!' : activeType === 'group' ? 'Group proposal sent!' : 'Entry Saved!');
+                                        // Call appropriate callback based on type
+                                        switch (activeType) {
+                                            case 'pain':
+                                                if (value && onPainUpdate) {
+                                                    onPainUpdate(parseInt(value), notes || undefined);
+                                                }
+                                                break;
+                                            case 'hydration':
+                                                if (value && onHydrationUpdate) {
+                                                    onHydrationUpdate(value, notes || undefined);
+                                                }
+                                                break;
+                                            case 'mood':
+                                                if (value && onMoodUpdate) {
+                                                    onMoodUpdate(value, notes || undefined);
+                                                }
+                                                break;
+                                            case 'triggers':
+                                                if (value && onTriggersUpdate) {
+                                                    onTriggersUpdate([value], notes || undefined);
+                                                }
+                                                break;
+                                            case 'meds':
+                                                // Already handled in checkbox onChange
+                                                break;
+                                            default:
+                                                // For non-health types, just show alert
+                                                alert(activeType === 'idea' ? 'Idea posted to community!' : activeType === 'group' ? 'Group proposal sent!' : 'Entry Saved!');
+                                        }
                                         onClose();
                                     }}
                                     style={[styles.saveButton, { backgroundColor: header.color }]}

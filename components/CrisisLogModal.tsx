@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Image, Modal, Animated } from 'react-native';
+import { View, Text, ScrollView, Pressable, Modal } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Slider from '@react-native-community/slider';
-import { LinearGradient } from 'expo-linear-gradient';
+import { CrisisEpisode } from '../types/healthLog';
 
 interface CrisisLogModalProps {
   visible: boolean;
   onClose: () => void;
+  onSave?: (episode: CrisisEpisode) => void;
 }
 
-export default function CrisisLogModal({ visible, onClose }: CrisisLogModalProps) {
+export default function CrisisLogModal({ visible, onClose, onSave }: CrisisLogModalProps) {
   const [painLevel, setPainLevel] = useState(8);
   const [selectedTriggers, setSelectedTriggers] = useState(['Cold Weather']);
   const [expandedMetrics, setExpandedMetrics] = useState(false);
@@ -137,7 +137,19 @@ export default function CrisisLogModal({ visible, onClose }: CrisisLogModalProps
             style={{ backgroundColor: '#EF4444' }}
             className="w-full py-4 rounded-3xl shadow-lg flex-row items-center justify-center gap-3 active:opacity-90 mt-4 mb-8"
             onPress={() => {
-              alert('Crisis Saved Successfully');
+              if (onSave) {
+                const episode: CrisisEpisode = {
+                  id: Date.now().toString(),
+                  painLevel,
+                  startTime: new Date().toISOString(),
+                  triggers: selectedTriggers,
+                  timestamp: new Date().toISOString(),
+                };
+                onSave(episode);
+              }
+              // Reset state for next use
+              setPainLevel(8);
+              setSelectedTriggers(['Cold Weather']);
               onClose();
             }}
           >
