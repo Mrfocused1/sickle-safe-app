@@ -71,54 +71,61 @@ export default function CaregiverDashboard() {
                         </Pressable>
                     </View>
 
-                    {/* Overcomer Status Card - Clean Light Theme */}
-                    <View className="bg-white rounded-[32px] p-6 shadow-sm">
+                    {/* Overcomer Status Card - Premium Light Mode Redesign */}
+                    <View className="mx-4 shadow-xl shadow-indigo-100/50">
+                        <View
+                            className="bg-white"
+                            style={{ borderRadius: 40, padding: 24, borderWidth: 1, borderColor: '#f1f5f9' }}
+                        >
+                            {/* Subtle background decorative shapes */}
+                            <View className="absolute -right-10 -top-10 w-40 h-40 bg-indigo-50/50 rounded-full" />
 
-                        <View className="flex-row items-center mb-6">
-                            <View className="w-14 h-14 rounded-2xl border border-gray-100 overflow-hidden mr-4 bg-gray-50">
-                                <Image
-                                    source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200' }}
-                                    className="w-full h-full"
-                                />
-                            </View>
-                            <View className="flex-1">
-                                <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>Maya Thompson</Text>
-                                <View className="flex-row items-center mt-1">
-                                    <View className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5" />
-                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>Stable • Last update 2h ago</Text>
+                            <View className="flex-row items-center mb-8">
+                                <View className="w-16 h-16 rounded-[24px] border-2 border-indigo-100 overflow-hidden mr-4 bg-indigo-50">
+                                    <Image
+                                        source={{ uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200' }}
+                                        className="w-full h-full"
+                                    />
                                 </View>
-                            </View>
-                            <Pressable
-                                onPress={() => handleAction('Maya')}
-                                className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100 active:bg-gray-100 ml-2"
-                            >
-                                <Phone size={18} color="#4B5563" />
-                            </Pressable>
-                        </View>
-
-                        <View className="flex-row">
-                            <View className="flex-1 bg-gray-50 rounded-2xl p-3 border border-gray-100 mr-2">
-                                <View className="flex-row items-center mb-2">
-                                    <Activity size={14} color="#EF4444" style={{ marginRight: 6 }} />
-                                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }} numberOfLines={1}>Pain Lvl</Text>
+                                <View className="flex-1">
+                                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a', letterSpacing: -0.5 }}>Maya Thompson</Text>
+                                    <View className="flex-row items-center mt-1.5">
+                                        <View className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 border-2 border-white" />
+                                        <Text style={{ fontSize: 13, fontWeight: '600', color: '#64748b' }}>Stable • 2h ago</Text>
+                                    </View>
                                 </View>
-                                <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>2<Text style={{ fontSize: 14, fontWeight: '400', color: '#64748b' }}>/10</Text></Text>
+                                <Pressable
+                                    onPress={() => handleAction('Maya')}
+                                    className="w-12 h-12 bg-indigo-50 rounded-2xl items-center justify-center border border-indigo-100 active:bg-indigo-100"
+                                >
+                                    <Phone size={20} color="#4f46e5" />
+                                </Pressable>
                             </View>
 
-                            <View className="flex-1 bg-gray-50 rounded-2xl p-3 border border-gray-100 mx-1">
-                                <View className="flex-row items-center mb-2">
-                                    <Droplets size={14} color="#3B82F6" style={{ marginRight: 6 }} />
-                                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }} numberOfLines={1}>Hydration</Text>
+                            <View className="flex-row gap-2">
+                                <View className="flex-1 bg-slate-50 rounded-[24px] p-4 border border-slate-100">
+                                    <View className="bg-rose-100 w-8 h-8 rounded-xl items-center justify-center mb-3">
+                                        <Activity size={16} color="#e11d48" />
+                                    </View>
+                                    <Text style={{ fontSize: 9, fontWeight: '800', color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Pain</Text>
+                                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a' }}>2<Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>/10</Text></Text>
                                 </View>
-                                <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>85<Text style={{ fontSize: 14, fontWeight: '400', color: '#64748b' }}>%</Text></Text>
-                            </View>
 
-                            <View className="flex-1 bg-gray-50 rounded-2xl p-3 border border-gray-100 ml-2">
-                                <View className="flex-row items-center mb-2">
-                                    <HeartPulse size={14} color="#8B5CF6" style={{ marginRight: 6 }} />
-                                    <Text style={{ fontSize: 10, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }} numberOfLines={1}>Vitals</Text>
+                                <View className="flex-1 bg-slate-50 rounded-[24px] p-4 border border-slate-100">
+                                    <View className="bg-blue-100 w-8 h-8 rounded-xl items-center justify-center mb-3">
+                                        <Droplets size={16} color="#2563eb" />
+                                    </View>
+                                    <Text style={{ fontSize: 9, fontWeight: '800', color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Water</Text>
+                                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a' }}>85<Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>%</Text></Text>
                                 </View>
-                                <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>98<Text style={{ fontSize: 14, fontWeight: '400', color: '#64748b' }}>bpm</Text></Text>
+
+                                <View className="flex-1 bg-slate-50 rounded-[24px] p-4 border border-slate-100">
+                                    <View className="bg-indigo-100 w-8 h-8 rounded-xl items-center justify-center mb-3">
+                                        <Pill size={16} color="#4f46e5" />
+                                    </View>
+                                    <Text style={{ fontSize: 9, fontWeight: '800', color: '#94a3b8', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Meds</Text>
+                                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a' }}>100<Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>%</Text></Text>
+                                </View>
                             </View>
                         </View>
                     </View>
