@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { LogoutConfirmSheet } from '@/components/LogoutConfirmSheet';
 
 interface MenuItemProps {
   icon: React.ReactNode;
@@ -58,10 +59,7 @@ const StatCard = ({ value, label, icon }: { value: string; label: string; icon: 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-
-  const handleAction = (label: string) => {
-    alert(`${label} (Coming Soon)`);
-  };
+  const [showLogoutSheet, setShowLogoutSheet] = useState(false);
 
   return (
     <View className="flex-1 bg-white">
@@ -191,7 +189,7 @@ export default function ProfileScreen() {
               <MenuItem
                 icon={<LogOut size={20} color="#EF4444" />}
                 label="Logout"
-                onPress={() => handleAction('Logout')}
+                onPress={() => setShowLogoutSheet(true)}
                 isLast
                 isDestructive
               />
@@ -203,6 +201,11 @@ export default function ProfileScreen() {
 
         </View>
       </ScrollView>
+
+      <LogoutConfirmSheet
+        visible={showLogoutSheet}
+        onClose={() => setShowLogoutSheet(false)}
+      />
     </View>
   );
 }

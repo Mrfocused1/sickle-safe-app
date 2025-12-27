@@ -25,9 +25,10 @@ import {
     ChevronRight
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter, router, useNavigation } from 'expo-router';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import AppBottomSheet from '../components/AppBottomSheet';
+import { CircleSettingsSheet } from '../components/CircleSettingsSheet';
 
 const { width } = Dimensions.get('window');
 
@@ -166,6 +167,7 @@ export default function CircleOfCareScreen() {
     const [activeTab, setActiveTab] = useState('All');
     const [activeMember, setActiveMember] = useState<any>(null);
     const [activeType, setActiveType] = useState<any>('member');
+    const [showSettings, setShowSettings] = useState(false);
 
     const insets = useSafeAreaInsets();
 
@@ -195,7 +197,7 @@ export default function CircleOfCareScreen() {
                         <Text className="text-xl font-bold text-gray-900">Circle of Care</Text>
                         <Pressable
                             className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100 active:scale-95 transition-transform"
-                            onPress={() => alert('Settings (Coming Soon)')}
+                            onPress={() => setShowSettings(true)}
                         >
                             <Settings size={20} color="#374151" />
                         </Pressable>
@@ -308,6 +310,11 @@ export default function CircleOfCareScreen() {
                 onClose={() => setActiveMember(null)}
                 type={activeType}
                 member={activeMember}
+            />
+
+            <CircleSettingsSheet
+                visible={showSettings}
+                onClose={() => setShowSettings(false)}
             />
         </View>
     );

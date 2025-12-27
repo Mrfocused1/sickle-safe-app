@@ -125,7 +125,7 @@ export default function VolunteerSettingsScreen() {
                             <View className="h-[1px] bg-gray-50" />
                             <Pressable
                                 className="flex-row items-center justify-between py-4"
-                                onPress={() => alert('Forms (Coming Soon)')}
+                                onPress={() => router.push('/settings/volunteer-forms')}
                             >
                                 <View className="flex-row items-center gap-4">
                                     <View className="w-10 h-10 rounded-xl items-center justify-center bg-amber-50">

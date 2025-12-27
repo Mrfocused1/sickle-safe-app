@@ -106,7 +106,7 @@ export default function RoleSelectionScreen() {
         </View>
 
         {/* Content */}
-        <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
           {/* Header */}
           <View className="mb-6">
             <Text className="text-4xl font-black text-gray-900 leading-none tracking-tighter mb-4">
@@ -119,7 +119,7 @@ export default function RoleSelectionScreen() {
           </View>
 
           {/* Role Cards */}
-          <View className="space-y-4 mb-6">
+          <View className="mb-6">
             {(Object.keys(rolesData) as Role[]).map((role) => {
               const roleData = rolesData[role];
               // Temporarily replace Icon with a simple View to test for context issues
@@ -130,7 +130,7 @@ export default function RoleSelectionScreen() {
                 <Pressable
                   key={role}
                   onPress={() => setSelectedRole(role)}
-                  className={`p-5 rounded-[32px] border-2 flex-row items-center ${isSelected ? 'border-red-600 bg-white' : 'border-gray-200'}`}
+                  className={`p-5 rounded-[32px] border-2 flex-row items-center mb-4 ${isSelected ? 'border-red-600 bg-white' : 'border-gray-200'}`}
                   style={isSelected ? {
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 20 },

@@ -68,7 +68,7 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
     }
   }, [visible]);
 
-  const handleClose = () => {
+  const handleClose = (callback?: () => void) => {
     Animated.parallel([
       Animated.timing(backdropOpacity, {
         toValue: 0,
@@ -97,6 +97,9 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
       }),
     ]).start(() => {
       onClose();
+      if (callback) {
+        setTimeout(callback, 50);
+      }
     });
   };
 
@@ -240,8 +243,9 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              handleClose();
-              router.push('/education');
+              handleClose(() => {
+                router.push('/education');
+              });
             }}
             style={styles.actionButton}
           >
@@ -500,3 +504,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#9ca3af',
   },
+});

@@ -11,15 +11,46 @@ import { useRouter } from 'expo-router';
 export default function LogScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [currentDate, setCurrentDate] = useState('Today, 25 Dec');
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [activeSheetType, setActiveSheetType] = useState<'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | null>(null);
 
+  const formatDate = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
 
-  const handleAction = (label: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    alert(`${label} (Coming Soon)`);
+    const isToday = date.toDateString() === today.toDateString();
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const dayNum = date.getDate();
+    const month = monthNames[date.getMonth()];
+
+    if (isToday) return `Today, ${dayNum} ${month}`;
+    if (isYesterday) return `Yesterday, ${dayNum} ${month}`;
+    return `${dayNum} ${month}`;
   };
+
+  const handlePreviousDay = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const handleNextDay = () => {
+    const today = new Date();
+    if (selectedDate.toDateString() === today.toDateString()) {
+      return; // Can't go to future
+    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setSelectedDate(newDate);
+  };
+
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
 
   const LogItem = ({ icon, label, value, status, color, onPress }: any) => (
     <Pressable
@@ -68,18 +99,19 @@ export default function LogScreen() {
           {/* Minimal Date Selector */}
           <View className="flex-row items-center justify-between bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
             <Pressable
-              onPress={() => handleAction('Previous Day')}
+              onPress={handlePreviousDay}
               className="w-10 h-10 items-center justify-center rounded-xl bg-white border border-gray-100 shadow-sm active:bg-gray-50"
             >
               <MaterialIcons name="chevron-left" size={24} color="#6b7280" />
             </Pressable>
             <View className="flex-row items-center gap-2 px-4 py-2">
               <MaterialIcons name="calendar-today" size={16} color="#8B5CF6" />
-              <Text className="font-bold text-gray-900">{currentDate}</Text>
+              <Text className="font-bold text-gray-900">{formatDate(selectedDate)}</Text>
             </View>
             <Pressable
-              onPress={() => handleAction('Next Day')}
-              className="w-10 h-10 items-center justify-center rounded-xl bg-white border border-gray-100 shadow-sm active:bg-gray-50"
+              onPress={handleNextDay}
+              className={`w-10 h-10 items-center justify-center rounded-xl bg-white border border-gray-100 shadow-sm ${isToday ? 'opacity-40' : 'active:bg-gray-50'}`}
+              disabled={isToday}
             >
               <MaterialIcons name="chevron-right" size={24} color="#6b7280" />
             </Pressable>
@@ -191,14 +223,21 @@ export default function LogScreen() {
 
           {/* Action Button */}
           <Pressable
-            style={{ backgroundColor: '#111827' }}
-            className="w-full py-4 rounded-3xl shadow-xl flex-row items-center justify-center gap-3 active:opacity-90 mt-4"
+            style={{
+              backgroundColor: '#dc2626',
+              shadowColor: '#dc2626',
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.4,
+              shadowRadius: 16,
+              elevation: 12,
+            }}
+            className="w-full py-5 rounded-2xl flex-row items-center justify-center gap-3 active:opacity-90 mt-6"
             onPress={() => setShowCrisisModal(true)}
           >
-            <View className="bg-red-500 rounded-full w-6 h-6 items-center justify-center">
-              <MaterialIcons name="add" size={16} color="#ffffff" />
+            <View className="bg-white/20 rounded-full w-8 h-8 items-center justify-center">
+              <MaterialIcons name="add" size={22} color="#ffffff" />
             </View>
-            <Text className="text-white font-bold text-base">New Crisis Report</Text>
+            <Text className="text-white font-black text-lg tracking-wide">New Crisis Report</Text>
           </Pressable>
 
           <View className="h-24" />

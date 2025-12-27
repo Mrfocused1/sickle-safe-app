@@ -48,7 +48,7 @@ export default function MedicalIDScreen() {
           </Pressable>
         </View>
 
-        <ScrollView className="flex-1 px-5 pb-24" showsVerticalScrollIndicator={false}>
+        <ScrollView className="flex-1 px-5" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Main Medical ID Card */}
           <View className="bg-white rounded-xl shadow-sm p-5 border border-gray-100 relative overflow-hidden mb-5">
             {/* Red Top Bar */}
