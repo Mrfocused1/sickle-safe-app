@@ -1,128 +1,254 @@
-import React from 'react';
-import { View, Text, Pressable, Image, Dimensions, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Users } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, Zap, Bell, Wifi, Heart } from 'lucide-react-native';
-import { Video, ResizeMode } from 'expo-av';
+import * as Haptics from 'expo-haptics';
+import { BackButton, RadioSelection, CounterInput } from '../../../components/onboarding';
 
-const { width } = Dimensions.get('window');
+const relationshipOptions = [
+  {
+    value: 'parent',
+    label: 'Parent / Guardian',
+    description: 'Caring for a child with SCD',
+  },
+  {
+    value: 'spouse',
+    label: 'Spouse / Partner',
+    description: 'Supporting your significant other',
+  },
+  {
+    value: 'sibling',
+    label: 'Sibling / Family Member',
+    description: 'Brother, sister, or extended family',
+  },
+  {
+    value: 'friend',
+    label: 'Friend',
+    description: 'Supporting someone you care about',
+  },
+  {
+    value: 'professional',
+    label: 'Professional Caregiver',
+    description: 'Nurse, aide, or healthcare worker',
+  },
+];
 
-export default function RealTimeAlertsScreen() {
-  const router = useRouter();
+export default function RelationshipScreen() {
+  const [relationship, setRelationship] = useState('');
+  const [lovedOnesCount, setLovedOnesCount] = useState(1);
+
+  const handleContinue = () => {
+    if (relationship) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      router.push('/(onboarding)/helper/actionable-support');
+    }
+  };
+
+  const isValid = relationship.length > 0;
 
   return (
-    <View className="flex-1 bg-black">
-      <StatusBar style="light" />
+    <View style={styles.container}>
+      <StatusBar style="dark" />
 
-      {/* Video Background */}
-      <Video
-        source={{ uri: 'https://assets.mixkit.co/videos/preview/mixkit-friends-sitting-on-a-couch-at-home-41312-large.mp4' }}
-        rate={1.0}
-        volume={0}
-        isMuted={true}
-        resizeMode={ResizeMode.COVER}
-        shouldPlay
-        isLooping
+      <LinearGradient
+        colors={['#ffffff', '#ECFDF5', '#ffffff']}
+        locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
       />
 
-      <LinearGradient
-        colors={['rgba(0,0,0,0.85)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.95)']}
-        className="absolute inset-0"
-      />
-
-      <SafeAreaView className="flex-1">
-        {/* Logo at Top (Triple Size, No BG) */}
-        <View className="items-center mt-2">
-          <Image
-            source={require('../../../assets/logo.png')}
-            style={{ width: width * 0.5, height: 80 }}
-            resizeMode="contain"
-          />
+      <SafeAreaView style={styles.safeArea}>
+        {/* Header */}
+        <View style={styles.header}>
+          <BackButton />
+          <View style={styles.stepIndicator}>
+            <Text style={styles.stepText}>Step 1 of 2</Text>
+          </View>
+          <Pressable onPress={() => router.replace('/(helper)')}>
+            <Text style={styles.skipText}>Skip</Text>
+          </Pressable>
         </View>
 
-        {/* Step Progress */}
-        <View className="px-8 mt-4 mb-10">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-[10px] font-black uppercase tracking-[2px] text-white">Helper Flow</Text>
-            <Pressable onPress={() => router.replace('/(helper)')}>
-              <Text className="text-[10px] font-black uppercase tracking-[2px] text-red-500">Skip</Text>
-            </Pressable>
-          </View>
-          <View className="h-2 w-full bg-white/10 rounded-full overflow-hidden">
-            <View className="h-full w-2/4 bg-red-600 rounded-full" />
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: '50%' }]} />
           </View>
         </View>
 
-        {/* Content */}
-        <View className="flex-1 px-8">
-          {/* Title Section */}
-          <View className="mb-8">
-            <Text className="text-[42px] font-black text-white leading-[1] tracking-tighter mb-4">
-              Real-Time{'\n'}
-              <Text className="text-red-600">Peace of Mind.</Text>
-            </Text>
-            <Text className="text-base text-gray-200 font-medium leading-relaxed">
-              Get notified immediately during a crisis.
-            </Text>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Icon */}
+          <View style={styles.iconContainer}>
+            <Users size={32} color="#10B981" />
           </View>
 
-          {/* Visual Phone Mockup Section */}
-          <View className="flex-1 items-center justify-center relative py-6">
-            <View className="absolute inset-0 bg-red-600/5 rounded-full blur-[100px]" />
-
-            {/* Phone Form Factor */}
-            <View className="w-48 h-72 bg-black/60 rounded-[40px] border-[6px] border-white/10 items-center justify-center shadow-2xl overflow-hidden relative">
-              <View className="absolute top-0 w-20 h-5 bg-white/10 rounded-b-xl" />
-
-              {/* Mock Notification */}
-              <View className="w-[85%] bg-white/10 backdrop-blur-xl p-3 rounded-[24px] border border-white/10">
-                <View className="w-8 h-8 bg-red-600 rounded-full items-center justify-center mb-1.5 shadow-lg">
-                  <Bell size={16} color="#FFF" />
-                </View>
-                <View className="h-1.5 w-16 bg-white/20 rounded-full mb-1" />
-                <View className="h-1 w-10 bg-white/10 rounded-full" />
-              </View>
-
-              {/* Status Icons */}
-              <View className="absolute bottom-6 right-5 w-10 h-10 bg-emerald-500/20 rounded-xl items-center justify-center border border-emerald-500/30">
-                <Wifi size={20} color="#10B981" />
-              </View>
-              <View className="absolute top-16 left-5 w-8 h-8 bg-red-600/20 rounded-xl items-center justify-center border border-red-600/30">
-                <Heart size={16} color="#EF4444" fill="#EF4444" />
-              </View>
-            </View>
-          </View>
-
-          <Text className="text-base text-gray-400 font-medium leading-relaxed mb-10">
-            No more missed calls. Stay connected and receive instant alerts when your loved one needs you most.
+          {/* Title */}
+          <Text style={styles.title}>
+            Tell us about{'\n'}
+            <Text style={styles.titleAccent}>your role</Text>
           </Text>
-        </View>
 
-        {/* Bottom Actions */}
-        <View className="px-8 pb-10">
+          <Text style={styles.subtitle}>
+            This helps us personalize your caregiver experience and provide relevant support.
+          </Text>
+
+          {/* Relationship Selection */}
+          <View style={styles.inputSection}>
+            <RadioSelection
+              label="What's your relationship?"
+              options={relationshipOptions}
+              value={relationship}
+              onChange={setRelationship}
+              color="#10B981"
+            />
+          </View>
+
+          {/* Number of people */}
+          <View style={styles.inputSection}>
+            <CounterInput
+              label="How many people do you care for?"
+              value={lovedOnesCount}
+              onChange={setLovedOnesCount}
+              min={1}
+              max={10}
+              unit="person"
+              color="#10B981"
+            />
+          </View>
+        </ScrollView>
+
+        {/* Bottom CTA */}
+        <View style={styles.bottomSection}>
           <Pressable
-            onPress={() => router.push('/(onboarding)/helper/actionable-support')}
-            className="w-full bg-red-600 py-6 rounded-[24px] active:scale-[0.98] relative overflow-hidden"
-            style={{
-              shadowColor: '#7f1d1d',
-              shadowOffset: { width: 0, height: 20 },
-              shadowOpacity: 0.4,
-              shadowRadius: 25,
-              elevation: 10,
-            }}
+            onPress={handleContinue}
+            disabled={!isValid}
+            style={[
+              styles.primaryButton,
+              !isValid && styles.primaryButtonDisabled,
+            ]}
           >
-            <View className="flex-row items-center justify-center">
-              <Text className="text-white font-black text-xl tracking-wide">Continue Journey</Text>
-              <View className="ml-3 bg-white/20 p-1.5 rounded-full">
-                <ArrowRight size={24} color="#ffffff" />
-              </View>
-            </View>
+            <Text style={styles.buttonText}>Continue</Text>
           </Pressable>
         </View>
       </SafeAreaView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  stepIndicator: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 100,
+  },
+  stepText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#10B981',
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    paddingHorizontal: 8,
+  },
+  progressContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+  progressTrack: {
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#10B981',
+    borderRadius: 2,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 32,
+    paddingBottom: 24,
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 20,
+    backgroundColor: '#ECFDF5',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#111827',
+    lineHeight: 38,
+    letterSpacing: -0.5,
+    marginBottom: 12,
+  },
+  titleAccent: {
+    color: '#10B981',
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6B7280',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  inputSection: {
+    marginBottom: 24,
+  },
+  bottomSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+  },
+  primaryButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  primaryButtonDisabled: {
+    backgroundColor: '#D1D5DB',
+    shadowOpacity: 0,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#fff',
+  },
+});
