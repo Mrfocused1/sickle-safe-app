@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, Pressable, Animated, StyleSheet, Dimensions, Modal } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, Pressable, Animated, StyleSheet, Dimensions } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
 import * as Haptics from 'expo-haptics';
@@ -15,91 +15,114 @@ interface AddMenuModalProps {
   fabRotation: Animated.Value;
 }
 
+// Mini Sparkline component
+const Sparkline = ({ data, color, width: w, height: h }: { data: number[], color: string, width: number, height: number }) => {
+  const max = Math.max(...data);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: h, width: w, gap: 2 }}>
+      {data.map((value, index) => {
+        const barHeight = ((value - min) / range) * h * 0.8 + h * 0.2;
+        return (
+          <View
+            key={index}
+            style={{
+              flex: 1,
+              height: barHeight,
+              backgroundColor: index === data.length - 1 ? color : `${color}50`,
+              borderRadius: 2,
+            }}
+          />
+        );
+      })}
+    </View>
+  );
+};
+
+// Get dynamic greeting based on time
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good Morning';
+  if (hour < 17) return 'Good Afternoon';
+  return 'Good Evening';
+};
+
+// Get formatted date
+const getFormattedDate = () => {
+  const now = new Date();
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+};
+
 export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuModalProps) {
+  // Animation values
   const scaleAnim1 = useRef(new Animated.Value(0)).current;
   const scaleAnim2 = useRef(new Animated.Value(0)).current;
   const scaleAnim3 = useRef(new Animated.Value(0)).current;
   const scaleAnim4 = useRef(new Animated.Value(0)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
 
+  // Widget animation values
+  const widgetAnim1 = useRef(new Animated.Value(0)).current;
+  const widgetAnim2 = useRef(new Animated.Value(0)).current;
+  const widgetAnim3 = useRef(new Animated.Value(0)).current;
+
+  // Mock data
+  const waterPercent = 64;
+  const streakDays = 7;
+  const crisisFreeDays = 32;
+  const weeklyWaterData = [45, 60, 72, 55, 80, 64, 64];
+
   useEffect(() => {
     if (visible) {
-      // Animate in
       Animated.timing(backdropOpacity, {
         toValue: 1,
         duration: 200,
         useNativeDriver: true,
       }).start();
 
-      // Animate menu items immediately with stagger
+      // Animate widgets with stagger
       Animated.stagger(80, [
-        Animated.spring(scaleAnim1, {
-          toValue: 1,
-          tension: 100,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim2, {
-          toValue: 1,
-          tension: 100,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim3, {
-          toValue: 1,
-          tension: 100,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim4, {
-          toValue: 1,
-          tension: 100,
-          friction: 7,
-          useNativeDriver: true,
-        }),
+        Animated.spring(widgetAnim1, { toValue: 1, tension: 80, friction: 8, useNativeDriver: true }),
+        Animated.spring(widgetAnim2, { toValue: 1, tension: 80, friction: 8, useNativeDriver: true }),
+        Animated.spring(widgetAnim3, { toValue: 1, tension: 80, friction: 8, useNativeDriver: true }),
+      ]).start();
+
+      // Animate menu items
+      Animated.stagger(80, [
+        Animated.spring(scaleAnim1, { toValue: 1, tension: 100, friction: 7, useNativeDriver: true }),
+        Animated.spring(scaleAnim2, { toValue: 1, tension: 100, friction: 7, useNativeDriver: true }),
+        Animated.spring(scaleAnim3, { toValue: 1, tension: 100, friction: 7, useNativeDriver: true }),
+        Animated.spring(scaleAnim4, { toValue: 1, tension: 100, friction: 7, useNativeDriver: true }),
       ]).start();
     } else {
-      // Reset animations
       backdropOpacity.setValue(0);
       scaleAnim1.setValue(0);
       scaleAnim2.setValue(0);
       scaleAnim3.setValue(0);
       scaleAnim4.setValue(0);
+      widgetAnim1.setValue(0);
+      widgetAnim2.setValue(0);
+      widgetAnim3.setValue(0);
     }
   }, [visible]);
 
   const handleClose = (callback?: () => void) => {
     Animated.parallel([
-      Animated.timing(backdropOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim1, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim2, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim3, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim4, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
+      Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(scaleAnim1, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(scaleAnim2, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(scaleAnim3, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(scaleAnim4, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(widgetAnim1, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(widgetAnim2, { toValue: 0, duration: 150, useNativeDriver: true }),
+      Animated.timing(widgetAnim3, { toValue: 0, duration: 150, useNativeDriver: true }),
     ]).start(() => {
       onClose();
-      if (callback) {
-        setTimeout(callback, 50);
-      }
+      if (callback) setTimeout(callback, 50);
     });
   };
 
@@ -110,190 +133,141 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
     outputRange: ['0deg', '45deg'],
   });
 
+  const greeting = getGreeting();
+  const formattedDate = getFormattedDate();
+
   return (
     <Animated.View style={[styles.container, { opacity: backdropOpacity }]} pointerEvents={visible ? 'auto' : 'none'}>
       {/* Blurred Background */}
       <View style={styles.blurContainer}>
-        <BlurView intensity={32} tint="light" style={StyleSheet.absoluteFill} />
+        <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
       </View>
 
-      {/* At a Glance Summary - iOS Dashboard Style */}
-      <Animated.View
-        style={[
-          styles.summaryContainer,
-          {
-            opacity: backdropOpacity,
-            transform: [{
-              translateY: backdropOpacity.interpolate({
-                inputRange: [0, 1],
-                outputRange: [40, 0]
-              })
-            }]
-          }
-        ]}
-      >
-        <View style={styles.headerRow}>
-          <Text style={styles.greetingText}>Good Morning, Paul</Text>
-          <Text style={styles.dateText}>Friday, December 26</Text>
-        </View>
+      {/* Dashboard Content - Upper Half Only */}
+      <View style={styles.summaryContainer}>
+        {/* Header with Dynamic Greeting */}
+        <Animated.View style={[styles.headerRow, {
+          opacity: backdropOpacity,
+          transform: [{ translateY: backdropOpacity.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }]
+        }]}>
+          <Text style={styles.greetingText}>{greeting}, Paul</Text>
+          <Text style={styles.dateText}>{formattedDate}</Text>
+        </Animated.View>
 
-        <View style={styles.widgetContainer}>
-          {/* Hero Widget - Primary Focus */}
-          <View style={[styles.widget, styles.heroWidget]}>
+        {/* Streak & Crisis-Free Row */}
+        <Animated.View style={[styles.statsRow, {
+          opacity: widgetAnim1,
+          transform: [{ scale: widgetAnim1 }]
+        }]}>
+          <View style={styles.statBadge}>
+            <Text style={styles.statEmoji}>🔥</Text>
+            <Text style={styles.statValue}>{streakDays}</Text>
+            <Text style={styles.statLabel}>Day Streak</Text>
+          </View>
+          <View style={[styles.statBadge, styles.statBadgeGreen]}>
+            <Text style={styles.statEmoji}>💪</Text>
+            <Text style={[styles.statValue, { color: '#10B981' }]}>{crisisFreeDays}</Text>
+            <Text style={styles.statLabel}>Crisis-Free</Text>
+          </View>
+        </Animated.View>
+
+        {/* Main Water Widget with Sparkline */}
+        <Animated.View style={[styles.widget, styles.glassWidget, {
+          opacity: widgetAnim2,
+          transform: [{ scale: widgetAnim2 }]
+        }]}>
+          <View style={styles.widgetHeader}>
+            <View style={[styles.inlineIcon, { backgroundColor: '#DBEAFE' }]}>
+              <Feather name="droplet" size={14} color="#2563EB" />
+            </View>
+            <Text style={styles.widgetTitle}>Water Intake</Text>
+            <View style={{ flex: 1 }} />
+            <Sparkline data={weeklyWaterData} color="#2563EB" width={60} height={20} />
+          </View>
+          <View style={styles.heroContent}>
+            <CountUp to={waterPercent} suffix="%" style={styles.heroValue} />
+            <AnimatedProgress progress={waterPercent / 100} color="#2563EB" delay={400} />
+            <Text style={styles.heroSubtext}>Goal: 100oz today</Text>
+          </View>
+        </Animated.View>
+
+        {/* Progress & Energy Row */}
+        <Animated.View style={[styles.sideBySideRow, {
+          opacity: widgetAnim3,
+          transform: [{ scale: widgetAnim3 }]
+        }]}>
+          <View style={[styles.widget, styles.smallWidget, styles.glassWidget]}>
             <View style={styles.widgetHeader}>
-              <View style={[styles.inlineIcon, { backgroundColor: '#DBEAFE' }]}>
-                <Feather name="droplet" size={14} color="#2563EB" />
+              <View style={[styles.inlineIcon, { backgroundColor: '#DCFCE7' }]}>
+                <Feather name="check" size={12} color="#10B981" />
               </View>
-              <Text style={styles.widgetTitle}>Water Intake</Text>
+              <Text style={styles.smallWidgetTitle}>Progress</Text>
             </View>
-            <View style={styles.heroContent}>
-              <CountUp to={64} suffix="%" style={styles.heroValue} />
-              <AnimatedProgress progress={0.64} color="#2563EB" delay={400} />
-              <Text style={styles.heroSubtext}>Goal: 100oz today</Text>
-            </View>
+            <CountUp to={3} suffix="/5" style={styles.smallWidgetValue} />
+            <Text style={styles.smallWidgetSubtext}>Tasks Done</Text>
           </View>
 
-          {/* Secondary Widgets Row */}
-          <View style={styles.sideBySideRow}>
-            <View style={[styles.widget, styles.smallWidget]}>
-              <View style={styles.widgetHeader}>
-                <View style={[styles.inlineIcon, { backgroundColor: '#DCFCE7' }]}>
-                  <Feather name="check" size={12} color="#10B981" />
-                </View>
-                <Text style={styles.smallWidgetTitle}>Progress</Text>
+          <View style={[styles.widget, styles.smallWidget, styles.glassWidget]}>
+            <View style={styles.widgetHeader}>
+              <View style={[styles.inlineIcon, { backgroundColor: '#FEF9C3' }]}>
+                <Feather name="zap" size={12} color="#CA8A04" />
               </View>
-              <CountUp to={3} suffix="/5" style={styles.smallWidgetValue} />
-              <Text style={styles.smallWidgetSubtext}>Tasks Done</Text>
+              <Text style={styles.smallWidgetTitle}>Energy</Text>
             </View>
-
-            <View style={[styles.widget, styles.smallWidget]}>
-              <View style={styles.widgetHeader}>
-                <View style={[styles.inlineIcon, { backgroundColor: '#FEF9C3' }]}>
-                  <Feather name="zap" size={12} color="#CA8A04" />
-                </View>
-                <Text style={styles.smallWidgetTitle}>Energy</Text>
-              </View>
-              <Text style={styles.smallWidgetValue}>Good</Text>
-              <Text style={styles.smallWidgetSubtext}>Stable Flow</Text>
-            </View>
+            <Text style={styles.smallWidgetValue}>Good</Text>
+            <Text style={styles.smallWidgetSubtext}>Stable Flow</Text>
           </View>
-        </View>
-      </Animated.View>
+        </Animated.View>
+      </View>
 
-      {/* Radial Menu */}
+      {/* Radial Menu - Positioned in Clear Area */}
       <View style={styles.menuContainer}>
-        {/* Item 1 - Left - New Task */}
-        <Animated.View
-          style={[
-            styles.menuItem,
-            styles.item1Position,
-            {
-              transform: [{ scale: scaleAnim1 }],
-            },
-          ]}
-        >
-          <Pressable
-            onPress={() => {
-              alert('New Task (Coming Soon)');
-              handleClose();
-            }}
-            style={styles.actionButton}
-          >
+        <Animated.View style={[styles.menuItem, styles.item1Position, { transform: [{ scale: scaleAnim1 }] }]}>
+          <Pressable onPress={() => { alert('New Task (Coming Soon)'); handleClose(); }} style={styles.actionButton}>
             <View style={[styles.iconContainer, styles.blueIcon]}>
-              <Feather name="plus-square" size={32} color="#ffffff" />
+              <Feather name="plus-square" size={28} color="#ffffff" />
             </View>
             <Text style={styles.label}>New Task</Text>
           </Pressable>
         </Animated.View>
 
-        {/* Item 2 - Center Up-Left - Log Wellness */}
-        <Animated.View
-          style={[
-            styles.menuItem,
-            styles.item2Position,
-            {
-              transform: [{ scale: scaleAnim2 }],
-            },
-          ]}
-        >
-          <Pressable
-            onPress={() => {
-              alert('Log Wellness (Coming Soon)');
-              handleClose();
-            }}
-            style={styles.actionButton}
-          >
+        <Animated.View style={[styles.menuItem, styles.item2Position, { transform: [{ scale: scaleAnim2 }] }]}>
+          <Pressable onPress={() => { alert('Log Wellness (Coming Soon)'); handleClose(); }} style={styles.actionButton}>
             <View style={[styles.iconContainer, styles.greenIcon]}>
-              <Feather name="activity" size={32} color="#ffffff" />
+              <Feather name="activity" size={28} color="#ffffff" />
             </View>
             <Text style={styles.label}>Wellness</Text>
           </Pressable>
         </Animated.View>
 
-        {/* Item 3 - Center Up-Right - Education */}
-        <Animated.View
-          style={[
-            styles.menuItem,
-            styles.item3Position,
-            {
-              transform: [{ scale: scaleAnim3 }],
-            },
-          ]}
-        >
+        <Animated.View style={[styles.menuItem, styles.item3Position, { transform: [{ scale: scaleAnim3 }] }]}>
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              handleClose(() => {
-                router.push('/education');
-              });
+              handleClose(() => router.push('/education'));
             }}
             style={styles.actionButton}
           >
             <View style={[styles.iconContainer, styles.orangeIcon]}>
-              <Feather name="book-open" size={32} color="#ffffff" />
+              <Feather name="book-open" size={28} color="#ffffff" />
             </View>
             <Text style={styles.label}>Education</Text>
           </Pressable>
         </Animated.View>
 
-        {/* Item 4 - Far Right - New Post */}
-        <Animated.View
-          style={[
-            styles.menuItem,
-            styles.item4Position,
-            {
-              transform: [{ scale: scaleAnim4 }],
-            },
-          ]}
-        >
-          <Pressable
-            onPress={() => {
-              alert('Create New Post (Coming Soon)');
-              handleClose();
-            }}
-            style={styles.actionButton}
-          >
+        <Animated.View style={[styles.menuItem, styles.item4Position, { transform: [{ scale: scaleAnim4 }] }]}>
+          <Pressable onPress={() => { alert('Create New Post (Coming Soon)'); handleClose(); }} style={styles.actionButton}>
             <View style={[styles.iconContainer, styles.violetIcon]}>
-              <Feather name="edit-3" size={32} color="#ffffff" />
+              <Feather name="edit-3" size={28} color="#ffffff" />
             </View>
             <Text style={styles.label}>New Post</Text>
           </Pressable>
         </Animated.View>
       </View>
 
-      {/* Clear Black Button (not blurred) */}
-      <Animated.View
-        style={[
-          styles.clearButton,
-          {
-            transform: [{ rotate: rotation }],
-          },
-        ]}
-      >
-        <Pressable
-          onPress={handleClose}
-          style={styles.clearButtonInner}
-        >
+      {/* Close Button */}
+      <Animated.View style={[styles.clearButton, { transform: [{ rotate: rotation }] }]}>
+        <Pressable onPress={() => handleClose()} style={styles.clearButtonInner}>
           <Feather name="plus" size={28} color="#ffffff" />
         </Pressable>
       </Animated.View>
@@ -311,77 +285,194 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
-  menuContainer: {
+  summaryContainer: {
+    position: 'absolute',
+    top: height * 0.08,
+    left: 16,
+    right: 16,
+    zIndex: 2,
+  },
+  headerRow: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  greetingText: {
+    fontSize: 30,
+    fontWeight: '900',
+    color: '#111827',
+    letterSpacing: -1,
+  },
+  dateText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 10,
+  },
+  statBadge: {
     flex: 1,
-    justifyContent: 'flex-end',
+    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(254, 243, 199, 0.9)',
+    borderRadius: 14,
+    padding: 12,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(251, 191, 36, 0.3)',
+  },
+  statBadgeGreen: {
+    backgroundColor: 'rgba(209, 250, 229, 0.9)',
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+  },
+  statEmoji: {
+    fontSize: 18,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#F59E0B',
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#6B7280',
+  },
+  widget: {
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 10,
+  },
+  glassWidget: {
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  widgetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 10,
+  },
+  inlineIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  widgetTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#4B5563',
+  },
+  heroContent: {
+    alignItems: 'center',
+  },
+  heroValue: {
+    fontSize: 56,
+    fontWeight: '900',
+    color: '#111827',
+    letterSpacing: -2,
+  },
+  heroSubtext: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    marginTop: 6,
+  },
+  sideBySideRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  smallWidget: {
+    flex: 1,
+    padding: 14,
+  },
+  smallWidgetTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#6B7280',
+  },
+  smallWidgetValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#111827',
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  smallWidgetSubtext: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#9CA3AF',
+  },
+  menuContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 280,
     zIndex: 3,
   },
   menuItem: {
     position: 'absolute',
   },
   item1Position: {
-    bottom: 100,
-    left: width / 2 - 140,
+    bottom: 110,
+    left: width / 2 - 135,
   },
   item2Position: {
-    bottom: 210,
-    left: width / 2 - 100,
+    bottom: 200,
+    left: width / 2 - 90,
   },
   item3Position: {
-    bottom: 210,
-    left: width / 2 + 36,
+    bottom: 200,
+    right: width / 2 - 90,
   },
   item4Position: {
-    bottom: 100,
-    left: width / 2 + 76,
+    bottom: 110,
+    right: width / 2 - 135,
   },
   actionButton: {
     alignItems: 'center',
   },
   iconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 6,
   },
   blueIcon: {
     backgroundColor: '#2563EB',
-    borderWidth: 2,
-    borderColor: '#93C5FD',
   },
   greenIcon: {
     backgroundColor: '#10B981',
-    borderWidth: 2,
-    borderColor: '#6EE7B7',
-  },
-  pinkIcon: {
-    backgroundColor: '#EC4899',
-    borderWidth: 2,
-    borderColor: '#F9A8D4',
   },
   violetIcon: {
     backgroundColor: '#8B5CF6',
-    borderWidth: 2,
-    borderColor: '#C4B5FD',
   },
   orangeIcon: {
     backgroundColor: '#F59E0B',
-    borderWidth: 2,
-    borderColor: '#FDE68A',
   },
   label: {
-    marginTop: 8,
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1f2937',
-    textAlign: 'center',
+    marginTop: 6,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#374151',
   },
   clearButton: {
     position: 'absolute',
@@ -395,113 +486,13 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#1f2937',
+    backgroundColor: '#1F2937',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
-  },
-  summaryContainer: {
-    position: 'absolute',
-    top: height * 0.12,
-    left: 16,
-    right: 16,
-    zIndex: 2,
-  },
-  headerRow: {
-    marginBottom: 24,
-    paddingHorizontal: 8,
-  },
-  greetingText: {
-    fontSize: 34,
-    fontWeight: '900',
-    color: '#111827',
-    letterSpacing: -1.2,
-  },
-  dateText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#374151',
-    marginTop: 2,
-    letterSpacing: -0.2,
-  },
-  widgetContainer: {
-    gap: 12,
-  },
-  widget: {
-    backgroundColor: 'rgba(255,255,255,0.7)',
-    borderRadius: 24,
-    padding: 20,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.8)',
-  },
-  heroWidget: {
-    width: '100%',
-    paddingBottom: 24,
-  },
-  widgetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 16,
-  },
-  inlineIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  widgetTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#4b5563',
-    letterSpacing: -0.3,
-  },
-  heroContent: {
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  heroValue: {
-    fontSize: 72,
-    fontWeight: '900',
-    color: '#111827',
-    letterSpacing: -3,
-    marginBottom: 4,
-  },
-  heroSubtext: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#6b7280',
-    marginTop: 12,
-  },
-  sideBySideRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  smallWidget: {
-    flex: 1,
-    padding: 18,
-  },
-  smallWidgetTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#4b5563',
-    letterSpacing: -0.2,
-  },
-  smallWidgetValue: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: '#111827',
-    marginBottom: 4,
-    letterSpacing: -0.8,
-  },
-  smallWidgetSubtext: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#9ca3af',
   },
 });

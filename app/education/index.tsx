@@ -228,23 +228,56 @@ export default function EducationScreen() {
         <View className="px-6">
             {/* Featured Article Card */}
             <Pressable style={shadowMd} className="mb-6 rounded-[28px] overflow-hidden active:scale-[0.98]">
-                <LinearGradient colors={['#1e293b', '#334155']} className="p-6">
-                    <View className="bg-amber-500 px-3 py-1.5 rounded-full self-start mb-4">
-                        <Text className="text-white text-[10px] font-black uppercase tracking-wider">Featured</Text>
+                <LinearGradient
+                    colors={['#dc2626', '#991b1b']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ padding: 24 }}
+                >
+                    {/* Decorative elements */}
+                    <View style={{ position: 'absolute', right: -20, top: -20, opacity: 0.1 }}>
+                        <MaterialIcons name="menu-book" size={140} color="#ffffff" />
                     </View>
-                    <Text className="text-2xl font-extrabold text-white mb-2">The Sickle Cell Warrior Manual</Text>
-                    <Text className="text-gray-300 text-sm mb-6 leading-5">A comprehensive guide on managing high-altitude travel and cold weather crises.</Text>
-                    <View className="flex-row items-center justify-between">
+
+                    <View className="flex-row items-center mb-5">
+                        <View className="bg-white px-3 py-1.5 rounded-full mr-3">
+                            <Text className="text-red-600 text-[10px] font-black uppercase tracking-wider">Featured Guide</Text>
+                        </View>
                         <View className="flex-row items-center">
-                            <View className="w-8 h-8 bg-gray-700 rounded-full items-center justify-center mr-2">
-                                <Feather name="clock" size={14} color="#94a3b8" />
-                            </View>
-                            <Text className="text-gray-400 text-xs font-medium">12 min read</Text>
-                        </View>
-                        <View style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} className="px-5 py-2.5 rounded-xl">
-                            <Text className="text-white font-bold text-sm">Start Reading</Text>
+                            <MaterialIcons name="star" size={14} color="#fbbf24" />
+                            <Text className="text-amber-300 text-xs font-bold ml-1">Essential</Text>
                         </View>
                     </View>
+
+                    <View className="flex-row items-start">
+                        <View className="flex-1 pr-5">
+                            <Text className="text-2xl font-extrabold text-white mb-3 leading-tight">The Sickle Cell Warrior Manual</Text>
+                            <Text className="text-red-100 text-sm mb-6 leading-5">Your comprehensive guide to managing high-altitude travel and cold weather crises safely.</Text>
+
+                            <View className="flex-row items-center">
+                                <View style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} className="flex-row items-center px-3 py-2 rounded-xl mr-3">
+                                    <Feather name="clock" size={14} color="#ffffff" />
+                                    <Text className="text-white text-xs font-semibold ml-1.5">12 min</Text>
+                                </View>
+                                <View style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} className="flex-row items-center px-3 py-2 rounded-xl">
+                                    <MaterialIcons name="bookmark-border" size={14} color="#ffffff" />
+                                    <Text className="text-white text-xs font-semibold ml-1">Save</Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        <View style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} className="w-16 h-16 rounded-2xl items-center justify-center">
+                            <MaterialIcons name="menu-book" size={32} color="#ffffff" />
+                        </View>
+                    </View>
+
+                    <Pressable
+                        style={{ backgroundColor: '#ffffff', ...shadowSm }}
+                        className="mt-6 py-4 rounded-2xl items-center flex-row justify-center active:scale-[0.98]"
+                    >
+                        <Text className="text-gray-900 font-bold text-base mr-2">Start Reading</Text>
+                        <MaterialIcons name="arrow-forward" size={18} color="#1f2937" />
+                    </Pressable>
                 </LinearGradient>
             </Pressable>
 

@@ -1,133 +1,257 @@
-import React from 'react';
-import { View, Text, Pressable, Image, Dimensions, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Pressable, Dimensions, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, Sparkles } from 'lucide-react-native';
-import { Video, ResizeMode } from 'expo-av';
+import { Sparkles } from 'lucide-react-native';
+import * as Haptics from 'expo-haptics';
+import OnboardingProgress from '../../components/OnboardingProgress';
+import { TextInputField, BackButton } from '../../components/onboarding';
 
-const { width } = Dimensions.get('window');
-
-const communityImages = [
-  { uri: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200', size: 90, top: '5%', left: '5%', zIndex: 1 },
-  { uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200', size: 110, top: '15%', right: '8%', zIndex: 2 },
-  { uri: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=200', size: 130, top: '25%', left: '15%', zIndex: 10 },
-  { uri: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200', size: 95, top: '45%', right: '5%', zIndex: 3 },
-  { uri: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200', size: 140, top: '48%', left: '45%', zIndex: 20 },
-  { uri: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200', size: 100, top: '68%', left: '5%', zIndex: 4 },
-  { uri: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200', size: 115, top: '72%', right: '12%', zIndex: 5 },
-];
+const { width, height } = Dimensions.get('window');
 
 export default function CommunityScreen() {
+  const [name, setName] = useState('');
+
+  const handleContinue = () => {
+    if (name.trim().length > 0) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      // TODO: Save name to user profile/context
+      router.push('/(onboarding)/role-selection');
+    }
+  };
+
+  const isValid = name.trim().length >= 2;
+
   return (
-    <View className="flex-1 bg-white">
+    <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Video Background */}
-      <Video
-        source={{ uri: 'https://assets.mixkit.co/videos/preview/mixkit-friends-sitting-on-a-couch-at-home-41312-large.mp4' }}
-        rate={1.0}
-        volume={0}
-        isMuted={true}
-        resizeMode={ResizeMode.COVER}
-        shouldPlay
-        isLooping
+      {/* Gradient Background */}
+      <LinearGradient
+        colors={['#ffffff', '#fef2f2', '#fff7ed', '#ffffff']}
+        locations={[0, 0.3, 0.6, 1]}
         style={StyleSheet.absoluteFill}
       />
 
-      <LinearGradient
-        colors={['rgba(255,255,255,0.4)', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.8)']}
-        className="absolute inset-0"
-      />
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.keyboardView}
+        >
+          {/* Header with Back Button */}
+          <View style={styles.header}>
+            <BackButton />
+            <OnboardingProgress currentStep={2} variant="light" />
+            <View style={styles.headerSpacer} />
+          </View>
 
-      <SafeAreaView className="flex-1">
-        {/* Logo at Top (Triple Size, No BG) */}
-        <View className="items-center mt-2">
-          <Image
-            source={require('../../assets/logo.png')}
-            style={{ width: width * 0.6, height: 100 }}
-            resizeMode="contain"
-          />
-        </View>
+          {/* Content */}
+          <View style={styles.content}>
+            {/* Badge */}
+            <View style={styles.badge}>
+              <Sparkles size={14} color="#EF4444" />
+              <Text style={styles.badgeText}>Let's get to know you</Text>
+            </View>
 
-        {/* Community Collage Section */}
-        <View className="flex-1 relative overflow-visible">
-          {communityImages.map((image, index) => (
-            <View
-              key={index}
-              className="absolute rounded-full border-[6px] border-white shadow-xl overflow-hidden"
-              style={{
-                width: image.size,
-                height: image.size,
-                top: image.top as any,
-                left: image.left as any,
-                right: image.right as any,
-                zIndex: image.zIndex,
-                transform: [{ rotate: `${index % 2 === 0 ? '-5deg' : '5deg'}` }]
-              }}
-            >
-              <Image
-                source={{ uri: image.uri }}
-                className="w-full h-full"
-                resizeMode="cover"
+            {/* Title */}
+            <Text style={styles.title}>
+              What should we{'\n'}
+              <Text style={styles.titleAccent}>call you?</Text>
+            </Text>
+
+            <Text style={styles.subtitle}>
+              This is how you'll appear to others in the Sickle Safe community.
+            </Text>
+
+            {/* Name Input */}
+            <View style={styles.inputSection}>
+              <TextInputField
+                label="Your name or nickname"
+                value={name}
+                onChange={setName}
+                placeholder="Enter your name"
+                maxLength={30}
+                autoCapitalize="words"
               />
             </View>
-          ))}
 
-          {/* Floating Badge */}
-          <View
-            className="absolute top-[38%] left-[10%] bg-red-600 px-4 py-2 rounded-2xl shadow-lg flex-row items-center gap-2 border border-red-500"
-            style={{ zIndex: 30 }}
-          >
-            <Sparkles size={16} color="#FFF" />
-            <Text className="text-[10px] font-black uppercase tracking-widest text-white">Stronger Together</Text>
-          </View>
-        </View>
-
-        {/* Content Section */}
-        <View className="px-8 pb-10">
-          <View className="mb-12">
-            <Text className="text-4xl font-black text-gray-900 leading-[1.1] tracking-tighter mb-4">
-              Join the{'\n'}
-              <Text className="text-red-500">Sickle Safe{'\n'}</Text>
-              Community
-            </Text>
-            <Text className="text-base text-gray-700 font-bold leading-relaxed">
-              Connect with a supportive network of <Text className="text-gray-900">Overcomers</Text>, <Text className="text-gray-900">Helpers</Text>, and <Text className="text-gray-900">Volunteers</Text>.
-            </Text>
-          </View>
-
-          {/* Action Area */}
-          <View className="w-full space-y-6">
-            <View className="flex-row items-center justify-between">
-              {/* Custom Pagination */}
-              <View className="flex-row gap-1.5">
-                <View className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-                <View className="w-8 h-2.5 rounded-full bg-red-600" />
-                <View className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-              </View>
-
-              <Pressable className="active:opacity-60">
-                <Text className="text-gray-600 font-bold text-sm">
-                  Existing account? <Text className="text-gray-900 underline font-black">Log in</Text>
-                </Text>
-              </Pressable>
-            </View>
-
-            <Link href="/(onboarding)/role-selection" asChild>
-              <Pressable className="w-full bg-red-600 py-6 rounded-[24px] shadow-xl shadow-red-900/20 active:scale-[0.98] overflow-hidden">
-                <View className="flex-row items-center justify-center">
-                  <Text className="text-white font-black text-xl tracking-wide">Get Started</Text>
-                  <View className="ml-3 bg-white/20 p-1.5 rounded-full">
-                    <ArrowRight size={24} color="#ffffff" />
-                  </View>
+            {/* Preview */}
+            {name.trim().length > 0 && (
+              <View style={styles.previewCard}>
+                <View style={styles.previewAvatar}>
+                  <Text style={styles.previewInitial}>
+                    {name.trim().charAt(0).toUpperCase()}
+                  </Text>
                 </View>
-              </Pressable>
-            </Link>
+                <View>
+                  <Text style={styles.previewName}>{name.trim()}</Text>
+                  <Text style={styles.previewLabel}>Community Member</Text>
+                </View>
+              </View>
+            )}
           </View>
-        </View>
+
+          {/* Bottom CTA */}
+          <View style={styles.bottomSection}>
+            <Pressable
+              onPress={handleContinue}
+              disabled={!isValid}
+              style={[
+                styles.primaryButton,
+                !isValid && styles.primaryButtonDisabled,
+              ]}
+            >
+              <Text style={styles.buttonText}>Continue</Text>
+            </Pressable>
+
+            <Pressable style={styles.skipButton}>
+              <Text style={styles.skipText}>
+                Already have an account? <Text style={styles.skipLink}>Log in</Text>
+              </Text>
+            </Pressable>
+          </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  headerSpacer: {
+    width: 80,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 32,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 100,
+    alignSelf: 'flex-start',
+    marginBottom: 20,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#EF4444',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#111827',
+    lineHeight: 42,
+    letterSpacing: -1,
+    marginBottom: 12,
+  },
+  titleAccent: {
+    color: '#EF4444',
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6B7280',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  inputSection: {
+    marginBottom: 24,
+  },
+  previewCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 16,
+    borderRadius: 20,
+    gap: 16,
+  },
+  previewAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewInitial: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  previewName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  previewLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  bottomSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 16,
+  },
+  primaryButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EF4444',
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  primaryButtonDisabled: {
+    backgroundColor: '#D1D5DB',
+    shadowOpacity: 0,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  skipButton: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  skipLink: {
+    color: '#111827',
+    fontWeight: '800',
+    textDecorationLine: 'underline',
+  },
+});

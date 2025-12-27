@@ -3,9 +3,11 @@ import { View, Text, Pressable, ScrollView, Image, Dimensions, StyleSheet } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Heart, Users, HandHeart, ArrowRight } from 'lucide-react-native';
+import { Heart, Users, HandHeart } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Video, ResizeMode } from 'expo-av';
+import OnboardingProgress from '../../components/OnboardingProgress';
+import { BackButton } from '../../components/onboarding';
 
 const { width } = Dimensions.get('window');
 
@@ -87,22 +89,11 @@ export default function RoleSelectionScreen() {
       />
 
       <SafeAreaView className="flex-1">
-        {/* Logo at Top (Triple Size, No BG) */}
-        <View className="items-center mt-2">
-          <Image
-            source={require('../../assets/logo.png')}
-            style={{ width: width * 0.55, height: 90 }}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Sub-Progress - Step 3 of 3 */}
-        <View className="px-8 mt-4 mb-4">
-          <View className="flex-row gap-1.5 justify-center">
-            <View className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-            <View className="w-2.5 h-2.5 rounded-full bg-gray-300" />
-            <View className="w-8 h-2.5 rounded-full bg-red-600" />
-          </View>
+        {/* Header with Back Button */}
+        <View className="flex-row items-center justify-between px-4 pt-2">
+          <BackButton />
+          <OnboardingProgress currentStep={3} variant="light" />
+          <View style={{ width: 80 }} />
         </View>
 
         {/* Content */}
@@ -175,21 +166,16 @@ export default function RoleSelectionScreen() {
         <View className="px-8 pb-10">
           <Pressable
             onPress={handleContinue}
-            className="w-full bg-red-600 py-6 rounded-[24px] active:scale-[0.98] relative overflow-hidden"
+            className="w-full bg-red-600 py-4 rounded-[16px] active:scale-[0.98]"
             style={{
               shadowColor: '#7f1d1d',
-              shadowOffset: { width: 0, height: 20 },
+              shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.2,
-              shadowRadius: 25,
-              elevation: 10,
+              shadowRadius: 16,
+              elevation: 8,
             }}
           >
-            <View className="flex-row items-center justify-center">
-              <Text className="text-white font-black text-xl tracking-wide">Enter Dashboard</Text>
-              <View className="ml-3 bg-white/20 p-1.5 rounded-full">
-                <ArrowRight size={24} color="#ffffff" />
-              </View>
-            </View>
+            <Text className="text-white font-extrabold text-base text-center">Continue</Text>
           </Pressable>
         </View>
       </SafeAreaView>
