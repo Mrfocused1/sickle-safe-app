@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, ImageBackground, Dimensions, StyleSh
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { X, Check } from 'lucide-react-native';
+import { Check } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 
 const { width, height } = Dimensions.get('window');
@@ -78,9 +78,6 @@ export default function RoleSelectionScreen() {
               <View style={styles.dot} />
               <View style={[styles.dot, styles.activeDot]} />
             </View>
-            <Pressable style={styles.closeButton} onPress={() => router.back()}>
-              <X size={20} color="#fff" />
-            </Pressable>
           </View>
 
           <ScrollView
@@ -193,7 +190,6 @@ const styles = StyleSheet.create({
     gap: 8,
     flex: 1,
     justifyContent: 'center',
-    marginLeft: 40,
   },
   dot: {
     width: 8,
@@ -204,14 +200,6 @@ const styles = StyleSheet.create({
   activeDot: {
     backgroundColor: '#fff',
     width: 20,
-  },
-  closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(55,65,81,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   scrollContent: {
     paddingHorizontal: 24,
