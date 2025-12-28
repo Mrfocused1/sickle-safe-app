@@ -32,7 +32,7 @@ export default function OrganizationInfoScreen() {
         }
     };
 
-    const isValid = orgName.trim().length >= 3 && mission.trim().length >= 3;
+    const isValid = orgName.trim().length >= 1 && mission.trim().length >= 1;
 
     return (
         <View style={styles.container}>
@@ -85,7 +85,7 @@ export default function OrganizationInfoScreen() {
                                 options={ORG_TYPES}
                                 selectedValues={orgType}
                                 onChange={setOrgType}
-                                color="#D97706"
+                                color="#334155"
                                 maxSelections={1}
                             />
 
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     titleAccent: {
-        color: '#D97706',
+        color: '#334155',
     },
     subtitle: {
         fontSize: 16,
@@ -192,10 +192,10 @@ const styles = StyleSheet.create({
     primaryButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#D97706',
+        backgroundColor: '#334155',
         paddingVertical: 16,
         borderRadius: 16,
-        shadowColor: '#D97706',
+        shadowColor: '#334155',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 16,
