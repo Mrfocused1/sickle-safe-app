@@ -40,13 +40,6 @@ export default function CharityLayout() {
                 }}
             />
             <Tabs.Screen
-                name="impact"
-                options={{
-                    title: 'Impact',
-                    tabBarIcon: ({ color }) => <MaterialIcons name="analytics" size={22} color={color} />,
-                }}
-            />
-            <Tabs.Screen
                 name="grants"
                 options={{
                     title: 'Grants',
