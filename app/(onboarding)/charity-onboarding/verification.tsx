@@ -126,7 +126,7 @@ export default function VerificationScreen() {
                     </View>
 
                     <View style={styles.noticeBox}>
-                        <AlertCircle size={18} color="#374151" className="mr-2" />
+                        <AlertCircle size={18} color="#374151" />
                         <Text style={styles.noticeText}>
                             By proceeding, you confirm you are an authorized representative of the organization.
                         </Text>
@@ -304,19 +304,20 @@ const styles = StyleSheet.create({
     noticeBox: {
         flexDirection: 'row',
         backgroundColor: '#f1f5f9',
-        padding: 16,
+        padding: 20,
         borderRadius: 20,
         marginTop: 24,
-        alignItems: 'center',
+        alignItems: 'flex-start',
         borderWidth: 1,
         borderColor: '#e2e8f0',
+        gap: 12,
     },
     noticeText: {
         flex: 1,
-        fontSize: 13,
+        fontSize: 14,
         color: '#475569',
         fontWeight: '600',
-        lineHeight: 18,
+        lineHeight: 20,
     },
     bottomSection: {
         paddingHorizontal: 24,
