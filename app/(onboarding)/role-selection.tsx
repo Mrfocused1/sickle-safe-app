@@ -65,13 +65,13 @@ export default function RoleSelectionScreen() {
 
   const handleContinue = () => {
     if (selectedRole === 'overcomer') {
-      router.push('/(onboarding)/overcomer/productivity');
+      router.push('/overcomer/productivity');
     } else if (selectedRole === 'helper') {
-      router.push('/(onboarding)/helper/real-time-alerts');
+      router.push('/helper/real-time-alerts');
     } else if (selectedRole === 'volunteer') {
-      router.push('/(onboarding)/volunteer/advocacy');
+      router.push('/volunteer/advocacy');
     } else {
-      router.push('/(onboarding)/charity/organization-info');
+      router.push('/charity-onboarding/organization-info');
     }
   };
 

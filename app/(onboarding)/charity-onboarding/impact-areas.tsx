@@ -43,7 +43,7 @@ export default function ImpactAreasScreen() {
 
     const handleContinue = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        router.push('/(onboarding)/charity/verification');
+        router.push('/charity-onboarding/verification');
     };
 
     const isValid = categories.length > 0 && geoFocus.length > 0;

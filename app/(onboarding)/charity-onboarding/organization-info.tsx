@@ -28,7 +28,7 @@ export default function OrganizationInfoScreen() {
     const handleContinue = () => {
         if (isValid) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-            router.push('/(onboarding)/charity/funding-goals');
+            router.push('/charity-onboarding/funding-goals');
         }
     };
 

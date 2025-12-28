@@ -26,7 +26,7 @@ export default function FundingGoalsScreen() {
 
     const handleContinue = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        router.push('/(onboarding)/charity/impact-areas');
+        router.push('/charity-onboarding/impact-areas');
     };
 
     const formatCurrency = (value: number) => {
