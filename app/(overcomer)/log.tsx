@@ -362,6 +362,14 @@ export default function LogScreen() {
         onHydrationUpdate={handleHydrationUpdate}
         onMoodUpdate={(level, notes) => handleMoodUpdate(level as MoodLevel, notes)}
         onTriggersUpdate={handleTriggersUpdate}
+        onCrisisUpdate={(startTime, level, notes) => handleCrisisUpdate({
+          id: Math.random().toString(36).substr(2, 9),
+          startTime,
+          painLevel: level,
+          notes,
+          triggers: [],
+          timestamp: new Date().toISOString()
+        })}
       />
     </View>
   );

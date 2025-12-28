@@ -26,6 +26,9 @@ import Animated, {
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddCarePlanModal from '../../components/AddCarePlanModal';
 import AppBottomSheet from '../../components/AppBottomSheet';
+import { healthLogStorage } from '../../services/healthLogStorage';
+import { DailyHealthLog, DailyLogSummary } from '../../types/healthLog';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -39,9 +42,46 @@ export default function DashboardScreen() {
   // Progress circle animation
   const progressValue = useSharedValue(0);
 
-  React.useEffect(() => {
-    progressValue.value = withTiming(0.6, { duration: 1200 });
-  }, []);
+  // Health Log State
+  const [dailyLog, setDailyLog] = React.useState<DailyHealthLog | null>(null);
+  const [summary, setSummary] = React.useState<DailyLogSummary | null>(null);
+  const [wellnessProgress, setWellnessProgress] = React.useState(0);
+  const [completedTasks, setCompletedTasks] = React.useState(0);
+
+  // Load health data on focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadHealthData();
+    }, [])
+  );
+
+  const loadHealthData = async () => {
+    try {
+      const today = new Date();
+      const log = await healthLogStorage.getDailyLog(today);
+      const logSummary = healthLogStorage.computeSummary(log);
+
+      setDailyLog(log);
+      setSummary(logSummary);
+
+      // Calculate progress (Meds + Water + Mood + Pain + Triggers)
+      let completed = 0;
+      const total = 5;
+
+      if (log.pain.length > 0) completed++;
+      if (log.hydration.length > 0) completed++;
+      if (log.medications.checked.length > 0) completed++;
+      if (log.mood.length > 0) completed++;
+      if (log.triggers.length > 0) completed++;
+
+      setCompletedTasks(completed);
+      const progress = completed / total;
+      setWellnessProgress(progress);
+      progressValue.value = withTiming(progress, { duration: 1000 });
+    } catch (error) {
+      console.error('Failed to load health data:', error);
+    }
+  };
 
   const [tasks, setTasks] = React.useState([
     {
@@ -328,7 +368,14 @@ export default function DashboardScreen() {
                       <MaterialIcons name="medical-services" size={44} color="#ffffff" />
                     </View>
 
-                    <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff', marginBottom: 8 }}>Crisis Alert</Text>
+                    <Text style={{ fontSize: 24, fontWeight: '800', color: '#ffffff', marginBottom: 4 }}>Crisis Alert</Text>
+                    {summary?.crisisCount !== undefined && summary.crisisCount > 0 && (
+                      <View className="bg-white/20 px-3 py-1 rounded-full mb-4">
+                        <Text style={{ fontSize: 13, fontWeight: '700', color: '#ffffff' }}>
+                          {summary.crisisCount} episode{summary.crisisCount === 1 ? '' : 's'} recorded today
+                        </Text>
+                      </View>
+                    )}
                     <Text style={{ fontSize: 15, fontWeight: '500', color: 'rgba(255, 255, 255, 0.9)', lineHeight: 22, textAlign: 'center', paddingHorizontal: 24 }}>
                       Slide the button below to notify emergency contacts
                     </Text>
@@ -364,7 +411,7 @@ export default function DashboardScreen() {
             <View className="mb-8">
               <View className="flex-row justify-between items-end mb-3">
                 <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Daily Wellness</Text>
-                <Text style={{ fontSize: 15, fontWeight: '700', color: '#3b82f6' }}>3/5 tasks</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#3b82f6' }}>{completedTasks}/5 tasks</Text>
               </View>
 
               <Pressable
@@ -409,11 +456,11 @@ export default function DashboardScreen() {
                         style={[
                           { fontSize: 14, fontWeight: '700', color: '#1e293b' },
                           useAnimatedStyle(() => ({
-                            opacity: interpolate(progressValue.value, [0, 0.3], [0, 1])
+                            opacity: interpolate(progressValue.value, [0, 0.1], [0, 1])
                           }))
                         ]}
                       >
-                        {Math.round(0.6 * 100)}%
+                        {Math.round(wellnessProgress * 100)}%
                       </Animated.Text>
                     </View>
                   </View>
@@ -430,23 +477,34 @@ export default function DashboardScreen() {
 
                 {/* Quick Actions */}
                 <View className="flex-row gap-3">
-                  <Pressable className="flex-1 flex-row items-center px-4 py-3 bg-blue-50/50 border border-blue-100 rounded-2xl active:bg-blue-100">
-                    <View className="w-8 h-8 bg-blue-100 rounded-xl items-center justify-center mr-2">
-                      <MaterialIcons name="water-drop" size={16} color="#2563eb" />
+                  <Pressable
+                    onPress={() => router.push({ pathname: '/log', params: { type: 'hydration' } })}
+                    className={`flex-1 flex-row items-center px-4 py-3 rounded-2xl border ${dailyLog?.hydration && dailyLog.hydration.length > 0 ? 'bg-blue-50/50 border-blue-100' : 'bg-gray-50 border-gray-200 opacity-50'}`}
+                  >
+                    <View className={`w-8 h-8 rounded-xl items-center justify-center mr-2 ${dailyLog?.hydration && dailyLog.hydration.length > 0 ? 'bg-blue-100' : 'bg-white'}`}>
+                      <MaterialIcons name="water-drop" size={16} color={dailyLog?.hydration && dailyLog.hydration.length > 0 ? '#2563eb' : '#6b7280'} />
                     </View>
-                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#1d4ed8' }}>Water</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: dailyLog?.hydration && dailyLog.hydration.length > 0 ? '#1d4ed8' : '#64748b' }}>Water</Text>
                   </Pressable>
-                  <Pressable className="flex-1 flex-row items-center px-4 py-3 bg-purple-50/50 border border-purple-100 rounded-2xl active:bg-purple-100">
-                    <View className="w-8 h-8 bg-purple-100 rounded-xl items-center justify-center mr-2">
-                      <MaterialIcons name="medication" size={16} color="#7c3aed" />
+
+                  <Pressable
+                    onPress={() => router.push({ pathname: '/log', params: { type: 'meds' } })}
+                    className={`flex-1 flex-row items-center px-4 py-3 rounded-2xl border ${dailyLog?.medications && dailyLog.medications.checked.length > 0 ? 'bg-purple-50/50 border-purple-100' : 'bg-gray-50 border-gray-200 opacity-50'}`}
+                  >
+                    <View className={`w-8 h-8 rounded-xl items-center justify-center mr-2 ${dailyLog?.medications && dailyLog.medications.checked.length > 0 ? 'bg-purple-100' : 'bg-white'}`}>
+                      <MaterialIcons name="medication" size={16} color={dailyLog?.medications && dailyLog.medications.checked.length > 0 ? '#7c3aed' : '#6b7280'} />
                     </View>
-                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#6d28d9' }}>Meds</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: dailyLog?.medications && dailyLog.medications.checked.length > 0 ? '#6d28d9' : '#64748b' }}>Meds</Text>
                   </Pressable>
-                  <Pressable className="flex-1 flex-row items-center px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl opacity-50">
-                    <View className="w-8 h-8 bg-white rounded-xl items-center justify-center mr-2">
-                      <MaterialIcons name="mood" size={16} color="#6b7280" />
+
+                  <Pressable
+                    onPress={() => router.push({ pathname: '/log', params: { type: 'mood' } })}
+                    className={`flex-1 flex-row items-center px-4 py-3 rounded-2xl border ${dailyLog?.mood && dailyLog.mood.length > 0 ? 'bg-green-50/50 border-green-100' : 'bg-gray-50 border-gray-200 opacity-50'}`}
+                  >
+                    <View className={`w-8 h-8 rounded-xl items-center justify-center mr-2 ${dailyLog?.mood && dailyLog.mood.length > 0 ? 'bg-green-100' : 'bg-white'}`}>
+                      <MaterialIcons name="mood" size={16} color={dailyLog?.mood && dailyLog.mood.length > 0 ? '#10b981' : '#6b7280'} />
                     </View>
-                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#64748b' }}>Mood</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: dailyLog?.mood && dailyLog.mood.length > 0 ? '#059669' : '#64748b' }}>Mood</Text>
                   </Pressable>
                 </View>
               </Pressable>

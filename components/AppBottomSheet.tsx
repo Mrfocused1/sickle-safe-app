@@ -13,9 +13,12 @@ import {
     ScrollView,
     Image,
 } from 'react-native';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { BlurView } from 'expo-blur';
+import Slider from '@react-native-community/slider';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,9 +44,10 @@ interface AppBottomSheetProps {
     onHydrationUpdate?: (amount: string, notes?: string) => void;
     onMoodUpdate?: (level: string, notes?: string) => void;
     onTriggersUpdate?: (triggers: string[], notes?: string) => void;
+    onCrisisUpdate?: (startTime: string, level: number, notes?: string) => void;
 }
 
-export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate }: AppBottomSheetProps) {
+export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate, onCrisisUpdate }: AppBottomSheetProps) {
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
     const [selectedHelpers, setSelectedHelpers] = useState<string[]>([]);
@@ -61,6 +65,10 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
     const [permission, requestPermission] = useCameraPermissions();
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const toastAnim = useRef(new Animated.Value(-100)).current;
+    const [showToast, setShowToast] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [startTime, setStartTime] = useState('');
     const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Common SCD medications for quick suggestions
@@ -169,6 +177,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     };
 
     const goBack = () => {
+        if (showToast) return; // Prevent closing while toast is showing
         if (history.length > 0) {
             const previous = history[history.length - 1];
             setHistory(prev => prev.slice(0, -1));
@@ -176,6 +185,34 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
         } else {
             onClose();
         }
+    };
+
+    const triggerToast = () => {
+        setShowToast(true);
+        setShowConfetti(true);
+        Animated.spring(toastAnim, {
+            toValue: 20,
+            useNativeDriver: true,
+            tension: 80,
+            friction: 10
+        }).start();
+
+        // Sequence of subtle vibrations
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setTimeout(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light), 100);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+        setTimeout(() => {
+            Animated.timing(toastAnim, {
+                toValue: -100,
+                duration: 300,
+                useNativeDriver: true
+            }).start(() => {
+                setShowToast(false);
+                setShowConfetti(false);
+                onClose();
+            });
+        }, 2200);
     };
 
     useEffect(() => {
@@ -200,6 +237,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             fadeAnim.setValue(0);
             setValue('');
             setNotes('');
+            setStartTime('');
             setSelectedHelpers([]);
         }
     }, [visible, type]);
@@ -241,9 +279,9 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'invite_member':
                 return { title: 'Invite Caregiver', icon: 'person-add', color: '#8b5cf6' };
             case 'manage_task':
-                return { title: 'Task Details', icon: 'assignment', color: '#f59e0b' };
+                return { title: 'Task Details', icon: 'assignment', color: task?.priority === 'critical' ? '#ef4444' : task?.priority === 'needs_help' ? '#f59e0b' : '#10b981' };
             case 'request_task':
-                return { title: 'Help Needed', icon: 'handshake', color: '#3b82f6' };
+                return { title: 'Help Needed', icon: 'handshake', color: task?.priority === 'critical' ? '#ef4444' : task?.priority === 'needs_help' ? '#f59e0b' : '#10b981' };
             case 'metrics_info':
                 return { title: 'Today\'s Metrics', icon: 'info', color: '#64748b' };
             case 'message_selection':
@@ -264,20 +302,30 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'pain':
                 return (
                     <View style={styles.contentSection}>
-                        <Text style={styles.sectionLabel}>Severity (1-10)</Text>
-                        <View style={styles.scaleContainer}>
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                                <Pressable
-                                    key={num}
-                                    onPress={() => setValue(num.toString())}
-                                    style={[
-                                        styles.scaleButton,
-                                        value === num.toString() && { backgroundColor: header.color, borderColor: header.color },
-                                    ]}
-                                >
-                                    <Text style={[styles.scaleText, value === num.toString() && { color: '#fff' }]}>{num}</Text>
-                                </Pressable>
-                            ))}
+                        <View style={{ alignItems: 'center', marginBottom: 24 }}>
+                            <Text style={{ fontSize: 64, fontWeight: '800', color: header.color }}>{value || '0'}</Text>
+                            <Text style={{ fontSize: 16, fontWeight: '700', color: '#64748b', marginTop: -8 }}>
+                                {parseInt(value) <= 3 ? 'Mild' : parseInt(value) <= 7 ? 'Moderate' : 'Severe'}
+                            </Text>
+                        </View>
+                        <Text style={styles.sectionLabel}>Severity (0-10)</Text>
+                        <Slider
+                            style={{ width: '100%', height: 40 }}
+                            minimumValue={0}
+                            maximumValue={10}
+                            step={1}
+                            value={parseInt(value) || 0}
+                            onValueChange={(val) => {
+                                setValue(val.toString());
+                                Haptics.selectionAsync();
+                            }}
+                            minimumTrackTintColor={header.color}
+                            maximumTrackTintColor="#e2e8f0"
+                            thumbTintColor={header.color}
+                        />
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: '#94a3b8' }}>Low</Text>
+                            <Text style={{ fontSize: 13, fontWeight: '600', color: '#94a3b8' }}>High</Text>
                         </View>
                     </View>
                 );
@@ -306,26 +354,41 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                     <View style={styles.contentSection}>
                         <Text style={styles.sectionLabel}>Medications Checklist</Text>
                         {medications.map((med) => (
-                            <Pressable
-                                key={med}
-                                onPress={() => {
-                                    const newList = checkedMeds.includes(med)
-                                        ? checkedMeds.filter(m => m !== med)
-                                        : [...checkedMeds, med];
-                                    setCheckedMeds(newList);
-                                    if (onMedsUpdate) onMedsUpdate(medications, newList);
-                                }}
-                                style={styles.checkItem}
-                            >
-                                <View style={styles.checkbox}>
-                                    <MaterialIcons
-                                        name={checkedMeds.includes(med) ? "check-box" : "check-box-outline-blank"}
-                                        size={24}
-                                        color={checkedMeds.includes(med) ? header.color : "#cbd5e1"}
-                                    />
-                                </View>
-                                <Text style={[styles.checkLabel, checkedMeds.includes(med) && { color: header.color, textDecorationLine: 'line-through', opacity: 0.6 }]}>{med}</Text>
-                            </Pressable>
+                            <View key={med} style={styles.checkItem}>
+                                <Pressable
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        const newList = checkedMeds.includes(med)
+                                            ? checkedMeds.filter(m => m !== med)
+                                            : [...checkedMeds, med];
+                                        setCheckedMeds(newList);
+                                        if (onMedsUpdate) onMedsUpdate(medications, newList);
+                                    }}
+                                    style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }}
+                                >
+                                    <View style={styles.checkbox}>
+                                        <MaterialIcons
+                                            name={checkedMeds.includes(med) ? "check-box" : "check-box-outline-blank"}
+                                            size={24}
+                                            color={checkedMeds.includes(med) ? header.color : "#cbd5e1"}
+                                        />
+                                    </View>
+                                    <Text style={[styles.checkLabel, checkedMeds.includes(med) && { color: header.color, textDecorationLine: 'line-through', opacity: 0.6 }]}>{med}</Text>
+                                </Pressable>
+                                <Pressable
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        const newList = medications.filter(m => m !== med);
+                                        const newChecked = checkedMeds.filter(m => m !== med);
+                                        setMedications(newList);
+                                        setCheckedMeds(newChecked);
+                                        if (onMedsUpdate) onMedsUpdate(newList, newChecked);
+                                    }}
+                                    style={{ padding: 4 }}
+                                >
+                                    <MaterialIcons name="delete-outline" size={20} color="#94a3b8" />
+                                </Pressable>
+                            </View>
                         ))}
 
                         {showAddMed ? (
@@ -507,19 +570,45 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         <View style={styles.crisisForm}>
                             <View style={styles.inputWrapper}>
                                 <Text style={styles.inputLabel}>Start Time</Text>
-                                <TextInput
-                                    style={styles.smallInput}
-                                    placeholder="e.g. 10:30 AM"
-                                    placeholderTextColor="#94a3b8"
-                                />
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                    <TextInput
+                                        style={[styles.smallInput, { flex: 1 }]}
+                                        placeholder="e.g. 10:30 AM"
+                                        placeholderTextColor="#94a3b8"
+                                        value={startTime}
+                                        onChangeText={setStartTime}
+                                    />
+                                    <Pressable
+                                        onPress={() => {
+                                            const now = new Date();
+                                            const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                            setStartTime(time);
+                                            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        }}
+                                        style={{ backgroundColor: header.color + '15', paddingHorizontal: 16, paddingVertical: 14, borderRadius: 16 }}
+                                    >
+                                        <Text style={{ fontWeight: '700', color: header.color }}>Now</Text>
+                                    </Pressable>
+                                </View>
                             </View>
                             <View style={styles.inputWrapper}>
-                                <Text style={styles.inputLabel}>Pain Level (0-10)</Text>
-                                <TextInput
-                                    style={styles.smallInput}
-                                    placeholder="e.g. 8"
-                                    placeholderTextColor="#94a3b8"
-                                    keyboardType="numeric"
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                    <Text style={styles.inputLabel}>Pain Level (0-10)</Text>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: header.color }}>{value || '0'}</Text>
+                                </View>
+                                <Slider
+                                    style={{ width: '100%', height: 40 }}
+                                    minimumValue={0}
+                                    maximumValue={10}
+                                    step={1}
+                                    value={parseInt(value) || 0}
+                                    onValueChange={(val) => {
+                                        setValue(val.toString());
+                                        Haptics.selectionAsync();
+                                    }}
+                                    minimumTrackTintColor={header.color}
+                                    maximumTrackTintColor="#e2e8f0"
+                                    thumbTintColor={header.color}
                                 />
                             </View>
                         </View>
@@ -849,19 +938,31 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return (
                     <View style={styles.contentSection}>
                         <Text style={styles.sectionLabel}>Hours Contributed</Text>
-                        <View style={styles.scaleContainer}>
-                            {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                                <Pressable
-                                    key={num}
-                                    onPress={() => setValue(num.toString())}
-                                    style={[
-                                        styles.scaleButton,
-                                        value === num.toString() && { backgroundColor: header.color, borderColor: header.color },
-                                    ]}
-                                >
-                                    <Text style={[styles.scaleText, value === num.toString() && { color: '#fff' }]}>{num}</Text>
-                                </Pressable>
-                            ))}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 32, paddingVertical: 12 }}>
+                            <Pressable
+                                onPress={() => {
+                                    const val = Math.max(0.5, (parseFloat(value) || 0) - 0.5);
+                                    setValue(val.toString());
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                }}
+                                style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <MaterialIcons name="remove" size={28} color="#475569" />
+                            </Pressable>
+                            <View style={{ alignItems: 'center', minWidth: 100 }}>
+                                <Text style={{ fontSize: 48, fontWeight: '800', color: '#1e293b' }}>{value || '0'}</Text>
+                                <Text style={{ fontSize: 13, fontWeight: '600', color: '#64748b', marginTop: -4 }}>Hours Today</Text>
+                            </View>
+                            <Pressable
+                                onPress={() => {
+                                    const val = (parseFloat(value) || 0) + 0.5;
+                                    setValue(val.toString());
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                }}
+                                style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: header.color + '15', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <MaterialIcons name="add" size={28} color={header.color} />
+                            </Pressable>
                         </View>
                         <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Mission Category</Text>
                         <View style={styles.gridContainer}>
@@ -947,7 +1048,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'manage_task':
                 return (
                     <View style={styles.contentSection}>
-                        <View style={[styles.taskDetailCard, { borderColor: '#f59e0b30', backgroundColor: '#fef3c705' }]}>
+                        <View style={[styles.taskDetailCard, { borderColor: header.color + '30', backgroundColor: header.color + '05' }]}>
                             <Text style={[styles.taskDescription, { fontSize: 18, color: '#0f172a', fontWeight: '700' }]}>{task?.title}</Text>
                             <Text style={[styles.taskDescription, { marginTop: 8 }]}>{task?.description}</Text>
                         </View>
@@ -969,14 +1070,14 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                     >
                                         <View style={[styles.memberAvatarWrapper, { width: 50, height: 50, marginBottom: 8, opacity: isSelected || isRequest ? 1 : 0.6 }]}>
                                             {helper.avatar ? (
-                                                <Image source={{ uri: helper.avatar }} style={[styles.memberAvatarLarge, { width: 50, height: 50 }]} />
+                                                <Image source={{ uri: helper.avatar }} style={[styles.memberAvatarLarge, { width: 50, height: 50, borderWidth: isSelected ? 3 : 0, borderColor: header.color }]} />
                                             ) : (
-                                                <View style={[styles.actionIconCircle, { width: 50, height: 50, margin: 0, backgroundColor: isSelected ? '#10b98120' : '#f8fafc', borderWidth: isRequest ? 0 : 1, borderColor: '#f1f5f9' }]}>
-                                                    <MaterialIcons name={isRequest ? "add" : "help"} size={24} color={isRequest ? "#10b981" : "#3b82f6"} />
+                                                <View style={[styles.actionIconCircle, { width: 50, height: 50, margin: 0, backgroundColor: isSelected ? header.color + '20' : '#f8fafc', borderWidth: 1, borderColor: isSelected ? header.color : isRequest ? '#e2e8f0' : '#f1f5f9', borderStyle: isRequest ? 'dotted' : 'solid' }]}>
+                                                    <MaterialIcons name={isRequest ? "add" : "help"} size={24} color={isSelected ? header.color : isRequest ? '#94a3b8' : '#3b82f6'} />
                                                 </View>
                                             )}
                                         </View>
-                                        <Text style={[styles.actionLabelText, isSelected && { color: isRequest ? '#10b981' : '#f59e0b', fontWeight: '800' }]}>{helper.name}</Text>
+                                        <Text style={[styles.actionLabelText, isSelected && { color: header.color, fontWeight: '800' }]}>{helper.name}</Text>
                                     </Pressable>
                                 );
                             })}
@@ -986,9 +1087,9 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'request_task':
                 return (
                     <View style={styles.contentSection}>
-                        <View style={[styles.taskDetailCard, { borderColor: '#3b82f630', backgroundColor: '#eff6ff05' }]}>
-                            <View className="bg-blue-100 self-start px-3 py-1 rounded-full mb-3">
-                                <Text className="text-blue-700 text-[10px] font-bold uppercase">Help Requested</Text>
+                        <View style={[styles.taskDetailCard, { borderColor: header.color + '30', backgroundColor: header.color + '05' }]}>
+                            <View style={{ backgroundColor: header.color + '20', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 12, marginBottom: 12 }}>
+                                <Text style={{ color: header.color, fontSize: 10, fontWeight: '800', textTransform: 'uppercase' }}>Help Requested</Text>
                             </View>
                             <Text style={[styles.taskDescription, { fontSize: 18, color: '#0f172a', fontWeight: '700' }]}>{task?.title}</Text>
                             <Text style={[styles.taskDescription, { marginTop: 8 }]}>{task?.description}</Text>
@@ -1256,194 +1357,236 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     };
 
     return (
-        <Modal visible={visible} transparent animationType="slide" onRequestClose={goBack}>
-            <View style={styles.container}>
-                <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
-                    <Pressable style={StyleSheet.absoluteFill} onPress={goBack}>
-                        <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
-                    </Pressable>
-                </Animated.View>
+        <>
+            <Modal visible={visible} transparent animationType="slide" onRequestClose={goBack}>
+                <View style={styles.container}>
+                    <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
+                        <Pressable style={StyleSheet.absoluteFill} onPress={goBack}>
+                            <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+                        </Pressable>
+                    </Animated.View>
 
-                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
-                    <View style={styles.modalCard}>
-                        <View style={styles.grabber} />
-                        <View style={styles.header}>
-                            <View style={[styles.iconContainer, { backgroundColor: `${header.color}15` }]}>
-                                <MaterialIcons name={header.icon as any} size={28} color={header.color} />
+                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
+                        <View style={styles.modalCard}>
+                            <View style={styles.grabber} />
+                            <View style={styles.header}>
+                                <View style={[styles.iconContainer, { backgroundColor: `${header.color}15` }]}>
+                                    <MaterialIcons name={header.icon as any} size={28} color={header.color} />
+                                </View>
+                                <View style={styles.headerText}>
+                                    <Text style={styles.headerTitle}>{activeType === 'member' ? header.title : activeType === 'community_actions' ? 'Community Hub' : 'Log ' + header.title}</Text>
+                                    <Text style={styles.headerSub}>
+                                        {activeType === 'member' ? member?.status + ' • ' + member?.role :
+                                            activeType === 'idea' ? 'Share with the community' :
+                                                activeType === 'group' ? 'Start a new chapter' :
+                                                    activeType === 'community_actions' ? 'Manage your community' :
+                                                        activeType === 'volunteer_actions' ? 'Your impact dashboard' :
+                                                            activeType === 'volunteer_log_hours' ? 'Record service time' :
+                                                                activeType === 'invite_member' ? 'Expand your circle' :
+                                                                    activeType === 'manage_task' ? 'Delegate this task' :
+                                                                        activeType === 'request_task' ? 'Be a hero today' :
+                                                                            'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                    </Text>
+                                </View>
+                                <Pressable onPress={goBack} style={styles.closeButton}>
+                                    <MaterialIcons name={history.length > 0 ? "arrow-back" : "close"} size={24} color="#94a3b8" />
+                                </Pressable>
                             </View>
-                            <View style={styles.headerText}>
-                                <Text style={styles.headerTitle}>{activeType === 'member' ? header.title : activeType === 'community_actions' ? 'Community Hub' : 'Log ' + header.title}</Text>
-                                <Text style={styles.headerSub}>
-                                    {activeType === 'member' ? member?.status + ' • ' + member?.role :
-                                        activeType === 'idea' ? 'Share with the community' :
-                                            activeType === 'group' ? 'Start a new chapter' :
-                                                activeType === 'community_actions' ? 'Manage your community' :
-                                                    activeType === 'volunteer_actions' ? 'Your impact dashboard' :
-                                                        activeType === 'volunteer_log_hours' ? 'Record service time' :
-                                                            activeType === 'invite_member' ? 'Expand your circle' :
-                                                                activeType === 'manage_task' ? 'Delegate this task' :
-                                                                    activeType === 'request_task' ? 'Be a hero today' :
-                                                                        'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+
+                            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                                {renderContent()}
+
+                                <View style={styles.notesSection}>
+                                    <Text style={styles.sectionLabel}>Additional Notes</Text>
+                                    <TextInput
+                                        style={styles.textArea}
+                                        placeholder="How are you feeling otherwise?"
+                                        placeholderTextColor="#94a3b8"
+                                        multiline
+                                        numberOfLines={4}
+                                        value={notes}
+                                        onChangeText={setNotes}
+                                    />
+                                </View>
+
+                                {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && (
+                                    <Pressable
+                                        onPress={() => {
+                                            switch (activeType) {
+                                                case 'pain': if (value && onPainUpdate) onPainUpdate(parseInt(value), notes || undefined); break;
+                                                case 'hydration': if (value && onHydrationUpdate) onHydrationUpdate(value, notes || undefined); break;
+                                                case 'mood': if (value && onMoodUpdate) onMoodUpdate(value, notes || undefined); break;
+                                                case 'triggers': if (value && onTriggersUpdate) onTriggersUpdate(value.split(', '), notes || undefined); break;
+                                                case 'crisis': if (value && onCrisisUpdate) onCrisisUpdate(startTime, parseInt(value), notes || undefined); break;
+                                                case 'edit_member': alert('Changes saved locally!'); break;
+                                                case 'manage_task':
+                                                    if (selectedHelpers.length > 0) {
+                                                        triggerToast();
+                                                        return; // Don't close yet, triggerToast handles it
+                                                    } else {
+                                                        alert('Please select at least one helper');
+                                                        return;
+                                                    }
+                                            }
+                                            onClose();
+                                        }}
+                                        style={[styles.saveButton, { backgroundColor: header.color }]}
+                                    >
+                                        <Text style={styles.saveButtonText}>
+                                            {activeType === 'idea' ? 'Post to Community' :
+                                                activeType === 'group' ? 'Send Proposal' :
+                                                    activeType === 'volunteer_log_hours' ? 'Save Service Log' :
+                                                        activeType === 'mission_detail' ? 'Join Mission' :
+                                                            activeType === 'invite_member' ? 'Send Invitation' :
+                                                                activeType === 'manage_task' ? 'Assign Task' :
+                                                                    activeType === 'request_task' ? 'Claim Task' :
+                                                                        activeType === 'view_care_plan' ? 'Close' :
+                                                                            activeType === 'edit_member' ? 'Save Changes' :
+                                                                                'Save Entry'}
+                                        </Text>
+                                    </Pressable>
+                                )}
+                            </ScrollView>
+
+                            {/* Premium Toast Notification */}
+                            {showToast && (
+                                <Animated.View
+                                    style={[
+                                        styles.toastContainer,
+                                        { transform: [{ translateY: toastAnim }] }
+                                    ]}
+                                >
+                                    <View style={styles.toastContent}>
+                                        <View style={styles.toastIcon}>
+                                            <MaterialIcons name="check-circle" size={20} color="#fff" />
+                                        </View>
+                                        <Text style={styles.toastText}>
+                                            {selectedHelpers.length > 1 ? 'Helpers notified' : `${selectedHelpers[0]} will be notified`}
+                                        </Text>
+                                    </View>
+                                </Animated.View>
+                            )}
+
+                            {showConfetti && (
+                                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                                    <ConfettiCannon
+                                        count={50}
+                                        origin={{ x: width / 2, y: -20 }}
+                                        fadeOut={true}
+                                        fallSpeed={3000}
+                                        colors={['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b']}
+                                    />
+                                </View>
+                            )}
+                        </View>
+                    </KeyboardAvoidingView>
+                </View>
+            </Modal>
+            {/* Barcode Scanner Modal */}
+            <Modal
+                visible={showBarcodeScanner}
+                animationType="slide"
+                transparent={false}
+                onRequestClose={() => setShowBarcodeScanner(false)}
+            >
+                <View style={{ flex: 1, backgroundColor: '#000' }}>
+                    <CameraView
+                        style={{ flex: 1 }}
+                        facing="back"
+                        barcodeScannerSettings={{
+                            barcodeTypes: ['upc_a', 'upc_e', 'ean13', 'ean8', 'code128', 'code39'],
+                        }}
+                        onBarcodeScanned={handleBarcodeScanned}
+                    >
+                        {/* Overlay */}
+                        <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+                            {/* Top Bar */}
+                            <View style={{
+                                paddingTop: Platform.OS === 'ios' ? 60 : 40,
+                                paddingHorizontal: 20,
+                                paddingBottom: 20,
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                            }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff' }}>
+                                        Scan Medication Barcode
+                                    </Text>
+                                    <Pressable
+                                        onPress={() => setShowBarcodeScanner(false)}
+                                        style={{
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 18,
+                                            backgroundColor: 'rgba(255,255,255,0.2)',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        <MaterialIcons name="close" size={24} color="#fff" />
+                                    </Pressable>
+                                </View>
+                            </View>
+
+                            {/* Scanning Frame */}
+                            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+                                <View style={{
+                                    width: 280,
+                                    height: 180,
+                                    borderWidth: 3,
+                                    borderColor: '#8b5cf6',
+                                    borderRadius: 20,
+                                    backgroundColor: 'transparent',
+                                }}>
+                                    {/* Corner markers */}
+                                    <View style={{ position: 'absolute', top: -3, left: -3, width: 40, height: 40, borderTopWidth: 6, borderLeftWidth: 6, borderColor: '#8b5cf6', borderTopLeftRadius: 20 }} />
+                                    <View style={{ position: 'absolute', top: -3, right: -3, width: 40, height: 40, borderTopWidth: 6, borderRightWidth: 6, borderColor: '#8b5cf6', borderTopRightRadius: 20 }} />
+                                    <View style={{ position: 'absolute', bottom: -3, left: -3, width: 40, height: 40, borderBottomWidth: 6, borderLeftWidth: 6, borderColor: '#8b5cf6', borderBottomLeftRadius: 20 }} />
+                                    <View style={{ position: 'absolute', bottom: -3, right: -3, width: 40, height: 40, borderBottomWidth: 6, borderRightWidth: 6, borderColor: '#8b5cf6', borderBottomRightRadius: 20 }} />
+                                </View>
+
+                                <Text style={{
+                                    marginTop: 30,
+                                    fontSize: 16,
+                                    fontWeight: '600',
+                                    color: '#fff',
+                                    textAlign: 'center',
+                                    textShadowColor: 'rgba(0,0,0,0.75)',
+                                    textShadowOffset: { width: 0, height: 2 },
+                                    textShadowRadius: 4,
+                                }}>
+                                    Position barcode within the frame
                                 </Text>
                             </View>
-                            <Pressable onPress={goBack} style={styles.closeButton}>
-                                <MaterialIcons name={history.length > 0 ? "arrow-back" : "close"} size={24} color="#94a3b8" />
-                            </Pressable>
-                        </View>
 
-                        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-                            {renderContent()}
-
-                            <View style={styles.notesSection}>
-                                <Text style={styles.sectionLabel}>Additional Notes</Text>
-                                <TextInput
-                                    style={styles.textArea}
-                                    placeholder="How are you feeling otherwise?"
-                                    placeholderTextColor="#94a3b8"
-                                    multiline
-                                    numberOfLines={4}
-                                    value={notes}
-                                    onChangeText={setNotes}
-                                />
-                            </View>
-
-                            {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && (
-                                <Pressable
-                                    onPress={() => {
-                                        switch (activeType) {
-                                            case 'pain': if (value && onPainUpdate) onPainUpdate(parseInt(value), notes || undefined); break;
-                                            case 'hydration': if (value && onHydrationUpdate) onHydrationUpdate(value, notes || undefined); break;
-                                            case 'mood': if (value && onMoodUpdate) onMoodUpdate(value, notes || undefined); break;
-                                            case 'triggers': if (value && onTriggersUpdate) onTriggersUpdate(value.split(', '), notes || undefined); break;
-                                            case 'edit_member': alert('Changes saved locally!'); break;
-                                        }
-                                        onClose();
-                                    }}
-                                    style={[styles.saveButton, { backgroundColor: header.color }]}
-                                >
-                                    <Text style={styles.saveButtonText}>
-                                        {activeType === 'idea' ? 'Post to Community' :
-                                            activeType === 'group' ? 'Send Proposal' :
-                                                activeType === 'volunteer_log_hours' ? 'Save Service Log' :
-                                                    activeType === 'mission_detail' ? 'Join Mission' :
-                                                        activeType === 'invite_member' ? 'Send Invitation' :
-                                                            activeType === 'manage_task' ? 'Assign Task' :
-                                                                activeType === 'request_task' ? 'Claim Task' :
-                                                                    activeType === 'view_care_plan' ? 'Close' :
-                                                                        activeType === 'edit_member' ? 'Save Changes' :
-                                                                            'Save Entry'}
+                            {/* Bottom Instructions */}
+                            <View style={{
+                                paddingHorizontal: 20,
+                                paddingVertical: 30,
+                                backgroundColor: 'rgba(0,0,0,0.7)',
+                                alignItems: 'center',
+                            }}>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                                    <MaterialIcons name="info-outline" size={20} color="#8b5cf6" style={{ marginRight: 8 }} />
+                                    <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>
+                                        Scan the barcode on your medication box
                                     </Text>
-                                </Pressable>
-                            )}
-                        </ScrollView>
-                    </View>
-                </KeyboardAvoidingView>
-            </View>
-        </Modal>
-        {/* Barcode Scanner Modal */ }
-    <Modal
-        visible={showBarcodeScanner}
-        animationType="slide"
-        transparent={false}
-        onRequestClose={() => setShowBarcodeScanner(false)}
-    >
-        <View style={{ flex: 1, backgroundColor: '#000' }}>
-            <CameraView
-                style={{ flex: 1 }}
-                facing="back"
-                barcodeScannerSettings={{
-                    barcodeTypes: ['upc_a', 'upc_e', 'ean13', 'ean8', 'code128', 'code39'],
-                }}
-                onBarcodeScanned={handleBarcodeScanned}
-            >
-                {/* Overlay */}
-                <View style={{ flex: 1, backgroundColor: 'transparent' }}>
-                    {/* Top Bar */}
-                    <View style={{
-                        paddingTop: Platform.OS === 'ios' ? 60 : 40,
-                        paddingHorizontal: 20,
-                        paddingBottom: 20,
-                        backgroundColor: 'rgba(0,0,0,0.7)',
-                    }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff' }}>
-                                Scan Medication Barcode
-                            </Text>
-                            <Pressable
-                                onPress={() => setShowBarcodeScanner(false)}
-                                style={{
-                                    width: 36,
-                                    height: 36,
-                                    borderRadius: 18,
-                                    backgroundColor: 'rgba(255,255,255,0.2)',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                }}
-                            >
-                                <MaterialIcons name="close" size={24} color="#fff" />
-                            </Pressable>
+                                </View>
+                                <Text style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>
+                                    We'll automatically look up the medication details
+                                </Text>
+                            </View>
                         </View>
-                    </View>
-
-                    {/* Scanning Frame */}
-                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
-                        <View style={{
-                            width: 280,
-                            height: 180,
-                            borderWidth: 3,
-                            borderColor: '#8b5cf6',
-                            borderRadius: 20,
-                            backgroundColor: 'transparent',
-                        }}>
-                            {/* Corner markers */}
-                            <View style={{ position: 'absolute', top: -3, left: -3, width: 40, height: 40, borderTopWidth: 6, borderLeftWidth: 6, borderColor: '#8b5cf6', borderTopLeftRadius: 20 }} />
-                            <View style={{ position: 'absolute', top: -3, right: -3, width: 40, height: 40, borderTopWidth: 6, borderRightWidth: 6, borderColor: '#8b5cf6', borderTopRightRadius: 20 }} />
-                            <View style={{ position: 'absolute', bottom: -3, left: -3, width: 40, height: 40, borderBottomWidth: 6, borderLeftWidth: 6, borderColor: '#8b5cf6', borderBottomLeftRadius: 20 }} />
-                            <View style={{ position: 'absolute', bottom: -3, right: -3, width: 40, height: 40, borderBottomWidth: 6, borderRightWidth: 6, borderColor: '#8b5cf6', borderBottomRightRadius: 20 }} />
-                        </View>
-
-                        <Text style={{
-                            marginTop: 30,
-                            fontSize: 16,
-                            fontWeight: '600',
-                            color: '#fff',
-                            textAlign: 'center',
-                            textShadowColor: 'rgba(0,0,0,0.75)',
-                            textShadowOffset: { width: 0, height: 2 },
-                            textShadowRadius: 4,
-                        }}>
-                            Position barcode within the frame
-                        </Text>
-                    </View>
-
-                    {/* Bottom Instructions */}
-                    <View style={{
-                        paddingHorizontal: 20,
-                        paddingVertical: 30,
-                        backgroundColor: 'rgba(0,0,0,0.7)',
-                        alignItems: 'center',
-                    }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                            <MaterialIcons name="info-outline" size={20} color="#8b5cf6" style={{ marginRight: 8 }} />
-                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>
-                                Scan the barcode on your medication box
-                            </Text>
-                        </View>
-                        <Text style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>
-                            We'll automatically look up the medication details
-                        </Text>
-                    </View>
+                    </CameraView>
                 </View>
-            </CameraView>
-        </View>
-    </Modal>
+            </Modal>
+        </>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'flex-end' },
-    content: { height: height * 0.78, width: '100%' },
-    modalCard: { flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingBottom: Platform.OS === 'ios' ? 40 : 20 },
+    content: { width: '100%', maxHeight: height * 0.9 },
+    modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingBottom: Platform.OS === 'ios' ? 40 : 20 },
     grabber: { width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
     iconContainer: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
@@ -1497,4 +1640,33 @@ const styles = StyleSheet.create({
     logTypeCard: { width: (width - 60) / 2, backgroundColor: '#f8fafc', borderRadius: 24, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
     logTypeIcon: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
     logTypeLabel: { fontSize: 14, fontWeight: '700', color: '#334155' },
+    toastContainer: {
+        position: 'absolute',
+        top: 0,
+        left: 20,
+        right: 20,
+        zIndex: 9999,
+        alignItems: 'center',
+    },
+    toastContent: {
+        backgroundColor: '#10b981',
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        borderRadius: 16,
+        shadowColor: '#10b981',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.3,
+        shadowRadius: 12,
+        elevation: 8,
+    },
+    toastIcon: {
+        marginRight: 10,
+    },
+    toastText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '700',
+    },
 });

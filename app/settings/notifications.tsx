@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, Switch } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Bell, Smartphone, Mail, Activity, AlertTriangle, Users } from 'lucide-react-native';
+import { ArrowLeft, Bell, Smartphone, Mail, Activity, AlertTriangle, Users, HeartHandshake, ShieldCheck } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 export default function NotificationsSettingsScreen() {
@@ -16,6 +16,8 @@ export default function NotificationsSettingsScreen() {
         health: true,
         crisis: true,
         community: true,
+        caregivers: true,
+        volunteers: false,
     });
 
     const toggle = (key: keyof typeof settings) => {
@@ -78,11 +80,25 @@ export default function NotificationsSettingsScreen() {
                         <Text className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-4 ml-1">Activity Alerts</Text>
                         <View className="bg-gray-50 rounded-[32px] px-6 py-2 border border-gray-100 shadow-sm">
                             <SettingRow
-                                icon={<Activity size={18} color="#8B5CF6" />}
+                                icon={<Activity size={18} color="#3B82F6" />}
                                 label="Health Insights"
                                 value={settings.health}
                                 onValueChange={() => toggle('health')}
-                                bgColor="bg-violet-50"
+                                bgColor="bg-blue-50"
+                            />
+                            <SettingRow
+                                icon={<HeartHandshake size={18} color="#3B82F6" />}
+                                label="Caregiver Updates"
+                                value={settings.caregivers}
+                                onValueChange={() => toggle('caregivers')}
+                                bgColor="bg-blue-50"
+                            />
+                            <SettingRow
+                                icon={<ShieldCheck size={18} color="#3B82F6" />}
+                                label="Volunteer Support"
+                                value={settings.volunteers}
+                                onValueChange={() => toggle('volunteers')}
+                                bgColor="bg-blue-50"
                             />
                             <SettingRow
                                 icon={<AlertTriangle size={18} color="#EF4444" />}
@@ -120,7 +136,7 @@ function SettingRow({ icon, label, value, onValueChange, bgColor, isLast }: any)
                 <Text className="font-semibold text-base text-gray-900">{label}</Text>
             </View>
             <Switch
-                trackColor={{ false: '#e2e8f0', true: '#8B5CF6' }}
+                trackColor={{ false: '#e2e8f0', true: '#3B82F6' }}
                 thumbColor="#fff"
                 onValueChange={onValueChange}
                 value={value}

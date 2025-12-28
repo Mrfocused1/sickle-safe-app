@@ -11,9 +11,12 @@ import {
   LogOut,
   ChevronRight,
   Stethoscope,
+  FileText,
+  Activity,
+  Award,
   Users,
   CreditCard,
-  FileText
+  Sun
 } from 'lucide-react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -46,13 +49,16 @@ const MenuItem = ({ icon, label, subLabel, onPress, isLast, isDestructive }: Men
   </Pressable>
 );
 
-const StatCard = ({ value, label, icon }: { value: string; label: string; icon: string }) => (
-  <View className="flex-1 bg-gray-50 rounded-2xl p-3 items-center border border-gray-100 min-w-[30%]">
-    <View className="mb-2">
-      <MaterialIcons name={icon as any} size={20} color="#8B5CF6" />
+const ImpactStat = ({ value, label, icon: Icon, isLast }: { value: string; label: string; icon: any; isLast?: boolean }) => (
+  <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', paddingVertical: 12 }}>
+    <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: '#eff6ff', alignItems: 'center', justifyContent: 'center' }}>
+      <Icon size={20} color="#3b82f6" />
     </View>
-    <Text className="text-brand-dark text-brand-title">{value}</Text>
-    <Text className="text-brand-muted text-brand-section text-[9px] mt-0.5">{label}</Text>
+    <View style={{ marginLeft: 12, flex: 1 }}>
+      <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>{value}</Text>
+      <Text style={{ fontSize: 10, fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 0.3 }} numberOfLines={1}>{label}</Text>
+    </View>
+    {!isLast && <View style={{ width: 1, height: '60%', backgroundColor: '#f1f5f9', marginLeft: 12 }} />}
   </View>
 );
 
@@ -69,8 +75,11 @@ export default function ProfileScreen() {
           style={{ paddingTop: Math.max(insets.top, 20) + 12 }}
           className="bg-white pb-6 px-6 border-b border-gray-100"
         >
-          <View className="flex-row items-center justify-between mb-8">
-            <Text className="text-brand-title text-brand-dark">Profile</Text>
+          <View className="flex-row items-center justify-between mb-6">
+            <View>
+              <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }} className="mb-0.5">Your Dashboard</Text>
+              <Text style={{ fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 }}>Profile</Text>
+            </View>
             <Pressable
               onPress={() => router.push('/settings/account')}
               className="px-4 py-2 rounded-full border border-gray-200 bg-gray-50 active:bg-gray-100"
@@ -89,25 +98,24 @@ export default function ProfileScreen() {
                 />
               </View>
               <View className="absolute bottom-0 right-0 w-6 h-6 bg-white rounded-full items-center justify-center shadow-sm border border-gray-100">
-                <MaterialIcons name="verified" size={16} color="#8B5CF6" />
+                <MaterialIcons name="verified" size={16} color="#3b82f6" />
               </View>
             </View>
             <View className="ml-5 flex-1">
-              <Text className="text-brand-title text-brand-dark">Maya Thompson</Text>
+              <Text style={{ fontSize: 20, fontWeight: '800', color: '#0f172a' }}>Maya Thompson</Text>
               <View className="flex-row items-center mt-1.5 flex-wrap gap-2">
-                <View className="bg-violet-50 px-2.5 py-1 rounded-md border border-violet-100">
-                  <Text className="text-violet-700 text-brand-section text-[10px]">Overcomer</Text>
+                <View className="bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">
+                  <Text className="text-blue-700 text-brand-section text-[10px]">Overcomer</Text>
                 </View>
                 <Text className="text-brand-muted text-brand-sub">Member since Oct 2023</Text>
               </View>
             </View>
           </View>
 
-          {/* Redesigned Impact Stats */}
-          <View className="flex-row gap-3 mt-8">
-            <StatCard value="12" label="Days Pain Free" icon="sentiment-satisfied" />
-            <StatCard value="42" label="Support Tokens" icon="stars" />
-            <StatCard value="5" label="Circle Members" icon="group" />
+          {/* Integrated Impact Dashboard */}
+          <View className="bg-white rounded-3xl shadow-sm border border-slate-50 mt-8 px-5 py-2 flex-row items-center">
+            <ImpactStat value="12" label="Pain Free" icon={Activity} />
+            <ImpactStat value="5" label="Circle" icon={Users} isLast />
           </View>
         </View>
 
@@ -116,22 +124,22 @@ export default function ProfileScreen() {
 
           {/* Medical Section */}
           <View className="mb-8">
-            <Text className="text-brand-muted text-brand-section mb-4 ml-1">Medical Identity</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }} className="mb-4">Medical Identity</Text>
             <View className="bg-white rounded-3xl shadow-sm border border-gray-100 px-4 overflow-hidden">
               <MenuItem
-                icon={<CreditCard size={20} color="#8B5CF6" />}
+                icon={<CreditCard size={20} color="#3b82f6" />}
                 label="Digital Medical ID"
                 subLabel="Essential info for emergency responders"
                 onPress={() => router.push('/medical-id')}
               />
               <MenuItem
-                icon={<Stethoscope size={20} color="#8B5CF6" />}
+                icon={<Stethoscope size={20} color="#3b82f6" />}
                 label="Healthcare Team"
                 subLabel="Doctors, clinics, and specialists"
                 onPress={() => router.push('/settings/medical-team')}
               />
               <MenuItem
-                icon={<FileText size={20} color="#8B5CF6" />}
+                icon={<FileText size={20} color="#3b82f6" />}
                 label="Medical Records"
                 subLabel="Lab results and care plans"
                 onPress={() => router.push('/settings/medical-records')}
@@ -142,16 +150,16 @@ export default function ProfileScreen() {
 
           {/* Community Section */}
           <View className="mb-8">
-            <Text className="text-brand-muted text-brand-section mb-4 ml-1">Connectivity</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }} className="mb-4">Connectivity</Text>
             <View className="bg-white rounded-3xl shadow-sm border border-gray-100 px-4 overflow-hidden">
               <MenuItem
-                icon={<Users size={20} color="#8B5CF6" />}
+                icon={<Users size={20} color="#3b82f6" />}
                 label="My Circle of Care"
                 subLabel="Manage friends and family contacts"
                 onPress={() => router.push('/circle')}
               />
               <MenuItem
-                icon={<Heart size={20} color="#8B5CF6" />}
+                icon={<Heart size={20} color="#3b82f6" />}
                 label="Community Contributions"
                 subLabel="Your posts and support history"
                 onPress={() => router.push('/community/history')}
@@ -162,7 +170,7 @@ export default function ProfileScreen() {
 
           {/* Settings Section */}
           <View className="mb-8">
-            <Text className="text-brand-muted text-brand-section mb-4 ml-1">App Settings</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }} className="mb-4">App Settings</Text>
             <View className="bg-white rounded-3xl shadow-sm border border-gray-100 px-4 overflow-hidden">
               <MenuItem
                 icon={<Bell size={20} color="#64748b" />}

@@ -21,7 +21,7 @@ interface CommunityPostCardProps {
 const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
         case 'overcomer':
-            return { bg: 'bg-violet-100', text: 'text-violet-700', badge: 'text-violet-600' };
+            return { bg: 'bg-blue-100', text: 'text-blue-700', badge: 'text-blue-600' };
         case 'hematologist':
         case 'doctor':
             return { bg: 'bg-blue-100', text: 'text-blue-700', badge: 'text-blue-600' };
@@ -136,10 +136,10 @@ export function CommunityPostCard({
                             <Text className={`${roleColors.text} font-bold text-lg`}>{user[0]}</Text>
                         </View>
                         <View className="ml-3">
-                            <Text className="text-brand-dark text-brand-label">{user}</Text>
-                            <View className="flex-row items-center">
+                            <Text style={{ fontSize: 15, fontWeight: '700', color: '#0f172a' }}>{user}</Text>
+                            <View className="flex-row items-center mt-0.5">
                                 <Text className={`${roleColors.badge} text-[13px] font-bold mr-2`}>{role}</Text>
-                                <Text className="text-brand-muted text-brand-sub">• {time}</Text>
+                                <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>• {time}</Text>
                             </View>
                         </View>
                     </View>

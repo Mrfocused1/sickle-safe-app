@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, Share, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Bell, MessageSquare, Plus, Search, Users } from 'lucide-react-native';
+import { View, Text, ScrollView, Pressable, Share, RefreshControl, Image } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Plus } from 'lucide-react-native';
 import { CommunityPostCard } from '@/components/CommunityPostCard';
 import { CircleMemberAvatar } from '@/components/CircleMemberAvatar';
 import { PostDetailSheet } from '@/components/PostDetailSheet';
+import { ComposePostSheet } from '@/components/ComposePostSheet';
+import { UserProfileSheet } from '@/components/UserProfileSheet';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
 const CATEGORIES = ['All', 'Stories', 'Tips', 'Events', 'General'];
 
 const CIRCLE_MEMBERS = [
-  { id: '1', name: 'Dr. Sarah', isOnline: true },
-  { id: '2', name: 'Marcus', isOnline: true },
-  { id: '3', name: 'Linda', isOnline: false },
-  { id: '4', name: 'Nurse Joy', isOnline: true },
-  { id: '5', name: 'Patient Group', isOnline: false },
+  { id: '1', name: 'Dr. Sarah', role: 'Hematologist', isOnline: true, location: 'Guy\'s Hospital', bio: 'Specialize in sickle cell disease management and crisis prevention strategies.' },
+  { id: '2', name: 'Marcus', role: 'Caregiver', isOnline: true, location: 'London, UK', bio: 'Supporting my brother through his journey. Here to connect with other caregivers.' },
+  { id: '3', name: 'Linda', role: 'Overcomer', isOnline: false, location: 'Birmingham, UK', bio: 'Living my best life despite the challenges. Advocate for mental health in SC.' },
+  { id: '4', name: 'Nurse Joy', role: 'Nurse Practitioner', isOnline: true, location: 'Evelina London', bio: 'Helping patients navigate their healthcare journey with compassion.' },
+  { id: '5', name: 'Patient Group', role: 'Support Group', isOnline: false, location: 'Online', bio: 'Weekly check-ins and support for all community members.' },
 ];
 
 const COMMUNITY_POSTS = [
@@ -95,10 +97,14 @@ type Post = typeof COMMUNITY_POSTS[0];
 
 export default function CommunityScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [activeCategory, setActiveCategory] = useState('All');
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showPostDetail, setShowPostDetail] = useState(false);
+  const [showComposeSheet, setShowComposeSheet] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<typeof CIRCLE_MEMBERS[0] | null>(null);
+  const [showProfileSheet, setShowProfileSheet] = useState(false);
 
   const handleCategoryPress = async (cat: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -127,31 +133,36 @@ export default function CommunityScreen() {
     setShowPostDetail(true);
   };
 
+  const handleOpenProfile = (member: typeof CIRCLE_MEMBERS[0]) => {
+    setSelectedMember(member);
+    setShowProfileSheet(true);
+  };
+
   const filteredPosts = COMMUNITY_POSTS.filter(
     post => activeCategory === 'All' || post.category === activeCategory
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top']}>
-      {/* Custom Header */}
-      <View className="px-6 py-4 flex-row items-center justify-between bg-white border-b border-gray-100">
-        <View>
-          <Text className="text-brand-title text-brand-dark">Community</Text>
-          <Text className="text-brand-muted text-brand-sub">Connect & Support</Text>
-        </View>
-        <View className="flex-row items-center">
+    <View className="flex-1 bg-gray-50">
+      {/* Clean White Header - Mirrored from Log Screen */}
+      <View
+        style={{ paddingTop: Math.max(insets.top, 20) + 12 }}
+        className="bg-white pb-6 px-6 border-b border-gray-100"
+      >
+        <View className="flex-row items-center justify-between mb-6">
+          <View>
+            <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }} className="mb-0.5">Connect & Support</Text>
+            <Text style={{ fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 }}>Community</Text>
+          </View>
           <Pressable
-            onPress={() => router.push('/community/groups')}
-            className="p-2 bg-gray-50 rounded-full mr-2 active:bg-gray-100"
+            onPress={() => router.push('/profile')}
+            className="w-12 h-12 rounded-2xl bg-gray-100 items-center justify-center border border-gray-200 overflow-hidden shadow-sm active:scale-95"
           >
-            <Users size={20} color="#64748b" />
-          </Pressable>
-          <Pressable className="p-2 bg-gray-50 rounded-full mr-2 active:bg-gray-100">
-            <Search size={20} color="#64748b" />
-          </Pressable>
-          <Pressable className="p-2 bg-gray-50 rounded-full relative active:bg-gray-100">
-            <Bell size={20} color="#64748b" />
-            <View className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+            <Image
+              source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCORMa38YShjxWXHcbH-MfY1UZF9LvIjHefqm4MnmpLYEROxwh8VpTJetiR_BPF_Kt4A676WuCNDwR6TmAHY5CN6SnaFzheHF0M5FtIlw80jCm2wH4NOcOa-IqaDBuomapbokmokeLN4wPVLAKg_jiKNzkeDzcjGH0r2qvVI1wF9rSlEq-KXsGO67Ujocu1a-guDc9qfSpuY_B_7PiQhy4P-zUFKocITqdWQuKu6QB8e9zr2Z-7vDyE00NRn5JxUXrBpBU36ttjbSZi' }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
           </Pressable>
         </View>
       </View>
@@ -159,6 +170,7 @@ export default function CommunityScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"
+        contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -168,24 +180,29 @@ export default function CommunityScreen() {
         }
       >
         {/* Your Circle Section */}
-        <View className="mt-6 mb-6">
+        <View className="mt-8 mb-6">
           <View className="px-6 flex-row items-center justify-between mb-4">
-            <Text className="text-brand-title text-brand-dark">Your Circle</Text>
+            <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Your Circle</Text>
             <Pressable
               onPress={() => router.push('/circle')}
               className="active:opacity-70"
             >
-              <Text className="text-violet-600 font-semibold text-sm">Manage</Text>
+              <Text style={{ fontSize: 15, fontWeight: '700', color: '#3b82f6' }}>Manage</Text>
             </Pressable>
           </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             className="pl-6"
-            contentContainerStyle={{ paddingRight: 24 }}
+            contentContainerStyle={{ paddingRight: 24, paddingVertical: 10 }}
           >
             {CIRCLE_MEMBERS.map((member) => (
-              <CircleMemberAvatar key={member.id} name={member.name} isOnline={member.isOnline} />
+              <CircleMemberAvatar
+                key={member.id}
+                name={member.name}
+                isOnline={member.isOnline}
+                onPress={() => handleOpenProfile(member)}
+              />
             ))}
             <Pressable className="items-center mr-6 active:opacity-70">
               <View className="w-14 h-14 bg-gray-100 rounded-full border-2 border-dashed border-gray-300 items-center justify-center">
@@ -198,13 +215,13 @@ export default function CommunityScreen() {
 
         {/* Global Feed Section */}
         <View className="px-6 mb-4 flex-row items-center justify-between">
-          <Text className="text-brand-title text-brand-dark">Community Feed</Text>
+          <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Community Feed</Text>
           <Pressable
-            onPress={() => router.push('/community/compose')}
-            className="flex-row items-center px-3 py-1.5 bg-violet-50 rounded-full active:bg-violet-100"
+            onPress={() => setShowComposeSheet(true)}
+            className="flex-row items-center px-4 py-2 bg-blue-50 border border-blue-100 rounded-2xl active:bg-blue-100"
           >
-            <MessageSquare size={16} color="#8B5CF6" />
-            <Text className="text-violet-600 font-bold text-xs ml-1.5">New Post</Text>
+            <Plus size={16} color="#3b82f6" />
+            <Text style={{ fontSize: 15, fontWeight: '700', color: '#3b82f6' }} className="ml-2">New Post</Text>
           </Pressable>
         </View>
 
@@ -213,18 +230,29 @@ export default function CommunityScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           className="pl-6 mb-6"
-          contentContainerStyle={{ paddingRight: 24 }}
+          contentContainerStyle={{ paddingRight: 24, paddingVertical: 8 }}
         >
           {CATEGORIES.map((cat) => (
             <Pressable
               key={cat}
               onPress={() => handleCategoryPress(cat)}
-              className={`mr-3 px-5 py-2.5 rounded-full ${activeCategory === cat ? 'bg-violet-600' : 'bg-white border border-gray-200'
-                }`}
+              style={{
+                backgroundColor: activeCategory === cat ? '#3b82f6' : '#ffffff',
+                borderColor: activeCategory === cat ? '#3b82f6' : '#e2e8f0',
+                borderWidth: 1,
+                borderRadius: 20,
+                paddingHorizontal: 20,
+                paddingVertical: 10,
+                marginRight: 10,
+              }}
+              className="shadow-sm active:scale-95"
             >
               <Text
-                className={`font-semibold text-sm ${activeCategory === cat ? 'text-white' : 'text-gray-600'
-                  }`}
+                style={{
+                  color: activeCategory === cat ? '#ffffff' : '#64748b',
+                  fontSize: 14,
+                  fontWeight: '700',
+                }}
               >
                 {cat}
               </Text>
@@ -233,7 +261,7 @@ export default function CommunityScreen() {
         </ScrollView>
 
         {/* Feed List */}
-        <View className="px-6 pb-24">
+        <View className="px-6">
           {filteredPosts.length > 0 ? (
             filteredPosts.map((post) => (
               <CommunityPostCard
@@ -246,19 +274,19 @@ export default function CommunityScreen() {
             ))
           ) : (
             <View className="py-12 items-center">
-              <Text className="text-gray-400 text-center">No posts in this category yet.</Text>
+              <Text className="text-gray-400 text-center font-medium">No posts in this category yet.</Text>
               <Pressable
-                onPress={() => router.push('/community/compose')}
-                className="mt-4 px-6 py-3 bg-violet-600 rounded-full"
+                onPress={() => setShowComposeSheet(true)}
+                className="mt-4 px-8 py-4 bg-blue-600 rounded-2xl shadow-sm active:scale-95"
               >
-                <Text className="text-white font-bold">Be the first to post!</Text>
+                <Text className="text-white font-extrabold">Be the first to post!</Text>
               </Pressable>
             </View>
           )}
 
           {filteredPosts.length > 0 && (
-            <Pressable className="py-4 items-center active:opacity-70">
-              <Text className="text-gray-400 font-medium text-sm">View more conversations</Text>
+            <Pressable className="py-8 items-center active:opacity-70">
+              <Text className="text-gray-400 font-bold text-sm">View more conversations</Text>
             </Pressable>
           )}
         </View>
@@ -270,6 +298,17 @@ export default function CommunityScreen() {
         onClose={() => setShowPostDetail(false)}
         post={selectedPost}
       />
-    </SafeAreaView>
+
+      <ComposePostSheet
+        visible={showComposeSheet}
+        onClose={() => setShowComposeSheet(false)}
+      />
+
+      <UserProfileSheet
+        visible={showProfileSheet}
+        onClose={() => setShowProfileSheet(false)}
+        member={selectedMember}
+      />
+    </View>
   );
 }

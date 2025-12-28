@@ -24,6 +24,7 @@ interface Comment {
     content: string;
     time: string;
     likes: number;
+    replies?: Comment[];
 }
 
 interface PostDetailSheetProps {
@@ -48,6 +49,16 @@ const SAMPLE_COMMENTS: Comment[] = [
         content: 'This is so inspiring! Keep up the amazing work! 💪',
         time: '1h ago',
         likes: 5,
+        replies: [
+            {
+                id: '1-1',
+                user: 'Jasmine W.',
+                role: 'Overcomer',
+                content: 'Thank you Maria! Your support means the world. ❤️',
+                time: '45m ago',
+                likes: 2,
+            }
+        ]
     },
     {
         id: '2',
@@ -56,6 +67,7 @@ const SAMPLE_COMMENTS: Comment[] = [
         content: 'Great to see you staying active. Remember to pace yourself and stay hydrated!',
         time: '1h ago',
         likes: 12,
+        replies: []
     },
     {
         id: '3',
@@ -64,6 +76,7 @@ const SAMPLE_COMMENTS: Comment[] = [
         content: 'You\'re an inspiration to all of us. I just started walking daily too!',
         time: '45m ago',
         likes: 3,
+        replies: []
     },
     {
         id: '4',
@@ -72,13 +85,14 @@ const SAMPLE_COMMENTS: Comment[] = [
         content: 'Wonderful progress! How are you feeling after the walk?',
         time: '30m ago',
         likes: 2,
+        replies: []
     },
 ];
 
 const getRoleColor = (role: string) => {
     switch (role.toLowerCase()) {
         case 'overcomer':
-            return { bg: '#ede9fe', text: '#6d28d9' };
+            return { bg: '#dbeafe', text: '#1d4ed8' };
         case 'hematologist':
         case 'doctor':
             return { bg: '#dbeafe', text: '#1d4ed8' };
@@ -96,7 +110,10 @@ const getRoleColor = (role: string) => {
 
 export function PostDetailSheet({ visible, onClose, post }: PostDetailSheetProps) {
     const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
+    const inputRef = useRef<TextInput>(null);
+    const [comments, setComments] = useState<Comment[]>(SAMPLE_COMMENTS);
     const [comment, setComment] = useState('');
+    const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
     const [isPostLiked, setIsPostLiked] = useState(false);
     const [postLikes, setPostLikes] = useState(post?.supportCount || 0);
@@ -105,6 +122,8 @@ export function PostDetailSheet({ visible, onClose, post }: PostDetailSheetProps
         if (post) {
             setPostLikes(post.supportCount);
             setIsPostLiked(false);
+            setComments(SAMPLE_COMMENTS);
+            setReplyingTo(null);
         }
     }, [post]);
 
@@ -157,8 +176,38 @@ export function PostDetailSheet({ visible, onClose, post }: PostDetailSheetProps
     const handleSendComment = async () => {
         if (comment.trim()) {
             await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+            const newComment: Comment = {
+                id: Date.now().toString(),
+                user: 'You',
+                role: 'Overcomer',
+                content: comment.trim(),
+                time: 'Just now',
+                likes: 0,
+                replies: [],
+            };
+
+            if (replyingTo) {
+                setComments(prev => prev.map(c => {
+                    if (c.id === replyingTo) {
+                        return { ...c, replies: [...(c.replies || []), newComment] };
+                    }
+                    return c;
+                }));
+            } else {
+                setComments(prev => [newComment, ...prev]);
+            }
+
             setComment('');
+            setReplyingTo(null);
         }
+    };
+
+    const handleReply = async (commentId: string, userName: string) => {
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setReplyingTo(commentId);
+        setComment(`@${userName} `);
+        inputRef.current?.focus();
     };
 
     if (!post) return null;
@@ -203,7 +252,7 @@ export function PostDetailSheet({ visible, onClose, post }: PostDetailSheetProps
                         <ScrollView
                             style={styles.scrollView}
                             showsVerticalScrollIndicator={false}
-                            contentContainerStyle={{ paddingBottom: 100 }}
+                            contentContainerStyle={styles.scrollContent}
                         >
                             {/* Original Post */}
                             <View style={styles.postContainer}>
@@ -243,7 +292,7 @@ export function PostDetailSheet({ visible, onClose, post }: PostDetailSheetProps
                                     </Pressable>
                                     <View style={styles.actionButton}>
                                         <MessageCircle size={22} color="#64748b" />
-                                        <Text style={styles.actionText}>{SAMPLE_COMMENTS.length}</Text>
+                                        <Text style={styles.actionText}>{comments.length}</Text>
                                     </View>
                                 </View>
                             </View>
@@ -252,48 +301,96 @@ export function PostDetailSheet({ visible, onClose, post }: PostDetailSheetProps
                             <View style={styles.commentsSection}>
                                 <Text style={styles.commentsTitle}>Comments</Text>
 
-                                {SAMPLE_COMMENTS.map((item) => {
+                                {comments.map((item) => {
                                     const commentRoleColors = getRoleColor(item.role);
                                     const isLiked = likedComments.has(item.id);
 
                                     return (
-                                        <View key={item.id} style={styles.commentItem}>
-                                            <View style={[styles.commentAvatar, { backgroundColor: commentRoleColors.bg }]}>
-                                                <Text style={[styles.commentAvatarText, { color: commentRoleColors.text }]}>
-                                                    {item.user[0]}
-                                                </Text>
-                                            </View>
-                                            <View style={styles.commentContent}>
-                                                <View style={styles.commentHeader}>
-                                                    <Text style={styles.commentUserName}>{item.user}</Text>
-                                                    <Text style={[styles.commentRole, { color: commentRoleColors.text }]}>
-                                                        {item.role}
+                                        <View key={item.id} style={styles.commentContainer}>
+                                            <View style={styles.commentItem}>
+                                                <View style={[styles.commentAvatar, { backgroundColor: commentRoleColors.bg }]}>
+                                                    <Text style={[styles.commentAvatarText, { color: commentRoleColors.text }]}>
+                                                        {item.user[0]}
                                                     </Text>
                                                 </View>
-                                                <Text style={styles.commentText}>{item.content}</Text>
-                                                <View style={styles.commentActions}>
-                                                    <Text style={styles.commentTime}>{item.time}</Text>
-                                                    <Pressable
-                                                        onPress={() => handleLikeComment(item.id)}
-                                                        style={styles.commentLikeButton}
-                                                    >
-                                                        <Heart
-                                                            size={14}
-                                                            color={isLiked ? "#ef4444" : "#9ca3af"}
-                                                            fill={isLiked ? "#ef4444" : "transparent"}
-                                                        />
-                                                        <Text style={[
-                                                            styles.commentLikeText,
-                                                            isLiked && { color: '#ef4444' }
-                                                        ]}>
-                                                            {item.likes + (isLiked ? 1 : 0)}
+                                                <View style={styles.commentContent}>
+                                                    <View style={styles.commentHeader}>
+                                                        <Text style={styles.commentUserName}>{item.user}</Text>
+                                                        <Text style={[styles.commentRole, { color: commentRoleColors.text }]}>
+                                                            {item.role}
                                                         </Text>
-                                                    </Pressable>
-                                                    <Pressable style={styles.replyButton}>
-                                                        <Text style={styles.replyText}>Reply</Text>
-                                                    </Pressable>
+                                                    </View>
+                                                    <Text style={styles.commentText}>{item.content}</Text>
+                                                    <View style={styles.commentActions}>
+                                                        <Text style={styles.commentTime}>{item.time}</Text>
+                                                        <Pressable
+                                                            onPress={() => handleLikeComment(item.id)}
+                                                            style={styles.commentLikeButton}
+                                                        >
+                                                            <Heart
+                                                                size={14}
+                                                                color={isLiked ? "#ef4444" : "#9ca3af"}
+                                                                fill={isLiked ? "#ef4444" : "transparent"}
+                                                            />
+                                                            <Text style={[
+                                                                styles.commentLikeText,
+                                                                isLiked && { color: '#ef4444' }
+                                                            ]}>
+                                                                {item.likes + (isLiked ? 1 : 0)}
+                                                            </Text>
+                                                        </Pressable>
+                                                        <Pressable
+                                                            style={styles.replyButton}
+                                                            onPress={() => handleReply(item.id, item.user)}
+                                                        >
+                                                            <Text style={styles.replyText}>Reply</Text>
+                                                        </Pressable>
+                                                    </View>
                                                 </View>
                                             </View>
+
+                                            {/* Sub-comments */}
+                                            {item.replies && item.replies.map((reply) => {
+                                                const replyRoleColors = getRoleColor(reply.role);
+                                                const isReplyLiked = likedComments.has(reply.id);
+                                                return (
+                                                    <View key={reply.id} style={styles.subCommentItem}>
+                                                        <View style={[styles.commentAvatar, styles.subCommentAvatar, { backgroundColor: replyRoleColors.bg }]}>
+                                                            <Text style={[styles.commentAvatarText, { color: replyRoleColors.text }]}>
+                                                                {reply.user[0]}
+                                                            </Text>
+                                                        </View>
+                                                        <View style={styles.commentContent}>
+                                                            <View style={styles.commentHeader}>
+                                                                <Text style={styles.commentUserName}>{reply.user}</Text>
+                                                                <Text style={[styles.commentRole, { color: replyRoleColors.text }]}>
+                                                                    {reply.role}
+                                                                </Text>
+                                                            </View>
+                                                            <Text style={styles.commentText}>{reply.content}</Text>
+                                                            <View style={styles.commentActions}>
+                                                                <Text style={styles.commentTime}>{reply.time}</Text>
+                                                                <Pressable
+                                                                    onPress={() => handleLikeComment(reply.id)}
+                                                                    style={styles.commentLikeButton}
+                                                                >
+                                                                    <Heart
+                                                                        size={14}
+                                                                        color={isReplyLiked ? "#ef4444" : "#9ca3af"}
+                                                                        fill={isReplyLiked ? "#ef4444" : "transparent"}
+                                                                    />
+                                                                    <Text style={[
+                                                                        styles.commentLikeText,
+                                                                        isReplyLiked && { color: '#ef4444' }
+                                                                    ]}>
+                                                                        {reply.likes + (isReplyLiked ? 1 : 0)}
+                                                                    </Text>
+                                                                </Pressable>
+                                                            </View>
+                                                        </View>
+                                                    </View>
+                                                );
+                                            })}
                                         </View>
                                     );
                                 })}
@@ -304,6 +401,7 @@ export function PostDetailSheet({ visible, onClose, post }: PostDetailSheetProps
                         <View style={styles.inputContainer}>
                             <View style={styles.inputWrapper}>
                                 <TextInput
+                                    ref={inputRef}
                                     value={comment}
                                     onChangeText={setComment}
                                     placeholder="Write a comment..."
@@ -317,7 +415,7 @@ export function PostDetailSheet({ visible, onClose, post }: PostDetailSheetProps
                                     disabled={!comment.trim()}
                                     style={[
                                         styles.sendButton,
-                                        { backgroundColor: comment.trim() ? '#8B5CF6' : '#d1d5db' }
+                                        { backgroundColor: comment.trim() ? '#3b82f6' : '#d1d5db' }
                                     ]}
                                 >
                                     <Send size={16} color="#ffffff" />
@@ -347,7 +445,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
-        maxHeight: SCREEN_HEIGHT * 0.70,
+        maxHeight: SCREEN_HEIGHT * 0.85,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -10 },
         shadowOpacity: 0.1,
@@ -389,7 +487,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     scrollView: {
-        maxHeight: SCREEN_HEIGHT * 0.50,
+        flexGrow: 0,
+    },
+    scrollContent: {
+        paddingBottom: 20,
     },
     postContainer: {
         padding: 20,
@@ -471,12 +572,28 @@ const styles = StyleSheet.create({
         letterSpacing: 1,
         marginBottom: 16,
     },
-    commentItem: {
-        flexDirection: 'row',
-        marginBottom: 16,
-        paddingBottom: 16,
+    commentContainer: {
+        marginBottom: 8,
+        paddingBottom: 8,
         borderBottomWidth: 1,
         borderBottomColor: '#f8fafc',
+    },
+    commentItem: {
+        flexDirection: 'row',
+        marginBottom: 8,
+    },
+    subCommentItem: {
+        flexDirection: 'row',
+        marginLeft: 48,
+        marginTop: 12,
+        paddingLeft: 12,
+        borderLeftWidth: 2,
+        borderLeftColor: '#f1f5f9',
+    },
+    subCommentAvatar: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
     },
     commentAvatar: {
         width: 36,
