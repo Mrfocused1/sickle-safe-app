@@ -22,7 +22,7 @@ import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | 'metrics_info' | 'message_selection' | 'notification_settings' | 'edit_member' | null;
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | 'metrics_info' | 'message_selection' | 'notification_settings' | 'edit_member' | 'create_event' | null;
 
 interface AppBottomSheetProps {
     visible: boolean;
@@ -277,7 +277,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'mission_detail':
                 return { title: mission?.title || 'Mission Detail', icon: 'volunteer-activism', color: '#8b5cf6' };
             case 'invite_member':
-                return { title: 'Invite Caregiver', icon: 'person-add', color: '#8b5cf6' };
+                return { title: 'Invite Caregiver', icon: 'person-add', color: '#3b82f6' };
             case 'manage_task':
                 return { title: 'Task Details', icon: 'assignment', color: task?.priority === 'critical' ? '#ef4444' : task?.priority === 'needs_help' ? '#f59e0b' : '#10b981' };
             case 'request_task':
@@ -290,6 +290,8 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return { title: 'Notifications', icon: 'notifications', color: '#8b5cf6' };
             case 'edit_member':
                 return { title: 'Edit Details', icon: 'edit', color: '#6366f1' };
+            case 'create_event':
+                return { title: 'New Event', icon: 'event', color: '#8b5cf6' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -918,7 +920,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                             {[
                                 { id: 'idea', label: 'Post Update', icon: 'image', color: '#8b5cf6', bg: '#f5f3ff' },
                                 { id: 'volunteer_log_hours', label: 'Log Hours', icon: 'schedule', color: '#10b981', bg: '#f0fdf4' },
-                                { id: 'group', label: 'New Event', icon: 'event', color: '#f59e0b', bg: '#fffbeb' },
+                                { id: 'create_event', label: 'New Event', icon: 'event', color: '#f59e0b', bg: '#fffbeb' },
                             ].map((item) => (
                                 <Pressable
                                     key={item.id}
@@ -1349,6 +1351,55 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         >
                             <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b' }}>Discard Changes</Text>
                         </Pressable>
+                    </View>
+                );
+            case 'create_event':
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>Event Category</Text>
+                        <View style={styles.gridContainer}>
+                            {['Blood Drive', 'Awareness', 'Fundraiser', 'Support'].map((cat) => (
+                                <Pressable
+                                    key={cat}
+                                    onPress={() => setValue(cat)}
+                                    style={[
+                                        styles.gridButton,
+                                        value === cat && { backgroundColor: header.color, borderColor: header.color },
+                                    ]}
+                                >
+                                    <Text style={[styles.gridText, value === cat && { color: '#fff' }]}>{cat}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Event Title</Text>
+                        <TextInput
+                            style={styles.smallInput}
+                            placeholder="e.g. Community Blood Drive 2024"
+                            placeholderTextColor="#94a3b8"
+                        />
+
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Date & Time</Text>
+                        <TextInput
+                            style={styles.smallInput}
+                            placeholder="e.g. Dec 28, 10:00 AM"
+                            placeholderTextColor="#94a3b8"
+                        />
+
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Description & Goals</Text>
+                        <TextInput
+                            style={[styles.smallInput, { height: 100, paddingTop: 12 }]}
+                            placeholder="What is the goal of this event? How many volunteers do you need?"
+                            placeholderTextColor="#94a3b8"
+                            multiline
+                            textAlignVertical="top"
+                            value={notes}
+                            onChangeText={setNotes}
+                        />
+
+                        <View style={styles.insightBox}>
+                            <Text style={styles.insightText}>Your proposed event will be reviewed by the community lead before being visible to other volunteers.</Text>
+                        </View>
                     </View>
                 );
             default:

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, ScrollView, Image, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -38,6 +38,9 @@ export default function DashboardScreen() {
   const [activeTask, setActiveTask] = React.useState<any>(null);
   const [activeType, setActiveType] = React.useState<any>('task');
   const [showWellnessSummary, setShowWellnessSummary] = React.useState(false);
+  const params = useLocalSearchParams();
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const carePlanY = React.useRef(0);
 
   // Progress circle animation
   const progressValue = useSharedValue(0);
@@ -52,7 +55,17 @@ export default function DashboardScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadHealthData();
-    }, [])
+
+      if (params.openAddCarePlan === 'true') {
+        // Delay slightly to ensure layout is ready
+        setTimeout(() => {
+          setIsAddCarePlanVisible(true);
+          scrollViewRef.current?.scrollTo({ y: carePlanY.current, animated: true });
+          // Clear params without full navigation to avoid re-triggering
+          router.setParams({ openAddCarePlan: undefined });
+        }, 100);
+      }
+    }, [params.openAddCarePlan])
   );
 
   const loadHealthData = async () => {
@@ -349,7 +362,11 @@ export default function DashboardScreen() {
             </View>
           </View>
 
-          <ScrollView className="flex-1 px-6 pb-24" showsVerticalScrollIndicator={false}>
+          <ScrollView
+            ref={scrollViewRef}
+            className="flex-1 px-6 pb-24"
+            showsVerticalScrollIndicator={false}
+          >
             {/* Crisis Alert Card */}
             <View className="mb-8 mt-2">
               <View className="overflow-hidden rounded-2xl shadow-lg">
@@ -511,7 +528,10 @@ export default function DashboardScreen() {
             </View>
 
             {/* Care Plan */}
-            <View className="mb-8">
+            <View
+              onLayout={(e) => { carePlanY.current = e.nativeEvent.layout.y; }}
+              className="mb-8"
+            >
               <View className="flex-row justify-between items-center mb-4 px-1">
                 <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Active Care Plan</Text>
                 <Pressable

@@ -143,87 +143,17 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
         <BlurView intensity={50} tint="light" style={StyleSheet.absoluteFill} />
       </View>
 
-      {/* Dashboard Content - Upper Half Only */}
-      <View style={styles.summaryContainer}>
-        {/* Header with Dynamic Greeting */}
-        <Animated.View style={[styles.headerRow, {
-          opacity: backdropOpacity,
-          transform: [{ translateY: backdropOpacity.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }]
-        }]}>
-          <Text style={styles.greetingText}>{greeting}, Paul</Text>
-          <Text style={styles.dateText}>{formattedDate}</Text>
-        </Animated.View>
-
-        {/* Streak & Crisis-Free Row */}
-        <Animated.View style={[styles.statsRow, {
-          opacity: widgetAnim1,
-          transform: [{ scale: widgetAnim1 }]
-        }]}>
-          <View style={styles.statBadge}>
-            <Text style={styles.statEmoji}>🔥</Text>
-            <Text style={styles.statValue}>{streakDays}</Text>
-            <Text style={styles.statLabel}>Day Streak</Text>
-          </View>
-          <View style={[styles.statBadge, styles.statBadgeGreen]}>
-            <Text style={styles.statEmoji}>💪</Text>
-            <Text style={[styles.statValue, { color: '#10B981' }]}>{crisisFreeDays}</Text>
-            <Text style={styles.statLabel}>Crisis-Free</Text>
-          </View>
-        </Animated.View>
-
-        {/* Main Water Widget with Sparkline */}
-        <Animated.View style={[styles.widget, styles.glassWidget, {
-          opacity: widgetAnim2,
-          transform: [{ scale: widgetAnim2 }]
-        }]}>
-          <View style={styles.widgetHeader}>
-            <View style={[styles.inlineIcon, { backgroundColor: '#DBEAFE' }]}>
-              <Feather name="droplet" size={14} color="#2563EB" />
-            </View>
-            <Text style={styles.widgetTitle}>Water Intake</Text>
-            <View style={{ flex: 1 }} />
-            <Sparkline data={weeklyWaterData} color="#2563EB" width={60} height={20} />
-          </View>
-          <View style={styles.heroContent}>
-            <CountUp to={waterPercent} suffix="%" style={styles.heroValue} />
-            <AnimatedProgress progress={waterPercent / 100} color="#2563EB" delay={400} />
-            <Text style={styles.heroSubtext}>Goal: 100oz today</Text>
-          </View>
-        </Animated.View>
-
-        {/* Progress & Energy Row */}
-        <Animated.View style={[styles.sideBySideRow, {
-          opacity: widgetAnim3,
-          transform: [{ scale: widgetAnim3 }]
-        }]}>
-          <View style={[styles.widget, styles.smallWidget, styles.glassWidget]}>
-            <View style={styles.widgetHeader}>
-              <View style={[styles.inlineIcon, { backgroundColor: '#DCFCE7' }]}>
-                <Feather name="check" size={12} color="#10B981" />
-              </View>
-              <Text style={styles.smallWidgetTitle}>Progress</Text>
-            </View>
-            <CountUp to={3} suffix="/5" style={styles.smallWidgetValue} />
-            <Text style={styles.smallWidgetSubtext}>Tasks Done</Text>
-          </View>
-
-          <View style={[styles.widget, styles.smallWidget, styles.glassWidget]}>
-            <View style={styles.widgetHeader}>
-              <View style={[styles.inlineIcon, { backgroundColor: '#FEF9C3' }]}>
-                <Feather name="zap" size={12} color="#CA8A04" />
-              </View>
-              <Text style={styles.smallWidgetTitle}>Energy</Text>
-            </View>
-            <Text style={styles.smallWidgetValue}>Good</Text>
-            <Text style={styles.smallWidgetSubtext}>Stable Flow</Text>
-          </View>
-        </Animated.View>
-      </View>
 
       {/* Radial Menu - Positioned in Clear Area */}
       <View style={styles.menuContainer}>
         <Animated.View style={[styles.menuItem, styles.item1Position, { transform: [{ scale: scaleAnim1 }] }]}>
-          <Pressable onPress={() => { alert('New Task (Coming Soon)'); handleClose(); }} style={styles.actionButton}>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              handleClose(() => router.push({ pathname: '/(overcomer)', params: { openAddCarePlan: 'true' } }));
+            }}
+            style={styles.actionButton}
+          >
             <View style={[styles.iconContainer, styles.blueIcon]}>
               <Feather name="plus-square" size={28} color="#ffffff" />
             </View>

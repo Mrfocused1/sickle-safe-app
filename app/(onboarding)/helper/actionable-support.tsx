@@ -53,7 +53,7 @@ export default function AlertPreferencesScreen() {
         <View style={styles.header}>
           <BackButton />
           <View style={styles.stepIndicator}>
-            <Text style={styles.stepText}>Step 2 of 2</Text>
+            <Text style={styles.stepText}>Step 3 of 3</Text>
           </View>
           <Pressable onPress={() => router.replace('/(helper)')}>
             <Text style={styles.skipText}>Skip</Text>

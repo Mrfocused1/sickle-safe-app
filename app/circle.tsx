@@ -71,6 +71,57 @@ const CIRCLE_MEMBERS = [
     },
 ];
 
+const PENDING_REQUESTS = [
+    {
+        id: 'p1',
+        name: 'James Harrison',
+        role: 'Helper / Brother',
+        avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=200',
+        requestedAt: '10 mins ago'
+    }
+];
+
+const ConnectionRequestCard = ({ request, onAccept, onDecline }: { request: any, onAccept: (id: string) => void, onDecline: (id: string) => void }) => {
+    return (
+        <View className="bg-violet-50 rounded-[28px] p-5 mb-6 border border-violet-100 shadow-sm">
+            <View className="flex-row items-center mb-4">
+                <View className="w-12 h-12 bg-white rounded-2xl items-center justify-center shadow-sm">
+                    <Image
+                        source={{ uri: request.avatar }}
+                        className="w-full h-full rounded-2xl"
+                    />
+                </View>
+                <View className="ml-3 flex-1">
+                    <Text className="text-brand-dark font-[800] text-[15px]">{request.name}</Text>
+                    <Text className="text-violet-500 text-[11px] font-bold uppercase tracking-wider">{request.role}</Text>
+                </View>
+                <View className="bg-white/50 px-3 py-1 rounded-full">
+                    <Text className="text-violet-600 font-bold text-[10px]">{request.requestedAt}</Text>
+                </View>
+            </View>
+
+            <Text className="text-gray-600 text-[13px] leading-5 mb-4 px-1">
+                Wants to connect as your caregiver to support you and receive alerts.
+            </Text>
+
+            <View className="flex-row gap-3">
+                <Pressable
+                    onPress={() => onDecline(request.id)}
+                    className="flex-1 bg-white py-3 rounded-2xl items-center border border-gray-100 active:bg-gray-50"
+                >
+                    <Text className="text-gray-500 font-bold text-sm">Decline</Text>
+                </Pressable>
+                <Pressable
+                    onPress={() => onAccept(request.id)}
+                    className="flex-1 bg-violet-600 py-3 rounded-2xl items-center shadow-sm shadow-violet-200 active:bg-violet-700"
+                >
+                    <Text className="text-white font-bold text-sm">Accept Access</Text>
+                </Pressable>
+            </View>
+        </View>
+    );
+};
+
 const MemberCard = ({ member, index, onShowDetails }: { member: any, index: number, onShowDetails: (m: any) => void }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(20)).current;
@@ -168,6 +219,7 @@ export default function CircleOfCareScreen() {
     const [activeMember, setActiveMember] = useState<any>(null);
     const [activeType, setActiveType] = useState<any>('member');
     const [showSettings, setShowSettings] = useState(false);
+    const [pendingRequests, setPendingRequests] = useState(PENDING_REQUESTS);
 
     const insets = useSafeAreaInsets();
 
@@ -177,6 +229,18 @@ export default function CircleOfCareScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         setActiveType('invite_member');
         setActiveMember({}); // Trigger modal visibility
+    };
+
+    const handleAcceptRequest = (id: string) => {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        // In a real app, this would append to CIRCLE_MEMBERS state
+        setPendingRequests(prev => prev.filter(r => r.id !== id));
+        alert('James Harrison has been added to your Circle of Care!');
+    };
+
+    const handleDeclineRequest = (id: string) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        setPendingRequests(prev => prev.filter(r => r.id !== id));
     };
 
     return (
@@ -218,6 +282,26 @@ export default function CircleOfCareScreen() {
                         </Text>
                     </View>
                 </View>
+
+                {/* Pending Requests Section */}
+                {pendingRequests.length > 0 && (
+                    <View className="px-6 pt-6">
+                        <View className="flex-row items-center justify-between mb-4 px-1">
+                            <Text className="text-brand-dark font-[800] text-lg">Connection Requests</Text>
+                            <View className="bg-violet-600 w-5 h-5 rounded-full items-center justify-center">
+                                <Text className="text-white text-[10px] font-bold">{pendingRequests.length}</Text>
+                            </View>
+                        </View>
+                        {pendingRequests.map(request => (
+                            <ConnectionRequestCard
+                                key={request.id}
+                                request={request}
+                                onAccept={handleAcceptRequest}
+                                onDecline={handleDeclineRequest}
+                            />
+                        ))}
+                    </View>
+                )}
 
                 {/* Tab Bar Container (Sticky) */}
                 <View className="bg-white px-6 pt-6 pb-2">

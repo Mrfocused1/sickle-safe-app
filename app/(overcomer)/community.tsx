@@ -7,6 +7,7 @@ import { CircleMemberAvatar } from '@/components/CircleMemberAvatar';
 import { PostDetailSheet } from '@/components/PostDetailSheet';
 import { ComposePostSheet } from '@/components/ComposePostSheet';
 import { UserProfileSheet } from '@/components/UserProfileSheet';
+import AppBottomSheet from '@/components/AppBottomSheet';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
@@ -105,6 +106,7 @@ export default function CommunityScreen() {
   const [showComposeSheet, setShowComposeSheet] = useState(false);
   const [selectedMember, setSelectedMember] = useState<typeof CIRCLE_MEMBERS[0] | null>(null);
   const [showProfileSheet, setShowProfileSheet] = useState(false);
+  const [showInviteSheet, setShowInviteSheet] = useState(false);
 
   const handleCategoryPress = async (cat: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -204,7 +206,13 @@ export default function CommunityScreen() {
                 onPress={() => handleOpenProfile(member)}
               />
             ))}
-            <Pressable className="items-center mr-6 active:opacity-70">
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowInviteSheet(true);
+              }}
+              className="items-center mr-6 active:opacity-70"
+            >
               <View className="w-14 h-14 bg-gray-100 rounded-full border-2 border-dashed border-gray-300 items-center justify-center">
                 <Plus size={24} color="#94a3b8" />
               </View>
@@ -308,6 +316,12 @@ export default function CommunityScreen() {
         visible={showProfileSheet}
         onClose={() => setShowProfileSheet(false)}
         member={selectedMember}
+      />
+
+      <AppBottomSheet
+        visible={showInviteSheet}
+        onClose={() => setShowInviteSheet(false)}
+        type="invite_member"
       />
     </View>
   );

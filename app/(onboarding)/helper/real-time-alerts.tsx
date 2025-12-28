@@ -65,7 +65,10 @@ export default function RelationshipScreen() {
   const handleContinue = () => {
     if (selectedRelationships.length > 0) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      router.push('/(onboarding)/helper/actionable-support');
+      router.push({
+        pathname: '/(onboarding)/helper/caring-for',
+        params: { count: lovedOnesCount.toString() }
+      });
     }
   };
 
@@ -86,7 +89,7 @@ export default function RelationshipScreen() {
         <View style={styles.header}>
           <BackButton />
           <View style={styles.stepIndicator}>
-            <Text style={styles.stepText}>Step 1 of 2</Text>
+            <Text style={styles.stepText}>Step 1 of 3</Text>
           </View>
           <Pressable onPress={() => router.replace('/(helper)')}>
             <Text style={styles.skipText}>Skip</Text>
@@ -96,7 +99,7 @@ export default function RelationshipScreen() {
         {/* Progress Bar */}
         <View style={styles.progressContainer}>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '50%' }]} />
+            <View style={[styles.progressFill, { width: '33.3%' }]} />
           </View>
         </View>
 

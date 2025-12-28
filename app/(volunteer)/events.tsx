@@ -8,8 +8,11 @@ import {
     Filter,
     Search,
     ChevronRight,
-    Users
+    Users,
+    Plus
 } from 'lucide-react-native';
+import AppBottomSheet from '../../components/AppBottomSheet';
+import * as Haptics from 'expo-haptics';
 
 const CATEGORIES = ['All', 'Blood Drive', 'Awareness', 'Fundraiser', 'Support'];
 
@@ -52,6 +55,12 @@ const EVENTS = [
 export default function VolunteerEvents() {
     const insets = useSafeAreaInsets();
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [showCreateSheet, setShowCreateSheet] = useState(false);
+
+    const handleCreatePress = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setShowCreateSheet(true);
+    };
 
     return (
         <View className="flex-1 bg-white">
@@ -67,9 +76,17 @@ export default function VolunteerEvents() {
                 >
                     <View className="flex-row items-center justify-between mb-6">
                         <Text className="text-3xl font-extrabold text-gray-900">Events</Text>
-                        <Pressable className="w-10 h-10 bg-gray-50 rounded-xl items-center justify-center border border-gray-100">
-                            <CalendarIcon size={20} color="#374151" />
-                        </Pressable>
+                        <View className="flex-row gap-3">
+                            <Pressable
+                                onPress={handleCreatePress}
+                                className="w-10 h-10 bg-violet-600 rounded-xl items-center justify-center shadow-sm shadow-violet-200"
+                            >
+                                <Plus size={20} color="#ffffff" />
+                            </Pressable>
+                            <Pressable className="w-10 h-10 bg-gray-50 rounded-xl items-center justify-center border border-gray-100">
+                                <CalendarIcon size={20} color="#374151" />
+                            </Pressable>
+                        </View>
                     </View>
 
                     {/* Search Bar */}
@@ -104,6 +121,21 @@ export default function VolunteerEvents() {
 
                 {/* Events List */}
                 <View className="px-6 py-6">
+                    {/* Create Event Quick Action */}
+                    <Pressable
+                        onPress={handleCreatePress}
+                        className="bg-violet-50 rounded-[28px] p-6 mb-8 border border-violet-100 flex-row items-center"
+                    >
+                        <View className="w-12 h-12 bg-white rounded-2xl items-center justify-center shadow-sm">
+                            <Plus size={24} color="#8B5CF6" />
+                        </View>
+                        <View className="ml-4 flex-1">
+                            <Text className="text-violet-900 font-extrabold text-lg">Host an Event</Text>
+                            <Text className="text-violet-600 text-xs font-medium">Create a new blood drive or awareness goal</Text>
+                        </View>
+                        <ChevronRight size={20} color="#8B5CF6" />
+                    </Pressable>
+
                     {EVENTS.map((event) => (
                         <Pressable
                             key={event.id}
@@ -158,6 +190,12 @@ export default function VolunteerEvents() {
                 </View>
 
             </ScrollView>
+
+            <AppBottomSheet
+                visible={showCreateSheet}
+                onClose={() => setShowCreateSheet(false)}
+                type="create_event"
+            />
         </View>
     );
 }
