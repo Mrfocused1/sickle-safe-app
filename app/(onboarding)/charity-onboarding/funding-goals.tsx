@@ -74,7 +74,7 @@ export default function FundingGoalsScreen() {
                             step={10000}
                             value={annualGoal}
                             onChange={setAnnualGoal}
-                            color="#6366F1"
+                            color="#D97706"
                             labels={{ min: '$10K', max: '$10M+' }}
                         />
                         <View style={styles.goalDisplay}>
