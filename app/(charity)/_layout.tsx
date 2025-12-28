@@ -40,13 +40,6 @@ export default function CharityLayout() {
                 }}
             />
             <Tabs.Screen
-                name="grants"
-                options={{
-                    title: 'Grants',
-                    tabBarIcon: ({ color }) => <MaterialIcons name="receipt-long" size={22} color={color} />,
-                }}
-            />
-            <Tabs.Screen
                 name="community"
                 options={{
                     title: 'Community',
