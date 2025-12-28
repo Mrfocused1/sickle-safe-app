@@ -124,7 +124,7 @@ const Dashboard = () => {
                 {/* Executive Stats Grid */}
                 <View style={styles.statsGrid}>
                     <View style={styles.statCard}>
-                        <View style={[styles.statIconContainer, { backgroundColor: '#fff7ed' }]}>
+                        <View style={[styles.statIconContainer, { backgroundColor: '#f1f5f9' }]}>
                             <Users size={20} color="#d97706" />
                         </View>
                         <Text style={styles.statNumber}>12.4k</Text>
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     impactTag: {
-        backgroundColor: '#fffbeb',
+        backgroundColor: '#f1f5f9',
         paddingHorizontal: 10,
         paddingVertical: 4,
         borderRadius: 8,

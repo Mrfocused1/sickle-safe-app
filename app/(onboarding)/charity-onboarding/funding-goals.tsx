@@ -39,7 +39,7 @@ export default function FundingGoalsScreen() {
             <StatusBar style="dark" />
 
             <LinearGradient
-                colors={['#ffffff', '#fffbeb', '#ffffff']}
+                colors={['#ffffff', '#f8fafc', '#ffffff']}
                 locations={[0, 0.5, 1]}
                 style={StyleSheet.absoluteFill}
             />
@@ -129,7 +129,7 @@ export default function FundingGoalsScreen() {
                         </Text>
                         <View style={styles.progressBarContainer}>
                             <View style={[styles.progressBarFull, { width: '80%', backgroundColor: '#D97706' }]} />
-                            <View style={[styles.progressBarFull, { width: '20%', backgroundColor: '#FDE68A' }]} />
+                            <View style={[styles.progressBarFull, { width: '20%', backgroundColor: '#e2e8f0' }]} />
                         </View>
                     </View>
                 </ScrollView>

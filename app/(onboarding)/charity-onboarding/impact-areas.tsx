@@ -53,7 +53,7 @@ export default function ImpactAreasScreen() {
             <StatusBar style="dark" />
 
             <LinearGradient
-                colors={['#ffffff', '#fffbeb', '#ffffff']}
+                colors={['#ffffff', '#f8fafc', '#ffffff']}
                 locations={[0, 0.5, 1]}
                 style={StyleSheet.absoluteFill}
             />
@@ -190,12 +190,12 @@ const styles = StyleSheet.create({
         height: 24,
     },
     infoCard: {
-        backgroundColor: '#FEF3C7',
+        backgroundColor: '#f1f5f9',
         borderRadius: 24,
         padding: 24,
         marginTop: 32,
         borderWidth: 1,
-        borderColor: '#FCD34D',
+        borderColor: '#e2e8f0',
     },
     infoTitle: {
         fontSize: 16,
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     },
     infoText: {
         fontSize: 14,
-        color: '#D97706',
+        color: '#475569',
         lineHeight: 20,
         fontWeight: '500',
     },

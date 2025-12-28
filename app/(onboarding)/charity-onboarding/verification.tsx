@@ -37,7 +37,7 @@ export default function VerificationScreen() {
             <StatusBar style="dark" />
 
             <LinearGradient
-                colors={['#ffffff', '#fffbeb', '#ffffff']}
+                colors={['#ffffff', '#f8fafc', '#ffffff']}
                 locations={[0, 0.5, 1]}
                 style={StyleSheet.absoluteFill}
             />
@@ -104,7 +104,7 @@ export default function VerificationScreen() {
                             <Switch
                                 value={agreedToTerms}
                                 onValueChange={setAgreedToTerms}
-                                trackColor={{ false: '#E5E7EB', true: '#FDE68A' }}
+                                trackColor={{ false: '#E5E7EB', true: '#D1D5DB' }}
                                 thumbColor={agreedToTerms ? '#D97706' : '#F3F4F6'}
                             />
                         </View>
@@ -119,7 +119,7 @@ export default function VerificationScreen() {
                             <Switch
                                 value={agreedToPrivacy}
                                 onValueChange={setAgreedToPrivacy}
-                                trackColor={{ false: '#E5E7EB', true: '#FDE68A' }}
+                                trackColor={{ false: '#E5E7EB', true: '#D1D5DB' }}
                                 thumbColor={agreedToPrivacy ? '#D97706' : '#F3F4F6'}
                             />
                         </View>
@@ -303,18 +303,18 @@ const styles = StyleSheet.create({
     },
     noticeBox: {
         flexDirection: 'row',
-        backgroundColor: '#FFFBEB',
+        backgroundColor: '#f1f5f9',
         padding: 16,
         borderRadius: 20,
         marginTop: 24,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#FDE68A',
+        borderColor: '#e2e8f0',
     },
     noticeText: {
         flex: 1,
         fontSize: 13,
-        color: '#D97706',
+        color: '#475569',
         fontWeight: '600',
         lineHeight: 18,
     },

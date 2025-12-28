@@ -59,7 +59,7 @@ export default function RoleSelectionScreen() {
       description: 'Support the community through funding, awareness, and centralized resource management.',
       icon: Gift,
       color: '#D97706',
-      bgColor: '#FFFBEB',
+      bgColor: '#f8fafc',
     },
   };
 

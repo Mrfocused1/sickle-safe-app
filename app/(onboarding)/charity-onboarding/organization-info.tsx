@@ -39,7 +39,7 @@ export default function OrganizationInfoScreen() {
             <StatusBar style="dark" />
 
             <LinearGradient
-                colors={['#ffffff', '#fffbeb', '#ffffff']}
+                colors={['#ffffff', '#f8fafc', '#ffffff']}
                 locations={[0, 0.5, 1]}
                 style={StyleSheet.absoluteFill}
             />
