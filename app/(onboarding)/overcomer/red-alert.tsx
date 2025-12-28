@@ -45,7 +45,7 @@ export default function HydrationGoalScreen() {
         <View style={styles.header}>
           <BackButton />
           <View style={styles.stepIndicator}>
-            <Text style={styles.stepText}>Step 3 of 3</Text>
+            <Text style={styles.stepText}>Step 4 of 4</Text>
           </View>
           <Pressable onPress={() => router.replace('/(overcomer)')}>
             <Text style={styles.skipText}>Skip</Text>
@@ -55,7 +55,7 @@ export default function HydrationGoalScreen() {
         {/* Progress Bar */}
         <View style={styles.progressContainer}>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '100%' }]} />
+            <View style={[styles.progressFill, { width: '100%', backgroundColor: '#EF4444' }]} />
           </View>
         </View>
 
@@ -133,7 +133,7 @@ export default function HydrationGoalScreen() {
           top: 80,
           left: 24,
           right: 24,
-          backgroundColor: '#FEF3C7',
+          backgroundColor: '#FEE2E2',
           padding: 20,
           borderRadius: 20,
           flexDirection: 'row',
@@ -149,7 +149,7 @@ export default function HydrationGoalScreen() {
             width: 40,
             height: 40,
             borderRadius: 12,
-            backgroundColor: '#F59E0B',
+            backgroundColor: '#EF4444',
             alignItems: 'center',
             justifyContent: 'center',
             marginRight: 16,

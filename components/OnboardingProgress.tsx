@@ -2,31 +2,33 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 
 interface OnboardingProgressProps {
-  currentStep: 1 | 2 | 3;
+  currentStep: number;
+  totalSteps?: number;
   variant?: 'light' | 'dark'; // dark for video backgrounds, light for white backgrounds
 }
 
-export default function OnboardingProgress({ currentStep, variant = 'light' }: OnboardingProgressProps) {
+export default function OnboardingProgress({
+  currentStep,
+  totalSteps = 3,
+  variant = 'light'
+}: OnboardingProgressProps) {
   const inactiveColor = variant === 'dark' ? 'rgba(255, 255, 255, 0.4)' : '#D1D5DB';
   const activeColor = '#EF4444';
 
+  const steps = Array.from({ length: totalSteps }, (_, i) => i + 1);
+
   return (
     <View style={styles.container}>
-      <View style={[
-        styles.dot,
-        currentStep === 1 ? styles.dotActive : null,
-        { backgroundColor: currentStep === 1 ? activeColor : inactiveColor }
-      ]} />
-      <View style={[
-        styles.dot,
-        currentStep === 2 ? styles.dotActive : null,
-        { backgroundColor: currentStep === 2 ? activeColor : inactiveColor }
-      ]} />
-      <View style={[
-        styles.dot,
-        currentStep === 3 ? styles.dotActive : null,
-        { backgroundColor: currentStep === 3 ? activeColor : inactiveColor }
-      ]} />
+      {steps.map((step) => (
+        <View
+          key={step}
+          style={[
+            styles.dot,
+            currentStep === step ? styles.dotActive : null,
+            { backgroundColor: currentStep === step ? activeColor : inactiveColor }
+          ]}
+        />
+      ))}
     </View>
   );
 }

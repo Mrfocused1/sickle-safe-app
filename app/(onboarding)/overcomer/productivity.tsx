@@ -81,7 +81,7 @@ export default function SickleTypeScreen() {
         <View style={styles.header}>
           <BackButton />
           <View style={styles.stepIndicator}>
-            <Text style={styles.stepText}>Step 1 of 3</Text>
+            <Text style={styles.stepText}>Step 1 of 4</Text>
           </View>
           <Pressable onPress={() => router.push('/(overcomer)')}>
             <Text style={styles.skipText}>Skip</Text>
@@ -91,7 +91,7 @@ export default function SickleTypeScreen() {
         {/* Progress Bar */}
         <View style={styles.progressContainer}>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '33%' }]} />
+            <View style={[styles.progressFill, { width: '25%' }]} />
           </View>
         </View>
 

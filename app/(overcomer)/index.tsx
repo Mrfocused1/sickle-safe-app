@@ -35,6 +35,14 @@ export default function DashboardScreen() {
   const [activeTask, setActiveTask] = React.useState<any>(null);
   const [activeType, setActiveType] = React.useState<any>('task');
   const [showWellnessSummary, setShowWellnessSummary] = React.useState(false);
+
+  // Progress circle animation
+  const progressValue = useSharedValue(0);
+
+  React.useEffect(() => {
+    progressValue.value = withTiming(0.6, { duration: 1200 });
+  }, []);
+
   const [tasks, setTasks] = React.useState([
     {
       id: '1',
@@ -239,22 +247,33 @@ export default function DashboardScreen() {
                   translateX.value = withSpring(0);
                 }
               }}
-              className="bg-white rounded-[24px] p-5 border-l-[6px] shadow-sm border-gray-100"
-              style={{ borderLeftColor: borderColor }}
+              className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100"
             >
               <View className="flex-row items-center">
-                <View className="w-10 h-10 rounded-xl items-center justify-center mr-4" style={{ backgroundColor: bgColor + '40' }}>
-                  <MaterialIcons name={priority === 'critical' ? 'priority-high' : 'assignment'} size={20} color={textColor} />
+                <View
+                  className="w-12 h-12 rounded-2xl items-center justify-center mr-4"
+                  style={{ backgroundColor: bgColor }}
+                >
+                  <MaterialIcons
+                    name={
+                      title.includes('Emergency') || title.includes('Bag') ? 'medical-services' :
+                        title.includes('Prescription') || title.includes('Refill') ? 'medication' :
+                          title.includes('Walk') || title.includes('Exercise') ? 'directions-walk' :
+                            'assignment'
+                    }
+                    size={24}
+                    color={textColor}
+                  />
                 </View>
                 <View className="flex-1">
-                  <Text className="text-brand-label text-brand-dark">{title}</Text>
+                  <Text style={{ fontSize: 17, fontWeight: '700', color: '#1e293b' }}>{title}</Text>
                 </View>
 
                 {/* Comment Count Badge */}
                 {item.comments && item.comments.length > 0 && (
                   <View className="flex-row items-center bg-gray-50 px-3 py-1.5 rounded-full">
-                    <MaterialIcons name="chat-bubble-outline" size={14} color="#64748b" />
-                    <Text className="text-xs font-bold text-gray-500 ml-1.5">{item.comments.length}</Text>
+                    <MaterialIcons name="message" size={14} color="#64748b" />
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#64748b', marginLeft: 6 }}>{item.comments.length}</Text>
                   </View>
                 )}
               </View>
@@ -309,8 +328,8 @@ export default function DashboardScreen() {
                       <MaterialIcons name="medical-services" size={44} color="#ffffff" />
                     </View>
 
-                    <Text className="text-brand-title text-white mb-1">Crisis Alert</Text>
-                    <Text className="text-red-100/80 text-brand-sub mb-8 text-center px-6 leading-5">
+                    <Text style={{ fontSize: 28, fontWeight: '800', color: '#ffffff', marginBottom: 8 }}>Crisis Alert</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '500', color: 'rgba(255, 255, 255, 0.9)', lineHeight: 22, textAlign: 'center', paddingHorizontal: 24 }}>
                       Slide the button below to notify emergency contacts
                     </Text>
 
@@ -331,7 +350,7 @@ export default function DashboardScreen() {
                         style={[animatedTextStyle, { width: SLIDER_WIDTH }]}
                         className="absolute inset-0 items-center justify-center"
                       >
-                        <Text className="text-white text-sm font-bold ml-12">
+                        <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '700' }}>
                           Slide to Trigger
                         </Text>
                       </Animated.View>
@@ -344,8 +363,8 @@ export default function DashboardScreen() {
             {/* Daily Wellness */}
             <View className="mb-8">
               <View className="flex-row justify-between items-end mb-3">
-                <Text className="text-brand-title text-brand-dark">Daily Wellness</Text>
-                <Text className="text-brand-sub font-bold text-blue-600">3/5 tasks</Text>
+                <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Daily Wellness</Text>
+                <Text style={{ fontSize: 15, fontWeight: '700', color: '#3b82f6' }}>3/5 tasks</Text>
               </View>
 
               <Pressable
@@ -358,22 +377,53 @@ export default function DashboardScreen() {
                 {/* Progress Circle */}
                 <View className="flex-row items-center mb-4">
                   <View className="relative w-16 h-16 mr-4">
+                    {/* Background Circle */}
                     <View className="absolute inset-0 rounded-full border-4 border-gray-200" />
-                    <View
-                      className="absolute inset-0 rounded-full border-4 border-blue-500 border-r-transparent border-b-transparent"
-                      style={{ transform: [{ rotate: '45deg' }] }}
+
+                    {/* Animated Progress Arc */}
+                    <Animated.View
+                      style={[
+                        {
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          borderRadius: 32,
+                          borderWidth: 4,
+                          borderColor: '#3b82f6',
+                          borderRightColor: 'transparent',
+                          borderBottomColor: 'transparent',
+                        },
+                        useAnimatedStyle(() => ({
+                          transform: [
+                            { rotate: `${interpolate(progressValue.value, [0, 1], [0, 360])}deg` }
+                          ],
+                          opacity: interpolate(progressValue.value, [0, 0.1], [0, 1])
+                        }))
+                      ]}
                     />
+
                     <View className="absolute inset-0 items-center justify-center">
-                      <Text className="text-xs font-bold text-gray-900">60%</Text>
+                      <Animated.Text
+                        style={[
+                          { fontSize: 14, fontWeight: '700', color: '#1e293b' },
+                          useAnimatedStyle(() => ({
+                            opacity: interpolate(progressValue.value, [0, 0.3], [0, 1])
+                          }))
+                        ]}
+                      >
+                        {Math.round(0.6 * 100)}%
+                      </Animated.Text>
                     </View>
                   </View>
 
                   <View className="flex-1">
-                    <Text className="text-sm text-gray-600 mb-1">
+                    <Text style={{ fontSize: 15, fontWeight: '500', color: '#64748b', lineHeight: 22, marginBottom: 4 }}>
                       Keep hydrated and track your pain levels regularly.
                     </Text>
                     <Pressable>
-                      <Text className="text-sm font-semibold text-blue-600">View Details</Text>
+                      <Text style={{ fontSize: 15, fontWeight: '700', color: '#3b82f6' }}>View Details</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -384,19 +434,19 @@ export default function DashboardScreen() {
                     <View className="w-8 h-8 bg-blue-100 rounded-xl items-center justify-center mr-2">
                       <MaterialIcons name="water-drop" size={16} color="#2563eb" />
                     </View>
-                    <Text className="text-sm font-bold text-blue-700">Water</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#1d4ed8' }}>Water</Text>
                   </Pressable>
                   <Pressable className="flex-1 flex-row items-center px-4 py-3 bg-purple-50/50 border border-purple-100 rounded-2xl active:bg-purple-100">
                     <View className="w-8 h-8 bg-purple-100 rounded-xl items-center justify-center mr-2">
                       <MaterialIcons name="medication" size={16} color="#7c3aed" />
                     </View>
-                    <Text className="text-sm font-bold text-purple-700">Meds</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#6d28d9' }}>Meds</Text>
                   </Pressable>
                   <Pressable className="flex-1 flex-row items-center px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl opacity-50">
                     <View className="w-8 h-8 bg-white rounded-xl items-center justify-center mr-2">
                       <MaterialIcons name="mood" size={16} color="#6b7280" />
                     </View>
-                    <Text className="text-sm font-bold text-gray-500">Mood</Text>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#64748b' }}>Mood</Text>
                   </Pressable>
                 </View>
               </Pressable>
@@ -405,7 +455,7 @@ export default function DashboardScreen() {
             {/* Care Plan */}
             <View className="mb-8">
               <View className="flex-row justify-between items-center mb-4 px-1">
-                <Text className="text-brand-muted text-brand-section">Active Care Plan</Text>
+                <Text style={{ fontSize: 24, fontWeight: '800', color: '#0f172a' }}>Active Care Plan</Text>
                 <Pressable
                   onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

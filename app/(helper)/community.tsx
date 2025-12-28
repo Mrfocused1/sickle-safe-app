@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable, Image, Alert } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
     Search,
@@ -15,6 +14,9 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { PostActionSheet, ActionItem } from '../../components/PostActionSheet';
+import { Dimensions } from 'react-native';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CATEGORIES = [
     { id: 'all', label: 'All' },
@@ -68,7 +70,6 @@ const POSTS = [
 ];
 
 export default function CommunityScreen() {
-    const insets = useSafeAreaInsets();
     const router = useRouter();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -100,49 +101,74 @@ export default function CommunityScreen() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     };
 
+    const filteredPosts = React.useMemo(() => {
+        const searchLower = searchQuery.toLowerCase().trim();
+        return POSTS.filter(post => {
+            const matchesCategory = selectedCategory === 'all' ||
+                post.tag.toLowerCase() === CATEGORIES.find(c => c.id === selectedCategory)?.label.toLowerCase();
+
+            const matchesSearch = !searchLower ||
+                post.title.toLowerCase().includes(searchLower) ||
+                post.content.toLowerCase().includes(searchLower) ||
+                post.author.toLowerCase().includes(searchLower);
+
+            return matchesCategory && matchesSearch;
+        });
+    }, [selectedCategory, searchQuery]);
+
     return (
         <View className="flex-1 bg-white">
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 100 }}
+                contentContainerStyle={{ paddingBottom: 120 }}
                 stickyHeaderIndices={[1]}
+                keyboardShouldPersistTaps="handled"
+                removeClippedSubviews={false}
             >
-                {/* Header */}
-                <View
-                    className="px-6 pb-2 bg-white"
-                    style={{ paddingTop: insets.top + 10 }}
-                >
-                    <View className="flex-row items-center justify-between mb-6">
-                        <View>
-                            <Text className="text-3xl font-extrabold text-gray-900">Community</Text>
-                            <Text className="text-gray-500 font-medium text-sm">Connect with other caregivers</Text>
+                {/* Header Section */}
+                <View className="px-6 py-6 bg-white">
+                    <View className="flex-row items-center justify-between mb-4">
+                        <View className="flex-1">
+                            <Text style={{ fontSize: 34, fontWeight: '900', color: '#0f172a', letterSpacing: -1.2 }}>Community</Text>
+                            <Text style={{ fontSize: 16, fontWeight: '500', color: '#64748b', marginTop: 2 }}>Connect with other caregivers</Text>
                         </View>
                         <Pressable
-                            className="w-10 h-10 bg-gray-50 rounded-full items-center justify-center border border-gray-100"
-                            onPress={() => router.push('/community/groups')}
+                            className="w-12 h-12 bg-gray-50 rounded-2xl items-center justify-center border border-gray-100 active:scale-90 transition-transform"
+                            onPress={() => {
+                                handleAction();
+                                Alert.alert("Groups", "Group feature coming soon!");
+                            }}
                         >
-                            <Users size={20} color="#374151" />
+                            <Users size={22} color="#4f46e5" />
                         </Pressable>
-                    </View>
-
-                    {/* Search Bar */}
-                    <View className="flex-row items-center bg-gray-50 rounded-2xl px-4 py-3 border border-gray-100 mb-2">
-                        <Search size={20} color="#9CA3AF" />
-                        <TextInput
-                            placeholder="Search topics, questions..."
-                            className="flex-1 ml-3 text-base text-gray-900"
-                            placeholderTextColor="#9CA3AF"
-                            value={searchQuery}
-                            onChangeText={setSearchQuery}
-                        />
                     </View>
                 </View>
 
-                {/* Categories Tab (Sticky) */}
-                <View className="bg-white py-4 px-6 border-b border-gray-50 z-10">
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="overflow-visible">
-                        <View className="flex-row gap-2">
+                {/* Sticky Interactive Bar */}
+                <View className="bg-white pb-6 pt-2 border-b border-gray-50" style={{ zIndex: 100 }}>
+                    <View className="px-6">
+                        {/* Search Bar */}
+                        <View className="flex-row items-center bg-gray-50 rounded-[24px] px-5 py-4 border border-gray-100 mb-6 shadow-sm focus-within:border-indigo-200">
+                            <Search size={18} color="#4f46e5" strokeWidth={2.5} />
+                            <TextInput
+                                placeholder="Search medical tips, school advice..."
+                                style={{ fontSize: 16, fontWeight: '600', color: '#0f172a', flex: 1, marginLeft: 12 }}
+                                placeholderTextColor="#94a3b8"
+                                value={searchQuery}
+                                onChangeText={setSearchQuery}
+                                clearButtonMode="while-editing"
+                                selectionColor="#4f46e5"
+                            />
+                        </View>
+
+                        {/* Animated Category Selector */}
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ paddingRight: 24, gap: 10 }}
+                            keyboardShouldPersistTaps="handled"
+                        >
                             {CATEGORIES.map((cat) => (
                                 <Pressable
                                     key={cat.id}
@@ -150,100 +176,121 @@ export default function CommunityScreen() {
                                         handleAction();
                                         setSelectedCategory(cat.id);
                                     }}
-                                    className={`px-5 py-2.5 rounded-full border ${selectedCategory === cat.id
-                                        ? 'bg-gray-900 border-gray-900'
+                                    className={`px-6 py-3 rounded-full border ${selectedCategory === cat.id
+                                        ? 'bg-[#0f172a] border-[#0f172a]'
                                         : 'bg-white border-gray-200'
-                                        }`}
+                                        } active:scale-95 transition-all shadow-sm`}
                                 >
-                                    <Text className={`font-semibold text-xs ${selectedCategory === cat.id ? 'text-white' : 'text-gray-600'
-                                        }`}>
+                                    <Text
+                                        style={{ fontSize: 13, fontWeight: '700' }}
+                                        className={selectedCategory === cat.id ? 'text-white' : 'text-gray-600'}
+                                    >
                                         {cat.label}
                                     </Text>
                                 </Pressable>
                             ))}
-                        </View>
-                    </ScrollView>
-                </View>
-
-                {/* Featured Resource (Optional - could vary) */}
-                <View className="px-6 py-6">
-                    <View className="bg-blue-50 rounded-[32px] p-5 border border-blue-100 flex-row items-center relative overflow-hidden">
-                        <View className="absolute -right-4 -top-4 w-24 h-24 bg-blue-100 rounded-full opacity-50" />
-                        <View className="w-12 h-12 bg-white rounded-full items-center justify-center mr-4">
-                            <BookOpen size={20} color="#3B82F6" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-blue-900 font-bold text-sm">Caregiver Guide 2024</Text>
-                            <Text className="text-blue-700 text-xs mt-0.5">Essential protocols & school forms</Text>
-                        </View>
-                        <Pressable className="bg-white px-3 py-1.5 rounded-full">
-                            <Text className="text-xs font-bold text-blue-600">Read</Text>
-                        </Pressable>
+                        </ScrollView>
                     </View>
                 </View>
 
+                {/* Featured Resource Card */}
+                <View className="px-6 py-6">
+                    <Pressable
+                        className="bg-[#eff6ff] rounded-[32px] p-6 border border-blue-100 flex-row items-center active:scale-[0.98] transition-all relative overflow-hidden shadow-sm"
+                        onPress={() => {
+                            handleAction();
+                            router.push('/(helper)/guide');
+                        }}
+                    >
+                        <View className="absolute -right-10 -top-10 w-32 h-32 bg-white rounded-full opacity-40" />
+                        <View className="w-14 h-14 bg-white rounded-2xl items-center justify-center mr-4 shadow-sm border border-blue-50">
+                            <BookOpen size={26} color="#3b82f6" strokeWidth={2.5} />
+                        </View>
+                        <View className="flex-1">
+                            <Text style={{ fontSize: 17, fontWeight: '900', color: '#1e3a8a', letterSpacing: -0.5 }}>Caregiver Guide 2024</Text>
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#3b82f6', marginTop: 2 }}>Essential protocols & school forms</Text>
+                        </View>
+                        <View className="bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-blue-50">
+                            <Text style={{ fontSize: 13, fontWeight: '900', color: '#3b82f6' }}>Read</Text>
+                        </View>
+                    </Pressable>
+                </View>
+
                 {/* Posts Feed */}
-                <View className="px-6 pb-20">
-                    {POSTS.map((post) => (
-                        <View key={post.id} className="mb-6 bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
-                            {/* User Info */}
-                            <View className="flex-row items-center justify-between mb-3">
-                                <View className="flex-row items-center">
-                                    <Image
-                                        source={{ uri: post.avatar }}
-                                        className="w-10 h-10 rounded-full border border-gray-100"
-                                    />
-                                    <View className="ml-3">
-                                        <View className="flex-row items-center gap-1.5">
-                                            <Text className="text-sm font-bold text-gray-900">{post.author}</Text>
-                                            {post.isExpert && (
-                                                <View className="bg-emerald-100 px-1.5 py-0.5 rounded text-[10px]">
-                                                    <Text className="text-emerald-700 font-bold text-[8px] uppercase">Expert</Text>
-                                                </View>
-                                            )}
+                <View className="px-6 pb-20 pt-2">
+                    {filteredPosts.length > 0 ? (
+                        filteredPosts.map((post) => (
+                            <View key={post.id} className="mb-8 bg-white rounded-[32px] p-6 shadow-md border border-gray-50">
+                                {/* User Info Header */}
+                                <View className="flex-row items-center justify-between mb-5">
+                                    <View className="flex-row items-center">
+                                        <View className="w-14 h-14 rounded-full border-2 border-indigo-50 overflow-hidden shadow-sm">
+                                            <Image
+                                                source={{ uri: post.avatar }}
+                                                className="w-full h-full"
+                                            />
                                         </View>
-                                        <Text className="text-xs text-gray-500">{post.role} • {post.time}</Text>
+                                        <View className="ml-4">
+                                            <View className="flex-row items-center gap-2">
+                                                <Text style={{ fontSize: 16, fontWeight: '800', color: '#0f172a' }}>{post.author}</Text>
+                                                {post.isExpert && (
+                                                    <View className="bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">
+                                                        <Text style={{ fontSize: 9, fontWeight: '900', color: '#059669', letterSpacing: 0.8 }}>EXPERT</Text>
+                                                    </View>
+                                                )}
+                                            </View>
+                                            <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b', marginTop: 1 }}>{post.role} • {post.time}</Text>
+                                        </View>
+                                    </View>
+                                    <Pressable
+                                        onPress={() => {
+                                            handleAction();
+                                            setSelectedPostAuthor(post.author);
+                                            setShowSheet(true);
+                                        }}
+                                        className="w-10 h-10 items-center justify-center bg-gray-50 rounded-2xl active:scale-90 transition-transform"
+                                    >
+                                        <MoreVertical size={20} color="#94a3b8" />
+                                    </Pressable>
+                                </View>
+
+                                {/* Content Section */}
+                                <View className="mb-6">
+                                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a', marginBottom: 8, lineHeight: 28, letterSpacing: -0.4 }}>{post.title}</Text>
+                                    <Text style={{ fontSize: 15, fontWeight: '500', color: '#4b5563', lineHeight: 24 }}>{post.content}</Text>
+                                </View>
+
+                                {/* Interactive Footer */}
+                                <View className="flex-row items-center justify-between pt-2">
+                                    <View className="bg-indigo-50/50 px-4 py-2 rounded-2xl border border-indigo-100/30">
+                                        <Text style={{ fontSize: 12, fontWeight: '800', color: '#4f46e5' }}>{post.tag}</Text>
+                                    </View>
+
+                                    <View className="flex-row items-center gap-5">
+                                        <Pressable className="flex-row items-center gap-2 active:scale-95 px-2 py-1" onPress={handleAction}>
+                                            <Heart size={22} color="#94a3b8" strokeWidth={2} />
+                                            <Text style={{ fontSize: 14, fontWeight: '800', color: '#64748b' }}>{post.likes}</Text>
+                                        </Pressable>
+                                        <Pressable className="flex-row items-center gap-2 active:scale-95 px-2 py-1" onPress={handleAction}>
+                                            <MessageCircle size={22} color="#94a3b8" strokeWidth={2} />
+                                            <Text style={{ fontSize: 14, fontWeight: '800', color: '#64748b' }}>{post.comments}</Text>
+                                        </Pressable>
+                                        <Pressable className="active:scale-95 p-1" onPress={handleAction}>
+                                            <Share2 size={22} color="#94a3b8" strokeWidth={2} />
+                                        </Pressable>
                                     </View>
                                 </View>
-                                <Pressable
-                                    onPress={() => {
-                                        setSelectedPostAuthor(post.author);
-                                        setShowSheet(true);
-                                    }}
-                                    className="p-2 -mr-2"
-                                >
-                                    <MoreVertical size={20} color="#9CA3AF" />
-                                </Pressable>
                             </View>
-
-                            {/* Content */}
-                            <View className="mb-4">
-                                <Text className="text-base font-bold text-gray-900 mb-1 leading-snug">{post.title}</Text>
-                                <Text className="text-sm text-gray-600 leading-relaxed">{post.content}</Text>
+                        ))
+                    ) : (
+                        <View className="py-32 items-center justify-center">
+                            <View className="w-20 h-20 bg-gray-50 rounded-full items-center justify-center mb-4">
+                                <Search size={32} color="#cbd5e1" />
                             </View>
-
-                            {/* Footer / Tags */}
-                            <View className="flex-row items-center justify-between">
-                                <View className={`px-3 py-1 rounded-full ${post.tagColor.split(' ')[0]}`}>
-                                    <Text className={`text-[10px] font-bold ${post.tagColor.split(' ')[1]}`}>{post.tag}</Text>
-                                </View>
-
-                                <View className="flex-row items-center gap-4">
-                                    <Pressable className="flex-row items-center gap-1.5" onPress={handleAction}>
-                                        <Heart size={18} color="#6B7280" />
-                                        <Text className="text-xs font-medium text-gray-500">{post.likes}</Text>
-                                    </Pressable>
-                                    <Pressable className="flex-row items-center gap-1.5" onPress={handleAction}>
-                                        <MessageCircle size={18} color="#6B7280" />
-                                        <Text className="text-xs font-medium text-gray-500">{post.comments}</Text>
-                                    </Pressable>
-                                    <Pressable onPress={handleAction}>
-                                        <Share2 size={18} color="#6B7280" />
-                                    </Pressable>
-                                </View>
-                            </View>
+                            <Text style={{ fontSize: 18, fontWeight: '800', color: '#0f172a' }}>No results found</Text>
+                            <Text style={{ fontSize: 14, fontWeight: '500', color: '#64748b', marginTop: 4 }}>Try adjusting your search or filters</Text>
                         </View>
-                    ))}
+                    )}
                 </View>
             </ScrollView>
 

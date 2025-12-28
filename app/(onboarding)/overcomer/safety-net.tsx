@@ -3,30 +3,17 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AlertTriangle } from 'lucide-react-native';
+import { AlertCircle } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { BackButton, SliderInput, ChipSelection } from '../../../components/onboarding';
+import { BackButton, SliderInput } from '../../../components/onboarding';
 
-const triggerOptions = [
-  { value: 'cold', label: 'Cold Weather', emoji: '🥶' },
-  { value: 'dehydration', label: 'Dehydration', emoji: '💧' },
-  { value: 'stress', label: 'Stress', emoji: '😰' },
-  { value: 'infection', label: 'Infections', emoji: '🤒' },
-  { value: 'exercise', label: 'Intense Exercise', emoji: '🏃' },
-  { value: 'altitude', label: 'High Altitude', emoji: '🏔️' },
-  { value: 'sleep', label: 'Poor Sleep', emoji: '😴' },
-  { value: 'alcohol', label: 'Alcohol', emoji: '🍺' },
-];
-
-export default function TriggersScreen() {
+export default function FrequencyScreen() {
   const [crisisFrequency, setCrisisFrequency] = useState(2);
-  const [triggers, setTriggers] = useState<string[]>([]);
 
   const handleContinue = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    // TODO: Save to profile
-    router.push('/(onboarding)/overcomer/red-alert');
+    router.push('/(onboarding)/overcomer/triggers');
   };
 
   const getFrequencyLabel = (value: number) => {
@@ -43,7 +30,7 @@ export default function TriggersScreen() {
       <StatusBar style="dark" />
 
       <LinearGradient
-        colors={['#ffffff', '#FEF3C7', '#ffffff']}
+        colors={['#ffffff', '#FEF2F2', '#ffffff']}
         locations={[0, 0.5, 1]}
         style={StyleSheet.absoluteFill}
       />
@@ -53,9 +40,9 @@ export default function TriggersScreen() {
         <View style={styles.header}>
           <BackButton />
           <View style={styles.stepIndicator}>
-            <Text style={styles.stepText}>Step 2 of 3</Text>
+            <Text style={styles.stepText}>Step 2 of 4</Text>
           </View>
-          <Pressable onPress={() => router.push('/(overcomer)')}>
+          <Pressable onPress={() => router.replace('/(overcomer)')}>
             <Text style={styles.skipText}>Skip</Text>
           </Pressable>
         </View>
@@ -63,7 +50,7 @@ export default function TriggersScreen() {
         {/* Progress Bar */}
         <View style={styles.progressContainer}>
           <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '66%' }]} />
+            <View style={[styles.progressFill, { width: '50%', backgroundColor: '#EF4444' }]} />
           </View>
         </View>
 
@@ -74,7 +61,7 @@ export default function TriggersScreen() {
         >
           {/* Icon */}
           <View style={styles.iconContainer}>
-            <AlertTriangle size={32} color="#F59E0B" />
+            <AlertCircle size={32} color="#EF4444" />
           </View>
 
           {/* Title */}
@@ -95,24 +82,12 @@ export default function TriggersScreen() {
               max={5}
               value={crisisFrequency}
               onChange={setCrisisFrequency}
-              color="#F59E0B"
+              color="#EF4444"
               labels={{ min: 'Rarely', max: 'Frequently' }}
             />
             <View style={styles.frequencyBadge}>
               <Text style={styles.frequencyText}>{getFrequencyLabel(crisisFrequency)}</Text>
             </View>
-          </View>
-
-          {/* Triggers Selection */}
-          <View style={styles.inputSection}>
-            <ChipSelection
-              label="What typically triggers your crises?"
-              options={triggerOptions}
-              selectedValues={triggers}
-              onChange={setTriggers}
-              color="#F59E0B"
-              maxSelections={5}
-            />
           </View>
         </ScrollView>
 
@@ -146,7 +121,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   stepIndicator: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FEE2E2',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 100,
@@ -154,7 +129,7 @@ const styles = StyleSheet.create({
   stepText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#F59E0B',
+    color: '#EF4444',
   },
   skipText: {
     fontSize: 14,
@@ -174,7 +149,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#EF4444',
     borderRadius: 2,
   },
   scrollView: {
@@ -189,7 +164,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
@@ -203,7 +178,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   titleAccent: {
-    color: '#F59E0B',
+    color: '#EF4444',
   },
   subtitle: {
     fontSize: 16,
@@ -216,7 +191,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   frequencyBadge: {
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#FEE2E2',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
@@ -226,7 +201,7 @@ const styles = StyleSheet.create({
   frequencyText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#92400E',
+    color: '#991B1B',
   },
   bottomSection: {
     paddingHorizontal: 24,
@@ -235,10 +210,10 @@ const styles = StyleSheet.create({
   primaryButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F59E0B',
+    backgroundColor: '#EF4444',
     paddingVertical: 16,
     borderRadius: 16,
-    shadowColor: '#F59E0B',
+    shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,

@@ -14,12 +14,12 @@ import {
     Image,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | null;
-
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | 'metrics_info' | 'message_selection' | 'notification_settings' | 'edit_member' | null;
 
 interface AppBottomSheetProps {
     visible: boolean;
@@ -44,7 +44,6 @@ interface AppBottomSheetProps {
 }
 
 export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate }: AppBottomSheetProps) {
-
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
     const [selectedHelpers, setSelectedHelpers] = useState<string[]>([]);
@@ -53,14 +52,144 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     const [newMed, setNewMed] = useState('');
     const [showAddMed, setShowAddMed] = useState(false);
     const [checkedMeds, setCheckedMeds] = useState<string[]>([]);
+    const [history, setHistory] = useState<MetricType[]>([]);
+    const [editName, setEditName] = useState('');
+    const [editRole, setEditRole] = useState('');
+    const [editStatus, setEditStatus] = useState('');
+    const [medSuggestions, setMedSuggestions] = useState<string[]>([]);
+    const [isSearchingMeds, setIsSearchingMeds] = useState(false);
+    const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
+    const [permission, requestPermission] = useCameraPermissions();
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Common SCD medications for quick suggestions
+    const commonSCDMeds = [
+        'Hydroxyurea',
+        'Folic Acid',
+        'Penicillin',
+        'Ibuprofen',
+        'Acetaminophen',
+        'Morphine',
+        'Oxycodone',
+        'Hydromorphone',
+        'L-Glutamine',
+        'Voxelotor',
+        'Crizanlizumab',
+    ];
+
+    // Search for medication suggestions
+    const searchMedications = async (query: string) => {
+        if (query.length < 2) {
+            setMedSuggestions([]);
+            return;
+        }
+
+        // Clear existing timeout
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        // Debounce search
+        searchTimeoutRef.current = setTimeout(async () => {
+            setIsSearchingMeds(true);
+
+            try {
+                // First, show common SCD medications that match
+                const localMatches = commonSCDMeds.filter(med =>
+                    med.toLowerCase().includes(query.toLowerCase())
+                );
+
+                // Then search FDA OpenFDA API for additional suggestions
+                const response = await fetch(
+                    `https://api.fda.gov/drug/ndc.json?search=brand_name:${encodeURIComponent(query)}*&limit=5`
+                );
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const apiSuggestions = data.results?.map((drug: any) =>
+                        drug.brand_name || drug.generic_name
+                    ).filter(Boolean) || [];
+
+                    // Combine and deduplicate
+                    const combined = [...new Set([...localMatches, ...apiSuggestions])];
+                    setMedSuggestions(combined.slice(0, 8));
+                } else {
+                    // Fallback to local matches only
+                    setMedSuggestions(localMatches);
+                }
+            } catch (error) {
+                console.log('Medication search error:', error);
+                // Fallback to local matches
+                const localMatches = commonSCDMeds.filter(med =>
+                    med.toLowerCase().includes(query.toLowerCase())
+                );
+                setMedSuggestions(localMatches);
+            } finally {
+                setIsSearchingMeds(false);
+            }
+        }, 300); // 300ms debounce
+    };
+
+    // Look up medication by barcode (NDC)
+    const lookupMedicationByBarcode = async (barcode: string) => {
+        try {
+            // FDA uses NDC codes in barcodes
+            const response = await fetch(
+                `https://api.fda.gov/drug/ndc.json?search=product_ndc:"${barcode}"&limit=1`
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    const drug = data.results[0];
+                    const medName = drug.brand_name || drug.generic_name || 'Unknown Medication';
+                    setNewMed(medName);
+                    setShowBarcodeScanner(false);
+                    setMedSuggestions([]);
+                    return medName;
+                }
+            }
+            alert('Medication not found. Please enter manually.');
+            setShowBarcodeScanner(false);
+        } catch (error) {
+            console.log('Barcode lookup error:', error);
+            alert('Failed to lookup medication. Please try again or enter manually.');
+            setShowBarcodeScanner(false);
+        }
+    };
+
+    const handleBarcodeScanned = ({ data }: { data: string }) => {
+        lookupMedicationByBarcode(data);
+    };
+
+    const navigateTo = (newType: MetricType) => {
+        setHistory(prev => [...prev, activeType]);
+        setActiveType(newType);
+    };
+
+    const goBack = () => {
+        if (history.length > 0) {
+            const previous = history[history.length - 1];
+            setHistory(prev => prev.slice(0, -1));
+            setActiveType(previous);
+        } else {
+            onClose();
+        }
+    };
 
     useEffect(() => {
         if (visible) {
             setActiveType(type || 'log_selection');
+            setHistory([]);
             if (medsData) {
                 setMedications(medsData.list);
                 setCheckedMeds(medsData.checked);
+            }
+            if (member) {
+                setEditName(member.name);
+                setEditRole(member.role);
+                setEditStatus(member.status);
             }
             Animated.timing(fadeAnim, {
                 toValue: 1,
@@ -73,7 +202,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             setNotes('');
             setSelectedHelpers([]);
         }
-    }, [visible]);
+    }, [visible, type]);
 
     const getHeaderInfo = () => {
         switch (activeType) {
@@ -94,7 +223,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'wellness_summary':
                 return { title: 'Daily Overview', icon: 'auto-graph', color: '#2563eb' };
             case 'member':
-                return { title: member?.name || 'Member', icon: 'person', color: '#8b5cf6' };
+                return { title: member?.name || 'Member', icon: 'person', color: '#6366f1' };
             case 'idea':
                 return { title: 'Share Idea', icon: 'lightbulb', color: '#3b82f6' };
             case 'group':
@@ -115,8 +244,14 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return { title: 'Task Details', icon: 'assignment', color: '#f59e0b' };
             case 'request_task':
                 return { title: 'Help Needed', icon: 'handshake', color: '#3b82f6' };
-            case 'view_care_plan':
-                return { title: 'Maya\'s Care Plan', icon: 'list-alt', color: '#4f46e5' };
+            case 'metrics_info':
+                return { title: 'Today\'s Metrics', icon: 'info', color: '#64748b' };
+            case 'message_selection':
+                return { title: 'Send Message', icon: 'textsms', color: '#6366f1' };
+            case 'notification_settings':
+                return { title: 'Notifications', icon: 'notifications', color: '#8b5cf6' };
+            case 'edit_member':
+                return { title: 'Edit Details', icon: 'edit', color: '#6366f1' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -151,7 +286,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                     <View style={styles.contentSection}>
                         <Text style={styles.sectionLabel}>Add Amount</Text>
                         <View style={styles.gridContainer}>
-                            {['250ml', '500ml', '750ml', '1L'].map((amount) => (
+                            {['1 cup', '250ml', '50cl', '500ml', '75cl', '750ml', '1L', '100cl'].map((amount) => (
                                 <Pressable
                                     key={amount}
                                     onPress={() => setValue(amount)}
@@ -195,14 +330,84 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
 
                         {showAddMed ? (
                             <View style={{ marginTop: 16, gap: 12 }}>
-                                <TextInput
-                                    style={styles.smallInput}
-                                    placeholder="Enter medication name & time..."
-                                    placeholderTextColor="#94a3b8"
-                                    value={newMed}
-                                    onChangeText={setNewMed}
-                                    autoFocus
-                                />
+                                <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                                    <TextInput
+                                        style={[styles.smallInput, { flex: 1 }]}
+                                        placeholder="Enter medication name & time..."
+                                        placeholderTextColor="#94a3b8"
+                                        value={newMed}
+                                        onChangeText={(text) => {
+                                            setNewMed(text);
+                                            searchMedications(text);
+                                        }}
+                                        autoFocus
+                                    />
+                                    <Pressable
+                                        onPress={async () => {
+                                            if (!permission?.granted) {
+                                                const result = await requestPermission();
+                                                if (!result.granted) {
+                                                    alert('Camera permission is required to scan barcodes');
+                                                    return;
+                                                }
+                                            }
+                                            setShowBarcodeScanner(true);
+                                        }}
+                                        style={{
+                                            width: 48,
+                                            height: 48,
+                                            backgroundColor: header.color + '15',
+                                            borderRadius: 12,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderWidth: 1,
+                                            borderColor: header.color + '30',
+                                        }}
+                                    >
+                                        <MaterialIcons name="qr-code-scanner" size={24} color={header.color} />
+                                    </Pressable>
+                                </View>
+
+                                {/* Medication Suggestions Dropdown */}
+                                {medSuggestions.length > 0 && (
+                                    <View style={{
+                                        backgroundColor: '#fff',
+                                        borderRadius: 16,
+                                        borderWidth: 1,
+                                        borderColor: '#e2e8f0',
+                                        marginTop: -8,
+                                        maxHeight: 200,
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 4 },
+                                        shadowOpacity: 0.1,
+                                        shadowRadius: 8,
+                                        elevation: 4,
+                                    }}>
+                                        <ScrollView>
+                                            {medSuggestions.map((suggestion, idx) => (
+                                                <Pressable
+                                                    key={idx}
+                                                    onPress={() => {
+                                                        setNewMed(suggestion);
+                                                        setMedSuggestions([]);
+                                                    }}
+                                                    style={{
+                                                        padding: 12,
+                                                        borderBottomWidth: idx < medSuggestions.length - 1 ? 1 : 0,
+                                                        borderBottomColor: '#f1f5f9',
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                    }}
+                                                >
+                                                    <MaterialIcons name="medication" size={18} color="#8b5cf6" style={{ marginRight: 12 }} />
+                                                    <Text style={{ fontSize: 15, fontWeight: '600', color: '#334155', flex: 1 }}>
+                                                        {suggestion}
+                                                    </Text>
+                                                </Pressable>
+                                            ))}
+                                        </ScrollView>
+                                    </View>
+                                )}
                                 <View style={{ flexDirection: 'row', gap: 12 }}>
                                     <Pressable
                                         onPress={() => {
@@ -277,13 +482,19 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                             {['Cold Weather', 'Dehydration', 'Stress', 'High Altitude', 'Infection', 'Physical Fatigue'].map((trigger) => (
                                 <Pressable
                                     key={trigger}
-                                    onPress={() => setValue(trigger)}
+                                    onPress={() => {
+                                        const current = value ? value.split(', ') : [];
+                                        const next = current.includes(trigger)
+                                            ? current.filter(t => t !== trigger)
+                                            : [...current, trigger];
+                                        setValue(next.join(', '));
+                                    }}
                                     style={[
                                         styles.gridButton,
-                                        value === trigger && { backgroundColor: header.color, borderColor: header.color },
+                                        value.includes(trigger) && { backgroundColor: header.color, borderColor: header.color },
                                     ]}
                                 >
-                                    <Text style={[styles.gridText, value === trigger && { color: '#fff' }]}>{trigger}</Text>
+                                    <Text style={[styles.gridText, value.includes(trigger) && { color: '#fff' }]}>{trigger}</Text>
                                 </Pressable>
                             ))}
                         </View>
@@ -396,44 +607,74 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'member':
                 return (
                     <View style={styles.contentSection}>
-                        <View style={styles.memberProfileCard}>
-                            <View style={styles.memberAvatarWrapper}>
-                                <Image source={{ uri: member?.avatar }} style={styles.memberAvatarLarge} />
-                                <View style={[styles.statusIndicator, { backgroundColor: member?.status === 'Online' ? '#10b981' : member?.status === 'Away' ? '#f59e0b' : '#94a3b8' }]} />
+                        <View style={{ alignItems: 'center', marginBottom: 32 }}>
+                            <View style={{ position: 'relative', marginBottom: 16 }}>
+                                <Image
+                                    source={{ uri: member?.avatar }}
+                                    style={{ width: 110, height: 110, borderRadius: 36 }}
+                                />
+                                <View
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: 0,
+                                        right: 0,
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: 14,
+                                        backgroundColor: '#94a3b8',
+                                        borderWidth: 4,
+                                        borderColor: '#fff'
+                                    }}
+                                />
                             </View>
-                            <Text style={styles.memberRoleText}>{member?.role}</Text>
-                            <View style={[styles.priorityBadgeModal, { backgroundColor: member?.priority === 'Emergency' ? '#fee2e2' : member?.priority === 'Primary' ? '#eff6ff' : '#f8fafc' }]}>
-                                <Text style={[styles.priorityTextModal, { color: member?.priority === 'Emergency' ? '#ef4444' : member?.priority === 'Primary' ? '#3b82f6' : '#64748b' }]}>
-                                    {member?.priority} Contact
-                                </Text>
+                            <Text style={{ fontSize: 16, fontWeight: '600', color: '#64748b', marginBottom: 12 }}>{member?.role}</Text>
+                            <View style={{ backgroundColor: '#eff6ff', paddingHorizontal: 16, paddingVertical: 6, borderRadius: 12 }}>
+                                <Text style={{ fontSize: 11, fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', letterSpacing: 0.5 }}>Primary Contact</Text>
                             </View>
                         </View>
 
                         <Text style={styles.sectionLabel}>Communication</Text>
-                        <View style={styles.actionGrid}>
-                            <Pressable style={styles.actionBox} onPress={() => alert('Calling...')}>
-                                <View style={[styles.actionIconCircle, { backgroundColor: '#f5f3ff' }]}>
-                                    <MaterialIcons name="phone" size={24} color="#8b5cf6" />
+                        <View style={{ flexDirection: 'row', gap: 12, marginBottom: 32, marginTop: 8 }}>
+                            <Pressable
+                                style={{ flex: 1, backgroundColor: '#f5f3ff', padding: 16, borderRadius: 24, borderWidth: 1, borderColor: '#ddd6fe' }}
+                                onPress={() => alert('Calling...')}
+                            >
+                                <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: '#8b5cf6', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <MaterialIcons name="phone" size={24} color="#fff" />
                                 </View>
-                                <Text style={styles.actionLabelText}>Voice Call</Text>
+                                <Text style={{ fontSize: 16, fontWeight: '800', color: '#1e293b' }}>Voice Call</Text>
+                                <Text style={{ fontSize: 12, fontWeight: '600', color: '#8b5cf6', marginTop: 2 }}>Audio only</Text>
                             </Pressable>
-                            <Pressable style={styles.actionBox} onPress={() => alert('Messaging...')}>
-                                <View style={[styles.actionIconCircle, { backgroundColor: '#f5f3ff' }]}>
-                                    <MaterialIcons name="chat" size={24} color="#8b5cf6" />
+
+                            <Pressable
+                                style={{ flex: 1, backgroundColor: '#eef2ff', padding: 16, borderRadius: 24, borderWidth: 1, borderColor: '#c7d2fe' }}
+                                onPress={() => navigateTo('message_selection')}
+                            >
+                                <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: '#6366f1', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                    <MaterialIcons name="textsms" size={24} color="#fff" />
                                 </View>
-                                <Text style={styles.actionLabelText}>Message</Text>
+                                <Text style={{ fontSize: 16, fontWeight: '800', color: '#1e293b' }}>Message</Text>
+                                <Text style={{ fontSize: 12, fontWeight: '600', color: '#6366f1', marginTop: 2 }}>Text or WhatsApp</Text>
                             </Pressable>
                         </View>
 
                         <Text style={styles.sectionLabel}>Member Actions</Text>
-                        <Pressable style={styles.checkItem} onPress={() => { }}>
-                            <MaterialIcons name="notifications-none" size={24} color="#64748b" />
-                            <Text style={styles.checkLabel}>Notification Settings</Text>
-                        </Pressable>
-                        <Pressable style={styles.checkItem} onPress={() => { }}>
-                            <MaterialIcons name="edit" size={24} color="#64748b" />
-                            <Text style={styles.checkLabel}>Edit Details</Text>
-                        </Pressable>
+                        <View style={{ gap: 4 }}>
+                            <Pressable
+                                onPress={() => navigateTo('notification_settings')}
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}
+                            >
+                                <MaterialIcons name="notifications-none" size={24} color="#64748b" />
+                                <Text style={{ fontSize: 16, fontWeight: '700', color: '#1e293b', marginLeft: 12 }}>Notification Settings</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={() => navigateTo('edit_member')}
+                                style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 16 }}
+                            >
+                                <MaterialIcons name="edit" size={24} color="#64748b" />
+                                <Text style={{ fontSize: 16, fontWeight: '700', color: '#1e293b', marginLeft: 12 }}>Edit Details</Text>
+                            </Pressable>
+                        </View>
                     </View>
                 );
             case 'idea':
@@ -555,7 +796,6 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'volunteer_actions':
                 return (
                     <View style={styles.contentSection}>
-                        {/* Impact Summary Quick View */}
                         <View style={styles.summaryCard}>
                             <View style={styles.summaryItem}>
                                 <View style={[styles.summaryIcon, { backgroundColor: '#f0f9ff' }]}>
@@ -721,91 +961,26 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                             ].map((helper) => {
                                 const isSelected = selectedHelpers.includes(helper.name);
                                 const isRequest = helper.name === 'Request Help';
-
-                                const toggleSelection = () => {
-                                    setSelectedHelpers(prev =>
-                                        prev.includes(helper.name)
-                                            ? prev.filter(h => h !== helper.name)
-                                            : [...prev, helper.name]
-                                    );
-                                };
-
                                 return (
                                     <Pressable
                                         key={helper.name}
-                                        onPress={toggleSelection}
-                                        style={[
-                                            styles.actionBox,
-                                            isRequest && {
-                                                borderWidth: 2,
-                                                borderStyle: 'dotted',
-                                                borderColor: isSelected ? '#10b981' : '#e2e8f0',
-                                                backgroundColor: isSelected ? '#ecfdf5' : 'transparent',
-                                                borderRadius: 24,
-                                            }
-                                        ]}
+                                        onPress={() => setSelectedHelpers(prev => prev.includes(helper.name) ? prev.filter(h => h !== helper.name) : [...prev, helper.name])}
+                                        style={[styles.actionBox, isRequest && { borderWidth: 2, borderStyle: 'dotted', borderColor: isSelected ? '#10b981' : '#e2e8f0', backgroundColor: isSelected ? '#ecfdf5' : 'transparent', borderRadius: 24 }]}
                                     >
                                         <View style={[styles.memberAvatarWrapper, { width: 50, height: 50, marginBottom: 8, opacity: isSelected || isRequest ? 1 : 0.6 }]}>
                                             {helper.avatar ? (
                                                 <Image source={{ uri: helper.avatar }} style={[styles.memberAvatarLarge, { width: 50, height: 50 }]} />
                                             ) : (
-                                                <View style={[
-                                                    styles.actionIconCircle,
-                                                    {
-                                                        width: 50,
-                                                        height: 50,
-                                                        margin: 0,
-                                                        backgroundColor: isSelected ? '#10b98120' : '#f8fafc',
-                                                        borderWidth: isRequest ? 0 : 1,
-                                                        borderColor: '#f1f5f9'
-                                                    }
-                                                ]}>
-                                                    <MaterialIcons
-                                                        name={isRequest ? "add" : "help"}
-                                                        size={24}
-                                                        color={isRequest ? "#10b981" : "#3b82f6"}
-                                                    />
+                                                <View style={[styles.actionIconCircle, { width: 50, height: 50, margin: 0, backgroundColor: isSelected ? '#10b98120' : '#f8fafc', borderWidth: isRequest ? 0 : 1, borderColor: '#f1f5f9' }]}>
+                                                    <MaterialIcons name={isRequest ? "add" : "help"} size={24} color={isRequest ? "#10b981" : "#3b82f6"} />
                                                 </View>
                                             )}
-                                            {isSelected && !isRequest && (
-                                                <View style={[styles.statusIndicator, { backgroundColor: '#10b981', bottom: -2, right: -2 }]} />
-                                            )}
                                         </View>
-                                        <Text style={[
-                                            styles.actionLabelText,
-                                            isSelected && { color: isRequest ? '#10b981' : '#f59e0b', fontWeight: '800' }
-                                        ]}>{helper.name}</Text>
+                                        <Text style={[styles.actionLabelText, isSelected && { color: isRequest ? '#10b981' : '#f59e0b', fontWeight: '800' }]}>{helper.name}</Text>
                                     </Pressable>
                                 );
                             })}
-
                         </View>
-
-                        {task?.comments && task.comments.length > 0 && (
-                            <View style={{ marginTop: 24 }}>
-                                <Text style={styles.sectionLabel}>Comments ({task?.comments?.length})</Text>
-                                <View style={{ backgroundColor: '#f8fafc', borderRadius: 20, padding: 16 }}>
-                                    {task?.comments?.slice(0, 2).map((comment, i) => (
-                                        <View key={i} style={{ marginBottom: i === 0 && (task?.comments?.length || 0) > i + 1 ? 12 : 0 }}>
-
-                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                                                <Text style={{ fontSize: 13, fontWeight: '700', color: '#334155' }}>{comment.author}</Text>
-                                                <Text style={{ fontSize: 11, color: '#94a3b8' }}>{comment.time}</Text>
-                                            </View>
-                                            <Text style={{ fontSize: 14, color: '#475569', lineHeight: 20 }} numberOfLines={2}>
-                                                {comment.text}
-                                            </Text>
-                                        </View>
-                                    ))}
-                                    {task.comments.length > 2 && (
-                                        <Pressable style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#e2e8f0' }}>
-                                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#6366f1', flex: 1 }}>View all {task.comments.length} comments</Text>
-                                            <MaterialIcons name="chevron-right" size={20} color="#6366f1" />
-                                        </Pressable>
-                                    )}
-                                </View>
-                            </View>
-                        )}
                     </View>
                 );
             case 'request_task':
@@ -818,11 +993,8 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                             <Text style={[styles.taskDescription, { fontSize: 18, color: '#0f172a', fontWeight: '700' }]}>{task?.title}</Text>
                             <Text style={[styles.taskDescription, { marginTop: 8 }]}>{task?.description}</Text>
                         </View>
-
                         <View style={styles.insightBox}>
-                            <Text style={styles.insightText}>
-                                Maya has flagged this task as something she needs help with. By claiming this task, it will be moved to your assigned missions.
-                            </Text>
+                            <Text style={styles.insightText}>Maya has flagged this task as something she needs help with. By claiming this task, it will be moved to your assigned missions.</Text>
                         </View>
                     </View>
                 );
@@ -838,52 +1010,19 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         {TASKS.map((t) => (
                             <Pressable
                                 key={t.id}
-                                onPress={() => {
-                                    setActiveType('request_task');
-                                    task = { title: t.title, description: t.detail, priority: t.priority };
-                                }}
-                                style={{
-                                    backgroundColor: '#fff',
-                                    borderRadius: 16,
-                                    padding: 16,
-                                    marginBottom: 12,
-                                    borderWidth: 1,
-                                    borderColor: '#f1f5f9',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between'
-                                }}
+                                onPress={() => setActiveType('request_task')}
+                                style={{ backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, borderWidth: 1, borderColor: '#f1f5f9', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
                             >
                                 <View style={{ flex: 1 }}>
                                     <Text style={{ fontSize: 16, fontWeight: '700', color: '#1e293b' }}>{t.title}</Text>
                                     <Text style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>{t.detail}</Text>
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                                        <View style={{
-                                            backgroundColor: t.status === 'Assigned' ? '#f0fdf4' : t.status === 'Help Needed' ? '#fffbeb' : '#f8fafc',
-                                            paddingHorizontal: 8,
-                                            paddingVertical: 2,
-                                            borderRadius: 6
-                                        }}>
-                                            <Text style={{
-                                                fontSize: 10,
-                                                fontWeight: '700',
-                                                color: t.status === 'Assigned' ? '#16a34a' : t.status === 'Help Needed' ? '#d97706' : '#64748b'
-                                            }}>{t.status}</Text>
-                                        </View>
-                                        {t.helper && <Text style={{ fontSize: 11, color: '#94a3b8', marginLeft: 8 }}>• {t.helper}</Text>}
-                                    </View>
                                 </View>
-                                <MaterialIcons
-                                    name={t.status === 'Assigned' ? "swap-horiz" : "add-circle-outline"}
-                                    size={24}
-                                    color={t.status === 'Assigned' ? "#94a3b8" : "#8b5cf6"}
-                                />
+                                <MaterialIcons name={t.status === 'Assigned' ? "swap-horiz" : "add-circle-outline"} size={24} color={t.status === 'Assigned' ? "#94a3b8" : "#8b5cf6"} />
                             </Pressable>
                         ))}
                     </View>
                 );
             case 'activity_detail':
-
                 return (
                     <View style={styles.contentSection}>
                         <View style={[styles.taskDetailCard, { borderColor: activity?.color + '20', backgroundColor: activity?.color + '05' }]}>
@@ -894,13 +1033,221 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                 <Text style={{ fontSize: 13, color: '#64748b', marginLeft: 4 }}>Logged {activity?.time}</Text>
                             </View>
                         </View>
-
-                        <Text style={styles.sectionLabel}>Context</Text>
+                    </View>
+                );
+            case 'metrics_info':
+                return (
+                    <View style={styles.contentSection}>
                         <View style={styles.insightBox}>
                             <Text style={styles.insightText}>
-                                This update was recorded automatically. For more information or to modify this entry, please visit the full history reports.
+                                These metrics are calculated based on the overcomer's log entries for today. They provide a real-time snapshot of wellness and adherence to the care plan.
                             </Text>
                         </View>
+                        <View style={{ marginTop: 24 }}>
+                            <Text style={styles.sectionLabel}>What's included</Text>
+                            <View style={styles.checkItem}>
+                                <MaterialIcons name="water-drop" size={20} color="#3b82f6" />
+                                <Text style={[styles.checkLabel, { marginLeft: 12 }]}>Hydration targets</Text>
+                            </View>
+                            <View style={styles.checkItem}>
+                                <MaterialIcons name="trending-down" size={20} color="#f59e0b" />
+                                <Text style={[styles.checkLabel, { marginLeft: 12 }]}>Pain level trends</Text>
+                            </View>
+                            <View style={styles.checkItem}>
+                                <MaterialIcons name="check-circle" size={20} color="#10b981" />
+                                <Text style={[styles.checkLabel, { marginLeft: 12 }]}>Medication adherence</Text>
+                            </View>
+                        </View>
+                    </View>
+                );
+            case 'message_selection':
+                return (
+                    <View style={styles.contentSection}>
+                        <View style={{ gap: 16 }}>
+                            <Pressable
+                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0' }}
+                                onPress={() => { alert('Opening SMS...'); onClose(); }}
+                            >
+                                <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: '#6366f1', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <MaterialIcons name="textsms" size={24} color="#fff" />
+                                </View>
+                                <View>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#1e293b' }}>Text Message</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>Send a standard SMS</Text>
+                                </View>
+                                <MaterialIcons name="chevron-right" size={24} color="#94a3b8" style={{ marginLeft: 'auto' }} />
+                            </Pressable>
+
+                            <Pressable
+                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0fdf4', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#bbf7d0' }}
+                                onPress={() => { alert('Opening WhatsApp...'); onClose(); }}
+                            >
+                                <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: '#22c55e', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <FontAwesome name="whatsapp" size={28} color="#fff" />
+                                </View>
+                                <View>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#166534' }}>WhatsApp</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#22c55e' }}>Chat on WhatsApp</Text>
+                                </View>
+                                <MaterialIcons name="chevron-right" size={24} color="#22c55e" style={{ marginLeft: 'auto' }} />
+                            </Pressable>
+                        </View>
+                        <Pressable onPress={goBack} style={{ alignItems: 'center', marginTop: 32 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b' }}>Go Back</Text>
+                        </Pressable>
+                    </View>
+                );
+            case 'notification_settings':
+                const NOTIF_OPTIONS = [
+                    { id: 'crisis', label: 'Crisis Alerts', sub: 'Immediate alerts for health emergencies', icon: 'emergency', color: '#ef4444', bg: '#fef2f2' },
+                    { id: 'meds', label: 'Medication Reminders', sub: 'Stay on track with schedule', icon: 'medication', color: '#a855f7', bg: '#f5f3ff' },
+                    { id: 'health', label: 'Health Insights', sub: 'Daily logs and trend updates', icon: 'analytics', color: '#3b82f6', bg: '#eff6ff' },
+                    { id: 'messages', label: 'Direct Messages', sub: 'Pushed for new chat messages', icon: 'chat-bubble', color: '#10b981', bg: '#f0fdf4' },
+                ];
+                return (
+                    <View style={styles.contentSection}>
+                        <Text style={styles.sectionLabel}>Preferences for {member?.name || 'this member'}</Text>
+                        <View style={{ gap: 12 }}>
+                            {NOTIF_OPTIONS.map((opt) => (
+                                <Pressable
+                                    key={opt.id}
+                                    onPress={() => {
+                                        const current = value ? value.split(',') : [];
+                                        const next = current.includes(opt.id)
+                                            ? current.filter(id => id !== opt.id)
+                                            : [...current, opt.id];
+                                        setValue(next.join(','));
+                                    }}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: '#fff',
+                                        padding: 16,
+                                        borderRadius: 24,
+                                        borderWidth: 1,
+                                        borderColor: '#f1f5f9',
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 2 },
+                                        shadowOpacity: 0.05,
+                                        shadowRadius: 10,
+                                        elevation: 2
+                                    }}
+                                >
+                                    <View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: opt.bg, alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                        <MaterialIcons name={opt.icon as any} size={22} color={opt.color} />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 16, fontWeight: '700', color: '#1e293b' }}>{opt.label}</Text>
+                                        <Text style={{ fontSize: 12, fontWeight: '500', color: '#94a3b8', marginTop: 1 }}>{opt.sub}</Text>
+                                    </View>
+                                    <View
+                                        style={{
+                                            width: 48,
+                                            height: 28,
+                                            borderRadius: 14,
+                                            backgroundColor: value.includes(opt.id) ? '#8b5cf6' : '#e2e8f0',
+                                            padding: 4,
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <View
+                                            style={{
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: 10,
+                                                backgroundColor: '#fff',
+                                                transform: [{ translateX: value.includes(opt.id) ? 20 : 0 }]
+                                            }}
+                                        />
+                                    </View>
+                                </Pressable>
+                            ))}
+                        </View>
+                        <View style={{ marginTop: 24, padding: 16, backgroundColor: '#f8fafc', borderRadius: 20, borderLeftWidth: 4, borderLeftColor: '#8b5cf6' }}>
+                            <Text style={{ fontSize: 13, color: '#64748b', fontStyle: 'italic', lineHeight: 20 }}>
+                                Notification settings are synced across your Circle of Care to ensure everyone stays informed.
+                            </Text>
+                        </View>
+                        <Pressable onPress={goBack} style={{ alignItems: 'center', marginTop: 32 }}>
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b' }}>Go Back</Text>
+                        </Pressable>
+                    </View>
+                );
+            case 'edit_member':
+                return (
+                    <View style={styles.contentSection}>
+                        <View style={{ alignItems: 'center', marginBottom: 24 }}>
+                            <View style={{ position: 'relative' }}>
+                                <Image
+                                    source={{ uri: member?.avatar }}
+                                    style={{ width: 100, height: 100, borderRadius: 32 }}
+                                />
+                                <Pressable
+                                    style={{
+                                        position: 'absolute',
+                                        bottom: -4,
+                                        right: -4,
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: 16,
+                                        backgroundColor: '#6366f1',
+                                        borderWidth: 3,
+                                        borderColor: '#fff',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    <MaterialIcons name="camera-alt" size={16} color="#fff" />
+                                </Pressable>
+                            </View>
+                        </View>
+
+                        <Text style={styles.sectionLabel}>Full Name</Text>
+                        <TextInput
+                            style={[styles.smallInput, { marginBottom: 20 }]}
+                            placeholder="Full Name"
+                            value={editName}
+                            onChangeText={setEditName}
+                        />
+
+                        <Text style={styles.sectionLabel}>Role / Relationship</Text>
+                        <TextInput
+                            style={[styles.smallInput, { marginBottom: 20 }]}
+                            placeholder="e.g. Spouse, Primary Caregiver"
+                            value={editRole}
+                            onChangeText={setEditRole}
+                        />
+
+                        <Text style={styles.sectionLabel}>Active Status</Text>
+                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+                            {['Active', 'Away', 'Offline', 'Recovering'].map((s) => (
+                                <Pressable
+                                    key={s}
+                                    onPress={() => setEditStatus(s)}
+                                    style={{
+                                        paddingHorizontal: 14,
+                                        paddingVertical: 10,
+                                        borderRadius: 12,
+                                        borderWidth: 1,
+                                        borderColor: editStatus === s ? '#6366f1' : '#e2e8f0',
+                                        backgroundColor: editStatus === s ? '#eef2ff' : 'transparent'
+                                    }}
+                                >
+                                    <Text style={{
+                                        fontSize: 13,
+                                        fontWeight: '700',
+                                        color: editStatus === s ? '#6366f1' : '#64748b'
+                                    }}>{s}</Text>
+                                </Pressable>
+                            ))}
+                        </View>
+
+                        <Pressable
+                            onPress={goBack}
+                            style={{ alignItems: 'center', marginTop: 16 }}
+                        >
+                            <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b' }}>Discard Changes</Text>
+                        </Pressable>
                     </View>
                 );
             default:
@@ -909,28 +1256,17 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     };
 
     return (
-        <Modal
-            visible={visible}
-            transparent
-            animationType="slide"
-            onRequestClose={onClose}
-        >
+        <Modal visible={visible} transparent animationType="slide" onRequestClose={goBack}>
             <View style={styles.container}>
                 <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
-                    <Pressable style={StyleSheet.absoluteFill} onPress={onClose}>
+                    <Pressable style={StyleSheet.absoluteFill} onPress={goBack}>
                         <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
                     </Pressable>
                 </Animated.View>
 
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={styles.content}
-                >
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
                     <View style={styles.modalCard}>
-                        {/* Grabber */}
                         <View style={styles.grabber} />
-
-                        {/* Header */}
                         <View style={styles.header}>
                             <View style={[styles.iconContainer, { backgroundColor: `${header.color}15` }]}>
                                 <MaterialIcons name={header.icon as any} size={28} color={header.color} />
@@ -950,8 +1286,8 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                                         'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                                 </Text>
                             </View>
-                            <Pressable onPress={onClose} style={styles.closeButton}>
-                                <MaterialIcons name="close" size={24} color="#94a3b8" />
+                            <Pressable onPress={goBack} style={styles.closeButton}>
+                                <MaterialIcons name={history.length > 0 ? "arrow-back" : "close"} size={24} color="#94a3b8" />
                             </Pressable>
                         </View>
 
@@ -971,37 +1307,15 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                 />
                             </View>
 
-                            {activeType !== 'activity_detail' && (
+                            {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && (
                                 <Pressable
                                     onPress={() => {
-                                        // Call appropriate callback based on type
                                         switch (activeType) {
-                                            case 'pain':
-                                                if (value && onPainUpdate) {
-                                                    onPainUpdate(parseInt(value), notes || undefined);
-                                                }
-                                                break;
-                                            case 'hydration':
-                                                if (value && onHydrationUpdate) {
-                                                    onHydrationUpdate(value, notes || undefined);
-                                                }
-                                                break;
-                                            case 'mood':
-                                                if (value && onMoodUpdate) {
-                                                    onMoodUpdate(value, notes || undefined);
-                                                }
-                                                break;
-                                            case 'triggers':
-                                                if (value && onTriggersUpdate) {
-                                                    onTriggersUpdate([value], notes || undefined);
-                                                }
-                                                break;
-                                            case 'meds':
-                                                // Already handled in checkbox onChange
-                                                break;
-                                            default:
-                                                // For non-health types, just show alert
-                                                alert(activeType === 'idea' ? 'Idea posted to community!' : activeType === 'group' ? 'Group proposal sent!' : 'Entry Saved!');
+                                            case 'pain': if (value && onPainUpdate) onPainUpdate(parseInt(value), notes || undefined); break;
+                                            case 'hydration': if (value && onHydrationUpdate) onHydrationUpdate(value, notes || undefined); break;
+                                            case 'mood': if (value && onMoodUpdate) onMoodUpdate(value, notes || undefined); break;
+                                            case 'triggers': if (value && onTriggersUpdate) onTriggersUpdate(value.split(', '), notes || undefined); break;
+                                            case 'edit_member': alert('Changes saved locally!'); break;
                                         }
                                         onClose();
                                     }}
@@ -1015,8 +1329,9 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                         activeType === 'invite_member' ? 'Send Invitation' :
                                                             activeType === 'manage_task' ? 'Assign Task' :
                                                                 activeType === 'request_task' ? 'Claim Task' :
-                                                                    activeType === 'view_care_plan' ? 'Close Plan' :
-                                                                        'Save Entry'}
+                                                                    activeType === 'view_care_plan' ? 'Close' :
+                                                                        activeType === 'edit_member' ? 'Save Changes' :
+                                                                            'Save Entry'}
                                     </Text>
                                 </Pressable>
                             )}
@@ -1025,378 +1340,161 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 </KeyboardAvoidingView>
             </View>
         </Modal>
+        {/* Barcode Scanner Modal */ }
+    <Modal
+        visible={showBarcodeScanner}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowBarcodeScanner(false)}
+    >
+        <View style={{ flex: 1, backgroundColor: '#000' }}>
+            <CameraView
+                style={{ flex: 1 }}
+                facing="back"
+                barcodeScannerSettings={{
+                    barcodeTypes: ['upc_a', 'upc_e', 'ean13', 'ean8', 'code128', 'code39'],
+                }}
+                onBarcodeScanned={handleBarcodeScanned}
+            >
+                {/* Overlay */}
+                <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+                    {/* Top Bar */}
+                    <View style={{
+                        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+                        paddingHorizontal: 20,
+                        paddingBottom: 20,
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Text style={{ fontSize: 20, fontWeight: '800', color: '#fff' }}>
+                                Scan Medication Barcode
+                            </Text>
+                            <Pressable
+                                onPress={() => setShowBarcodeScanner(false)}
+                                style={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: 18,
+                                    backgroundColor: 'rgba(255,255,255,0.2)',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                }}
+                            >
+                                <MaterialIcons name="close" size={24} color="#fff" />
+                            </Pressable>
+                        </View>
+                    </View>
+
+                    {/* Scanning Frame */}
+                    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
+                        <View style={{
+                            width: 280,
+                            height: 180,
+                            borderWidth: 3,
+                            borderColor: '#8b5cf6',
+                            borderRadius: 20,
+                            backgroundColor: 'transparent',
+                        }}>
+                            {/* Corner markers */}
+                            <View style={{ position: 'absolute', top: -3, left: -3, width: 40, height: 40, borderTopWidth: 6, borderLeftWidth: 6, borderColor: '#8b5cf6', borderTopLeftRadius: 20 }} />
+                            <View style={{ position: 'absolute', top: -3, right: -3, width: 40, height: 40, borderTopWidth: 6, borderRightWidth: 6, borderColor: '#8b5cf6', borderTopRightRadius: 20 }} />
+                            <View style={{ position: 'absolute', bottom: -3, left: -3, width: 40, height: 40, borderBottomWidth: 6, borderLeftWidth: 6, borderColor: '#8b5cf6', borderBottomLeftRadius: 20 }} />
+                            <View style={{ position: 'absolute', bottom: -3, right: -3, width: 40, height: 40, borderBottomWidth: 6, borderRightWidth: 6, borderColor: '#8b5cf6', borderBottomRightRadius: 20 }} />
+                        </View>
+
+                        <Text style={{
+                            marginTop: 30,
+                            fontSize: 16,
+                            fontWeight: '600',
+                            color: '#fff',
+                            textAlign: 'center',
+                            textShadowColor: 'rgba(0,0,0,0.75)',
+                            textShadowOffset: { width: 0, height: 2 },
+                            textShadowRadius: 4,
+                        }}>
+                            Position barcode within the frame
+                        </Text>
+                    </View>
+
+                    {/* Bottom Instructions */}
+                    <View style={{
+                        paddingHorizontal: 20,
+                        paddingVertical: 30,
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                        alignItems: 'center',
+                    }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                            <MaterialIcons name="info-outline" size={20} color="#8b5cf6" style={{ marginRight: 8 }} />
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#fff' }}>
+                                Scan the barcode on your medication box
+                            </Text>
+                        </View>
+                        <Text style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>
+                            We'll automatically look up the medication details
+                        </Text>
+                    </View>
+                </View>
+            </CameraView>
+        </View>
+    </Modal>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'flex-end',
-    },
-    content: {
-        width: '100%',
-    },
-    modalCard: {
-        backgroundColor: '#ffffff',
-        borderTopLeftRadius: 40,
-        borderTopRightRadius: 40,
-        paddingHorizontal: 24,
-        paddingTop: 12,
-        paddingBottom: Platform.OS === 'ios' ? 40 : 24,
-        maxHeight: height * 0.85,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -10 },
-        shadowOpacity: 0.1,
-        shadowRadius: 20,
-        elevation: 20,
-    },
-    grabber: {
-        width: 40,
-        height: 4,
-        backgroundColor: '#e2e8f0',
-        borderRadius: 2,
-        alignSelf: 'center',
-        marginBottom: 20,
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    iconContainer: {
-        width: 56,
-        height: 56,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    headerText: {
-        flex: 1,
-        marginLeft: 16,
-    },
-    headerTitle: {
-        fontSize: 22,
-        fontWeight: '800',
-        color: '#0f172a',
-        letterSpacing: -0.5,
-    },
-    headerSub: {
-        fontSize: 13,
-        color: '#64748b',
-        marginTop: 2,
-    },
-    closeButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#f8fafc',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    scrollContent: {
-        paddingBottom: 20,
-    },
-    contentSection: {
-        marginBottom: 24,
-    },
-    sectionLabel: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#64748b',
-        textTransform: 'uppercase',
-        letterSpacing: 1,
-        marginBottom: 16,
-    },
-    scaleContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    scaleButton: {
-        width: (width - 80) / 5,
-        height: (width - 80) / 5,
-        borderRadius: 16,
-        borderWidth: 2,
-        borderColor: '#f1f5f9',
-        backgroundColor: '#f8fafc',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    scaleText: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: '#0f172a',
-    },
-    gridContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-    },
-    gridButton: {
-        flex: 1,
-        minWidth: '45%',
-        paddingVertical: 20,
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: '#f1f5f9',
-        backgroundColor: '#f8fafc',
-        alignItems: 'center',
-    },
-    gridText: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: '#334155',
-    },
-    checkItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f1f5f9',
-    },
-    checkbox: {
-        marginRight: 12,
-    },
-    checkLabel: {
-        fontSize: 15,
-        fontWeight: '700',
-        color: '#0f172a',
-    },
-    moodContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingTop: 10,
-    },
-    moodItem: {
-        alignItems: 'center',
-        flex: 1,
-    },
-    moodLabel: {
-        fontSize: 10,
-        color: '#94a3b8',
-        marginTop: 8,
-        fontWeight: '500',
-    },
-    notesSection: {
-        marginBottom: 32,
-    },
-    textArea: {
-        backgroundColor: '#f8fafc',
-        borderWidth: 2,
-        borderColor: '#f1f5f9',
-        borderRadius: 20,
-        padding: 16,
-        height: 120,
-        fontSize: 16,
-        color: '#0f172a',
-        textAlignVertical: 'top',
-    },
-    saveButton: {
-        paddingVertical: 18,
-        borderRadius: 20,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    saveButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: '800',
-    },
-    crisisForm: {
-        gap: 16,
-    },
-    inputWrapper: {
-        gap: 8,
-    },
-    inputLabel: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#64748b',
-        marginLeft: 4,
-    },
-    smallInput: {
-        backgroundColor: '#f8fafc',
-        borderWidth: 2,
-        borderColor: '#f1f5f9',
-        borderRadius: 16,
-        padding: 14,
-        fontSize: 15,
-        color: '#0f172a',
-    },
-    taskDetailCard: {
-        backgroundColor: '#f8fafc',
-        padding: 20,
-        borderRadius: 24,
-        borderWidth: 1,
-        marginBottom: 24,
-    },
-    taskDescription: {
-        fontSize: 16,
-        lineHeight: 24,
-        color: '#334155',
-        fontWeight: '500',
-    },
-    summaryCard: {
-        backgroundColor: '#f8fafc',
-        borderRadius: 24,
-        padding: 8,
-        marginBottom: 24,
-    },
-    summaryItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#ffffff',
-        borderRadius: 20,
-        margin: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 4,
-        elevation: 2,
-    },
-    summaryIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    summaryInfo: {
-        flex: 1,
-        marginLeft: 12,
-    },
-    summaryLabel: {
-        fontSize: 12,
-        fontWeight: '700',
-        color: '#64748b',
-        textTransform: 'uppercase',
-    },
-    summaryValue: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#1e293b',
-        marginTop: 2,
-    },
-    summaryStatus: {
-        marginLeft: 8,
-    },
-    statusText: {
-        fontSize: 12,
-        fontWeight: '800',
-        color: '#3b82f6',
-    },
-    insightBox: {
-        backgroundColor: '#fffbeb',
-        padding: 20,
-        borderRadius: 20,
-        borderWidth: 1,
-        borderColor: '#fef3c7',
-    },
-    insightText: {
-        fontSize: 15,
-        color: '#92400e',
-        lineHeight: 22,
-        fontWeight: '500',
-    },
-    memberProfileCard: {
-        alignItems: 'center',
-        marginBottom: 32,
-    },
-    memberAvatarWrapper: {
-        position: 'relative',
-        marginBottom: 16,
-    },
-    memberAvatarLarge: {
-        width: 100,
-        height: 100,
-        borderRadius: 32,
-    },
-    statusIndicator: {
-        position: 'absolute',
-        bottom: -2,
-        right: -2,
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        borderWidth: 4,
-        borderColor: '#ffffff',
-    },
-    memberRoleText: {
-        fontSize: 16,
-        color: '#64748b',
-        fontWeight: '500',
-        marginBottom: 12,
-    },
-    priorityBadgeModal: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-    },
-    priorityTextModal: {
-        fontSize: 11,
-        fontWeight: '800',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    actionGrid: {
-        flexDirection: 'row',
-        gap: 16,
-        marginBottom: 32,
-    },
-    actionBox: {
-        flex: 1,
-        backgroundColor: 'transparent',
-        borderRadius: 24,
-        padding: 20,
-        alignItems: 'center',
-    },
-
-    actionIconCircle: {
-        width: 56,
-        height: 56,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-    },
-    actionLabelText: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#1e293b',
-        textAlign: 'center',
-    },
-
-    logSelectorGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 12,
-        marginTop: 8,
-    },
-    logTypeCard: {
-        width: (width - 60) / 2,
-        backgroundColor: '#f8fafc',
-        borderRadius: 24,
-        padding: 16,
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#f1f5f9',
-    },
-    logTypeIcon: {
-        width: 64,
-        height: 64,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 12,
-    },
-    logTypeLabel: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#334155',
-    },
+    container: { flex: 1, justifyContent: 'flex-end' },
+    content: { height: height * 0.78, width: '100%' },
+    modalCard: { flex: 1, backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingBottom: Platform.OS === 'ios' ? 40 : 20 },
+    grabber: { width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
+    header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    iconContainer: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+    headerText: { flex: 1 },
+    headerTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
+    headerSub: { fontSize: 13, color: '#64748b', marginTop: 2 },
+    closeButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
+    scrollContent: { padding: 24 },
+    contentSection: { marginBottom: 24 },
+    sectionLabel: { fontSize: 13, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 },
+    scaleContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    scaleButton: { width: (width - 80) / 5, height: 48, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0', alignItems: 'center', justifyContent: 'center' },
+    scaleText: { fontSize: 16, fontWeight: '700', color: '#475569' },
+    gridContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+    gridButton: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+    gridText: { fontSize: 14, fontWeight: '600', color: '#475569' },
+    checkItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    checkbox: { marginRight: 12 },
+    checkLabel: { fontSize: 16, fontWeight: '600', color: '#334155', flex: 1 },
+    smallInput: { backgroundColor: '#f8fafc', borderRadius: 16, padding: 16, fontSize: 15, color: '#1e293b', borderWidth: 1, borderColor: '#f1f5f9' },
+    textArea: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 16, fontSize: 15, color: '#1e293b', height: 120, textAlignVertical: 'top' },
+    notesSection: { marginTop: 8, marginBottom: 32 },
+    saveButton: { backgroundColor: '#000', borderRadius: 20, paddingVertical: 18, alignItems: 'center' },
+    saveButtonText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+    moodContainer: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
+    moodItem: { alignItems: 'center' },
+    moodLabel: { fontSize: 12, color: '#64748b', marginTop: 8 },
+    crisisForm: { gap: 16 },
+    inputWrapper: { gap: 8 },
+    inputLabel: { fontSize: 14, fontWeight: '600', color: '#64748b' },
+    taskDetailCard: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 16, borderWidth: 1, marginBottom: 20 },
+    taskDescription: { fontSize: 15, color: '#475569', lineHeight: 22 },
+    insightBox: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 16, borderLeftWidth: 4, borderLeftColor: '#cbd5e1' },
+    insightText: { fontSize: 14, color: '#64748b', fontStyle: 'italic', lineHeight: 20 },
+    summaryCard: { backgroundColor: '#f8fafc', borderRadius: 24, padding: 16, gap: 12, marginBottom: 24 },
+    summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    summaryIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+    summaryInfo: { flex: 1 },
+    summaryLabel: { fontSize: 12, color: '#64748b' },
+    summaryValue: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+    summaryStatus: { alignItems: 'flex-end' },
+    statusText: { fontSize: 14, fontWeight: '700', color: '#3b82f6' },
+    actionGrid: { flexDirection: 'row', gap: 12 },
+    actionBox: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 20 },
+    memberAvatarWrapper: { position: 'relative' },
+    memberAvatarLarge: { width: 50, height: 50, borderRadius: 18 },
+    statusIndicator: { position: 'absolute', width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: '#fff' },
+    actionIconCircle: { width: 50, height: 50, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+    actionLabelText: { fontSize: 12, fontWeight: '600', color: '#64748b', marginTop: 8 },
+    logSelectorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+    logTypeCard: { width: (width - 60) / 2, backgroundColor: '#f8fafc', borderRadius: 24, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
+    logTypeIcon: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+    logTypeLabel: { fontSize: 14, fontWeight: '700', color: '#334155' },
 });

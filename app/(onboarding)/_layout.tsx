@@ -17,6 +17,7 @@ export default function OnboardingLayout() {
             <Stack.Screen name="helper/actionable-support" />
             <Stack.Screen name="volunteer/advocacy" />
             <Stack.Screen name="overcomer/safety-net" />
+            <Stack.Screen name="overcomer/triggers" />
         </Stack>
     );
 }

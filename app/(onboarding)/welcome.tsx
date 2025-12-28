@@ -77,8 +77,18 @@ export default function WelcomeScreen() {
 
     // Reset and start playing the next video before crossfade
     if (nextVideoRef.current) {
-      await nextVideoRef.current.setPositionAsync(0);
-      await nextVideoRef.current.playAsync();
+      try {
+        await nextVideoRef.current.setPositionAsync(0);
+        await nextVideoRef.current.playAsync();
+      } catch (error) {
+        console.log('Video playback error:', error);
+        isTransitioning.current = false;
+        return;
+      }
+    } else {
+      // Video ref not ready, abort transition
+      isTransitioning.current = false;
+      return;
     }
 
     // Crossfade: fade out current, fade in next simultaneously

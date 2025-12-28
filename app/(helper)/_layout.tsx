@@ -99,6 +99,12 @@ export default function CaregiverLayout() {
                         tabBarIcon: ({ color }) => <MaterialIcons name="settings" size={24} color={color} />,
                     }}
                 />
+                <Tabs.Screen
+                    name="guide"
+                    options={{
+                        href: null,
+                    }}
+                />
             </Tabs>
         </>
     );

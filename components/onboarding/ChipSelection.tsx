@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Animated, {
   useAnimatedStyle,
@@ -11,6 +12,7 @@ interface Option {
   value: string;
   label: string;
   emoji?: string;
+  icon?: string;
 }
 
 interface ChipSelectionProps {
@@ -63,7 +65,16 @@ function Chip({
         disabled && !isSelected && styles.chipDisabled,
       ]}
     >
-      {option.emoji && <Text style={styles.emoji}>{option.emoji}</Text>}
+      {option.icon ? (
+        <MaterialIcons
+          name={option.icon as any}
+          size={18}
+          color={isSelected ? '#FFFFFF' : color}
+          style={styles.icon}
+        />
+      ) : option.emoji && (
+        <Text style={styles.emoji}>{option.emoji}</Text>
+      )}
       <Text
         style={[
           styles.chipLabel,
@@ -167,6 +178,9 @@ const styles = StyleSheet.create({
   emoji: {
     fontSize: 16,
     marginRight: 6,
+  },
+  icon: {
+    marginRight: 8,
   },
   chipLabel: {
     fontSize: 14,

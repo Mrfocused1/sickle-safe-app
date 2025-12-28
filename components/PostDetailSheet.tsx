@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
-        maxHeight: SCREEN_HEIGHT * 0.9,
+        maxHeight: SCREEN_HEIGHT * 0.70,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -10 },
         shadowOpacity: 0.1,
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     scrollView: {
-        maxHeight: SCREEN_HEIGHT * 0.6,
+        maxHeight: SCREEN_HEIGHT * 0.50,
     },
     postContainer: {
         padding: 20,
