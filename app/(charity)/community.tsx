@@ -47,7 +47,7 @@ export default function CommunityScreen() {
                 >
                     <View style={styles.statCard}>
                         <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
-                            <Heart size={20} color="#374151" />
+                            <Heart size={18} color="#374151" />
                         </View>
                         <Text style={styles.statValue}>248</Text>
                         <Text style={styles.statLabel}>Active Donors</Text>
@@ -55,7 +55,7 @@ export default function CommunityScreen() {
 
                     <View style={styles.statCard}>
                         <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
-                            <Users size={20} color="#374151" />
+                            <Users size={18} color="#374151" />
                         </View>
                         <Text style={styles.statValue}>1,247</Text>
                         <Text style={styles.statLabel}>Beneficiaries</Text>
@@ -63,7 +63,7 @@ export default function CommunityScreen() {
 
                     <View style={styles.statCard}>
                         <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
-                            <TrendingUp size={20} color="#374151" />
+                            <TrendingUp size={18} color="#374151" />
                         </View>
                         <Text style={styles.statValue}>32%</Text>
                         <Text style={styles.statLabel}>Growth Rate</Text>
@@ -225,27 +225,27 @@ const styles = StyleSheet.create({
     statCard: {
         backgroundColor: '#F9FAFB',
         borderRadius: 16,
-        padding: 16,
-        width: 140,
+        padding: 12,
+        width: 120,
         borderWidth: 1,
         borderColor: '#F3F4F6',
     },
     statIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 10,
+        width: 32,
+        height: 32,
+        borderRadius: 8,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 12,
+        marginBottom: 8,
     },
     statValue: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: '900',
         color: '#111827',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     statLabel: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#6B7280',
         fontWeight: '600',
     },
