@@ -19,10 +19,12 @@ import Slider from '@react-native-community/slider';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | 'metrics_info' | 'message_selection' | 'notification_settings' | 'edit_member' | 'create_event' | null;
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | 'metrics_info' | 'message_selection' | 'notification_settings' | 'edit_member' | 'create_event' | 'event_detail' | 'event_calendar' | null;
 
 interface AppBottomSheetProps {
     visible: boolean;
@@ -38,6 +40,7 @@ interface AppBottomSheetProps {
     member?: { name: string; role: string; priority: string; avatar: string; status: string; isEmergency: boolean };
     activity?: { title: string; detail: string; time: string; color: string; icon: string };
     mission?: { title: string; detail: string; time: string; location?: string; status?: string };
+    event?: { id: number; title: string; category: string; date: string; time: string; location: string; volunteers: number; needed: number; image: string };
     medsData?: { list: string[], checked: string[] };
     onMedsUpdate?: (list: string[], checked: string[]) => void;
     onPainUpdate?: (level: number, notes?: string) => void;
@@ -45,9 +48,11 @@ interface AppBottomSheetProps {
     onMoodUpdate?: (level: string, notes?: string) => void;
     onTriggersUpdate?: (triggers: string[], notes?: string) => void;
     onCrisisUpdate?: (startTime: string, level: number, notes?: string) => void;
+    eventsList?: Array<{ id: number; title: string; category: string; date: string; time: string; location: string; volunteers: number; needed: number; image: string }>;
 }
 
-export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate, onCrisisUpdate }: AppBottomSheetProps) {
+export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, event, eventsList, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate, onCrisisUpdate }: AppBottomSheetProps) {
+    const insets = useSafeAreaInsets();
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
     const [selectedHelpers, setSelectedHelpers] = useState<string[]>([]);
@@ -69,6 +74,11 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     const [showToast, setShowToast] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [startTime, setStartTime] = useState('');
+    const [eventDate, setEventDate] = useState(new Date());
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [eventLink, setEventLink] = useState('');
+    const [eventTitle, setEventTitle] = useState('');
+    const [eventCategoryTitle, setEventCategoryTitle] = useState('');
     const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Common SCD medications for quick suggestions
@@ -239,6 +249,11 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             setNotes('');
             setStartTime('');
             setSelectedHelpers([]);
+            setEventDate(new Date());
+            setEventLink('');
+            setEventTitle('');
+            setEventCategoryTitle('');
+            setShowDatePicker(false);
         }
     }, [visible, type]);
 
@@ -290,8 +305,10 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return { title: 'Notifications', icon: 'notifications', color: '#8b5cf6' };
             case 'edit_member':
                 return { title: 'Edit Details', icon: 'edit', color: '#6366f1' };
-            case 'create_event':
-                return { title: 'New Event', icon: 'event', color: '#8b5cf6' };
+            case 'event_detail':
+                return { title: event?.title || 'Event Detail', icon: 'event', color: '#10b981' };
+            case 'event_calendar':
+                return { title: 'Event Schedule', icon: 'event-note', color: '#6366f1' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -1356,12 +1373,15 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'create_event':
                 return (
                     <View style={styles.contentSection}>
-                        <Text style={styles.sectionLabel}>Event Category</Text>
+                        <Text style={styles.sectionLabel}>EVENT CATEGORY</Text>
                         <View style={styles.gridContainer}>
                             {['Blood Drive', 'Awareness', 'Fundraiser', 'Support'].map((cat) => (
                                 <Pressable
                                     key={cat}
-                                    onPress={() => setValue(cat)}
+                                    onPress={() => {
+                                        setValue(cat);
+                                        setEventCategoryTitle(cat);
+                                    }}
                                     style={[
                                         styles.gridButton,
                                         value === cat && { backgroundColor: header.color, borderColor: header.color },
@@ -1370,23 +1390,95 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                     <Text style={[styles.gridText, value === cat && { color: '#fff' }]}>{cat}</Text>
                                 </Pressable>
                             ))}
+                            <Pressable
+                                onPress={() => {
+                                    setValue('Other');
+                                    setEventCategoryTitle('');
+                                }}
+                                style={[
+                                    styles.gridButton,
+                                    value === 'Other' && { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+                                    { flexDirection: 'row', alignItems: 'center', gap: 6, borderColor: '#3b82f6' }
+                                ]}
+                            >
+                                <MaterialIcons
+                                    name="add"
+                                    size={18}
+                                    color={value === 'Other' ? '#fff' : '#3b82f6'}
+                                />
+                                <Text style={[
+                                    styles.gridText,
+                                    { color: value === 'Other' ? '#fff' : '#3b82f6' }
+                                ]}>
+                                    Other category
+                                </Text>
+                            </Pressable>
                         </View>
 
-                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Event Title</Text>
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>CATEGORY NAME / TYPE</Text>
+                        <TextInput
+                            style={styles.smallInput}
+                            placeholder="e.g. Advocacy Campaign"
+                            placeholderTextColor="#94a3b8"
+                            value={eventCategoryTitle}
+                            onChangeText={setEventCategoryTitle}
+                        />
+
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>EVENT TITLE</Text>
                         <TextInput
                             style={styles.smallInput}
                             placeholder="e.g. Community Blood Drive 2024"
                             placeholderTextColor="#94a3b8"
+                            value={eventTitle}
+                            onChangeText={setEventTitle}
                         />
 
-                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Date & Time</Text>
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>DATE & TIME</Text>
+                        <Pressable
+                            onPress={() => setShowDatePicker(!showDatePicker)}
+                            style={[styles.smallInput, { justifyContent: 'center', borderColor: showDatePicker ? '#3b82f6' : '#f1f5f9' }]}
+                        >
+                            <Text style={{ color: eventDate ? '#1e293b' : '#94a3b8', fontSize: 16, fontWeight: '500' }}>
+                                {eventDate ? eventDate.toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Select Date & Time'}
+                            </Text>
+                        </Pressable>
+
+                        {showDatePicker && (
+                            <View style={{ backgroundColor: '#f8fafc', borderRadius: 20, marginTop: 12, overflow: 'hidden', borderWidth: 1, borderColor: '#e2e8f0' }}>
+                                {Platform.OS === 'ios' && (
+                                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', padding: 12, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+                                        <Pressable onPress={() => setShowDatePicker(false)}>
+                                            <Text style={{ color: '#3b82f6', fontWeight: '800', fontSize: 15 }}>Done</Text>
+                                        </Pressable>
+                                    </View>
+                                )}
+                                <DateTimePicker
+                                    value={eventDate}
+                                    mode="datetime"
+                                    is24Hour={true}
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={(event, date) => {
+                                        if (Platform.OS === 'android') {
+                                            setShowDatePicker(false);
+                                        }
+                                        if (date) setEventDate(date);
+                                    }}
+                                />
+                            </View>
+                        )}
+
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>EXTERNAL LINK</Text>
                         <TextInput
                             style={styles.smallInput}
-                            placeholder="e.g. Dec 28, 10:00 AM"
+                            placeholder="e.g. www.google.com"
                             placeholderTextColor="#94a3b8"
+                            value={eventLink}
+                            onChangeText={setEventLink}
+                            autoCapitalize="none"
+                            keyboardType="url"
                         />
 
-                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>Description & Goals</Text>
+                        <Text style={[styles.sectionLabel, { marginTop: 24 }]}>DESCRIPTION & GOALS</Text>
                         <TextInput
                             style={[styles.smallInput, { height: 100, paddingTop: 12 }]}
                             placeholder="What is the goal of this event? How many volunteers do you need?"
@@ -1399,6 +1491,166 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
 
                         <View style={styles.insightBox}>
                             <Text style={styles.insightText}>Your proposed event will be reviewed by the community lead before being visible to other volunteers.</Text>
+                        </View>
+                    </View>
+                );
+            case 'event_detail':
+                return (
+                    <View style={{ gap: 24 }}>
+                        {/* Unified Event Card */}
+                        <View style={{ backgroundColor: '#fff', borderRadius: 24, overflow: 'hidden', borderWidth: 1, borderColor: '#f1f5f9' }}>
+                            <Image
+                                source={{ uri: event?.image || 'https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&q=80&w=800' }}
+                                style={{ width: '100%', height: 180 }}
+                            />
+
+                            <View style={{ padding: 20 }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                    <View style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}>
+                                        <Text style={{ color: '#10b981', fontSize: 12, fontWeight: '800', textTransform: 'uppercase' }}>{event?.category}</Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 }}>
+                                        <MaterialIcons name="people" size={16} color="#64748b" />
+                                        <Text style={{ marginLeft: 6, fontSize: 14, color: '#334155', fontWeight: '700' }}>{event?.volunteers}/{event?.needed} Joiners</Text>
+                                    </View>
+                                </View>
+
+                                <Text style={{ fontSize: 24, fontWeight: '900', color: '#1e293b', marginBottom: 16, lineHeight: 30 }}>{event?.title}</Text>
+
+                                <View style={{ gap: 12, marginBottom: 24 }}>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' }}>
+                                            <MaterialIcons name="event" size={18} color="#94a3b8" />
+                                        </View>
+                                        <Text style={{ marginLeft: 12, fontSize: 15, color: '#475569', fontWeight: '500' }}>{event?.date} • {event?.time}</Text>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                        <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' }}>
+                                            <MaterialIcons name="location-on" size={18} color="#94a3b8" />
+                                        </View>
+                                        <Text style={{ marginLeft: 12, fontSize: 15, color: '#475569', fontWeight: '500' }}>{event?.location}</Text>
+                                    </View>
+                                </View>
+
+                                <Pressable
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        backgroundColor: '#eff6ff',
+                                        padding: 16,
+                                        borderRadius: 16,
+                                        borderWidth: 1,
+                                        borderColor: '#dbeafe',
+                                        gap: 10
+                                    }}
+                                    onPress={() => alert('Opening external link...')}
+                                >
+                                    <MaterialIcons name="launch" size={20} color="#3b82f6" />
+                                    <Text style={{ color: '#3b82f6', fontWeight: '800', fontSize: 16 }}>Visit Website</Text>
+                                </Pressable>
+                            </View>
+                        </View>
+
+                        {/* Mission Section */}
+                        <View style={{ gap: 12 }}>
+                            <Text style={styles.sectionLabel}>Mission Goal</Text>
+                            <View style={{ backgroundColor: '#f8fafc', padding: 20, borderRadius: 20, borderLeftWidth: 4, borderLeftColor: '#10b981' }}>
+                                <Text style={{ fontSize: 16, color: '#475569', lineHeight: 24, fontWeight: '500' }}>
+                                    Join us for the {event?.title}. We are looking for volunteers to assist with logistics, attendee management, and overall support to make this {event?.category} a massive success for the community.
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
+                );
+            case 'event_calendar':
+                return (
+                    <View style={{ gap: 24 }}>
+                        {/* Custom Calendar Header */}
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <Text style={{ fontSize: 20, fontWeight: '900', color: '#1e293b' }}>January 2026</Text>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                <Pressable style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' }}>
+                                    <MaterialIcons name="chevron-left" size={20} color="#64748b" />
+                                </Pressable>
+                                <Pressable style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' }}>
+                                    <MaterialIcons name="chevron-right" size={20} color="#64748b" />
+                                </Pressable>
+                            </View>
+                        </View>
+
+                        {/* Calendar Grid */}
+                        <View>
+                            <View style={{ flexDirection: 'row', marginBottom: 16 }}>
+                                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                                    <Text key={i} style={{ flex: 1, textAlign: 'center', fontSize: 12, fontWeight: '800', color: '#94a3b8' }}>{day}</Text>
+                                ))}
+                            </View>
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                                {Array.from({ length: 35 }).map((_, i) => {
+                                    const day = i - 2; // Start from Tues for Jan 2026 placeholder
+                                    const isCurrentMonth = day > 0 && day <= 31;
+                                    const hasEvent = isCurrentMonth && [5, 12, 28].includes(day);
+
+                                    return (
+                                        <View key={i} style={{ width: '14.28%', height: 44, alignItems: 'center', justifyContent: 'center' }}>
+                                            {isCurrentMonth && (
+                                                <Pressable
+                                                    style={{
+                                                        width: 34,
+                                                        height: 34,
+                                                        borderRadius: 12,
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        backgroundColor: day === 28 ? '#1e293b' : 'transparent',
+                                                        borderWidth: hasEvent && day !== 28 ? 1 : 0,
+                                                        borderColor: '#e2e8f0'
+                                                    }}
+                                                >
+                                                    <Text style={{
+                                                        fontSize: 14,
+                                                        fontWeight: '700',
+                                                        color: day === 28 ? '#fff' : hasEvent ? '#1e293b' : '#64748b'
+                                                    }}>{day}</Text>
+                                                    {hasEvent && day !== 28 && (
+                                                        <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: '#10b981', position: 'absolute', bottom: 4 }} />
+                                                    )}
+                                                </Pressable>
+                                            )}
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        </View>
+
+                        {/* Upcoming Events List */}
+                        <View style={{ gap: 16 }}>
+                            <Text style={styles.sectionLabel}>Upcoming this month</Text>
+                            {(eventsList || []).map((item) => (
+                                <Pressable
+                                    key={item.id}
+                                    onPress={() => navigateTo('event_detail')}
+                                    style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: '#fff',
+                                        padding: 12,
+                                        borderRadius: 20,
+                                        borderWidth: 1,
+                                        borderColor: '#f1f5f9',
+                                        gap: 12
+                                    }}
+                                >
+                                    <Image source={{ uri: item.image }} style={{ width: 48, height: 48, borderRadius: 12 }} />
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 15, fontWeight: '800', color: '#1e293b' }}>{item.title}</Text>
+                                        <Text style={{ fontSize: 13, color: '#64748b', fontWeight: '500' }}>{item.date} • {item.location}</Text>
+                                    </View>
+                                    <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' }}>
+                                        <MaterialIcons name="chevron-right" size={20} color="#94a3b8" />
+                                    </View>
+                                </Pressable>
+                            ))}
                         </View>
                     </View>
                 );
@@ -1417,7 +1669,13 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         </Pressable>
                     </Animated.View>
 
-                    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={[
+                            styles.content,
+                            (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event') && { height: height * 0.9 }
+                        ]}
+                    >
                         <View style={styles.modalCard}>
                             <View style={styles.grabber} />
                             <View style={styles.header}>
@@ -1425,7 +1683,12 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                     <MaterialIcons name={header.icon as any} size={28} color={header.color} />
                                 </View>
                                 <View style={styles.headerText}>
-                                    <Text style={styles.headerTitle}>{activeType === 'member' ? header.title : activeType === 'community_actions' ? 'Community Hub' : 'Log ' + header.title}</Text>
+                                    <Text style={styles.headerTitle}>
+                                        {activeType === 'member' ? header.title :
+                                            activeType === 'community_actions' ? 'Community Hub' :
+                                                (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event' || activeType === 'volunteer_actions' || activeType === 'volunteer_log_hours' || activeType === 'manage_task' || activeType === 'request_task')
+                                                    ? header.title : 'Log ' + header.title}
+                                    </Text>
                                     <Text style={styles.headerSub}>
                                         {activeType === 'member' ? member?.status + ' • ' + member?.role :
                                             activeType === 'idea' ? 'Share with the community' :
@@ -1436,7 +1699,9 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                                 activeType === 'invite_member' ? 'Expand your circle' :
                                                                     activeType === 'manage_task' ? 'Delegate this task' :
                                                                         activeType === 'request_task' ? 'Be a hero today' :
-                                                                            'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                                                            activeType === 'event_calendar' ? 'View upcoming community initiatives' :
+                                                                                activeType === 'event_detail' ? 'Event Information' :
+                                                                                    'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                                     </Text>
                                 </View>
                                 <Pressable onPress={goBack} style={styles.closeButton}>
@@ -1444,23 +1709,39 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                 </Pressable>
                             </View>
 
-                            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={styles.scrollContent}
+                                style={{ flex: 1 }}
+                            >
                                 {renderContent()}
 
-                                <View style={styles.notesSection}>
-                                    <Text style={styles.sectionLabel}>Additional Notes</Text>
-                                    <TextInput
-                                        style={styles.textArea}
-                                        placeholder="How are you feeling otherwise?"
-                                        placeholderTextColor="#94a3b8"
-                                        multiline
-                                        numberOfLines={4}
-                                        value={notes}
-                                        onChangeText={setNotes}
-                                    />
-                                </View>
+                                {(activeType === 'pain' || activeType === 'hydration' || activeType === 'meds' || activeType === 'mood' || activeType === 'triggers' || activeType === 'crisis' || activeType === 'idea' || activeType === 'log_selection' || activeType === 'create_event') && (
+                                    <View style={styles.notesSection}>
+                                        <Text style={styles.sectionLabel}>Additional Notes</Text>
+                                        <TextInput
+                                            style={styles.textArea}
+                                            placeholder="How are you feeling otherwise?"
+                                            placeholderTextColor="#94a3b8"
+                                            multiline
+                                            numberOfLines={4}
+                                            value={notes}
+                                            onChangeText={setNotes}
+                                        />
+                                    </View>
+                                )}
 
-                                {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && (
+                            </ScrollView>
+
+                            {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && (
+                                <View style={{
+                                    paddingHorizontal: 24,
+                                    paddingTop: 16,
+                                    paddingBottom: Math.max(insets.bottom, 40),
+                                    backgroundColor: '#fff',
+                                    borderTopWidth: 1,
+                                    borderTopColor: '#f1f5f9',
+                                }}>
                                     <Pressable
                                         onPress={() => {
                                             switch (activeType) {
@@ -1470,10 +1751,14 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                 case 'triggers': if (value && onTriggersUpdate) onTriggersUpdate(value.split(', '), notes || undefined); break;
                                                 case 'crisis': if (value && onCrisisUpdate) onCrisisUpdate(startTime, parseInt(value), notes || undefined); break;
                                                 case 'edit_member': alert('Changes saved locally!'); break;
+                                                case 'create_event':
+                                                case 'event_detail':
+                                                    triggerToast();
+                                                    return;
                                                 case 'manage_task':
                                                     if (selectedHelpers.length > 0) {
                                                         triggerToast();
-                                                        return; // Don't close yet, triggerToast handles it
+                                                        return;
                                                     } else {
                                                         alert('Please select at least one helper');
                                                         return;
@@ -1493,11 +1778,14 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                                     activeType === 'request_task' ? 'Claim Task' :
                                                                         activeType === 'view_care_plan' ? 'Close' :
                                                                             activeType === 'edit_member' ? 'Save Changes' :
-                                                                                'Save Entry'}
+                                                                                activeType === 'create_event' ? 'Propose Event' :
+                                                                                    activeType === 'event_detail' ? 'Join Initiative' :
+                                                                                        activeType === 'event_calendar' ? 'Close' :
+                                                                                            'Save Entry'}
                                         </Text>
                                     </Pressable>
-                                )}
-                            </ScrollView>
+                                </View>
+                            )}
 
                             {/* Premium Toast Notification */}
                             {showToast && (
@@ -1636,8 +1924,8 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
 
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'flex-end' },
-    content: { width: '100%', maxHeight: height * 0.9 },
-    modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingBottom: Platform.OS === 'ios' ? 40 : 20 },
+    content: { width: '100%', maxHeight: height * 0.9, backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: 'hidden' },
+    modalCard: { flex: 1, paddingBottom: 0 },
     grabber: { width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
     iconContainer: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
@@ -1645,7 +1933,7 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
     headerSub: { fontSize: 13, color: '#64748b', marginTop: 2 },
     closeButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-    scrollContent: { padding: 24 },
+    scrollContent: { padding: 24, paddingBottom: 180 },
     contentSection: { marginBottom: 24 },
     sectionLabel: { fontSize: 13, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 },
     scaleContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },

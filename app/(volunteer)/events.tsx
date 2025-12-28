@@ -56,10 +56,17 @@ export default function VolunteerEvents() {
     const insets = useSafeAreaInsets();
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [showCreateSheet, setShowCreateSheet] = useState(false);
+    const [showCalendarSheet, setShowCalendarSheet] = useState(false);
+    const [clickedEvent, setClickedEvent] = useState<any>(null);
 
     const handleCreatePress = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         setShowCreateSheet(true);
+    };
+
+    const handleCalendarPress = () => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setShowCalendarSheet(true);
     };
 
     return (
@@ -78,12 +85,9 @@ export default function VolunteerEvents() {
                         <Text className="text-3xl font-extrabold text-gray-900">Events</Text>
                         <View className="flex-row gap-3">
                             <Pressable
-                                onPress={handleCreatePress}
-                                className="w-10 h-10 bg-violet-600 rounded-xl items-center justify-center shadow-sm shadow-violet-200"
+                                onPress={handleCalendarPress}
+                                className="w-10 h-10 bg-gray-50 rounded-xl items-center justify-center border border-gray-100"
                             >
-                                <Plus size={20} color="#ffffff" />
-                            </Pressable>
-                            <Pressable className="w-10 h-10 bg-gray-50 rounded-xl items-center justify-center border border-gray-100">
                                 <CalendarIcon size={20} color="#374151" />
                             </Pressable>
                         </View>
@@ -121,24 +125,27 @@ export default function VolunteerEvents() {
 
                 {/* Events List */}
                 <View className="px-6 py-6">
-                    {/* Create Event Quick Action */}
                     <Pressable
                         onPress={handleCreatePress}
-                        className="bg-violet-50 rounded-[28px] p-6 mb-8 border border-violet-100 flex-row items-center"
+                        className="bg-gray-900 rounded-[28px] p-6 mb-8 border border-gray-800 flex-row items-center"
                     >
-                        <View className="w-12 h-12 bg-white rounded-2xl items-center justify-center shadow-sm">
-                            <Plus size={24} color="#8B5CF6" />
+                        <View className="w-12 h-12 bg-white/10 rounded-2xl items-center justify-center shadow-sm">
+                            <Plus size={24} color="#ffffff" />
                         </View>
                         <View className="ml-4 flex-1">
-                            <Text className="text-violet-900 font-extrabold text-lg">Host an Event</Text>
-                            <Text className="text-violet-600 text-xs font-medium">Create a new blood drive or awareness goal</Text>
+                            <Text className="text-white font-extrabold text-lg">Create an Event</Text>
+                            <Text className="text-gray-400 text-xs font-medium">Create a new blood drive or awareness goal</Text>
                         </View>
-                        <ChevronRight size={20} color="#8B5CF6" />
+                        <ChevronRight size={20} color="#ffffff" />
                     </Pressable>
 
-                    {EVENTS.map((event) => (
+                    {EVENTS.map((item) => (
                         <Pressable
-                            key={event.id}
+                            key={item.id}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setClickedEvent(item);
+                            }}
                             className="bg-white rounded-[32px] p-5 shadow-sm border border-gray-100 mb-8 last:mb-0"
                             style={{
                                 shadowColor: '#000',
@@ -150,38 +157,38 @@ export default function VolunteerEvents() {
                         >
                             <View className="h-48 bg-gray-100 rounded-[24px] mb-5 overflow-hidden relative">
                                 <Image
-                                    source={{ uri: event.image }}
+                                    source={{ uri: item.image }}
                                     className="w-full h-full"
                                     resizeMode="cover"
                                 />
                                 <View className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-sm">
-                                    <Text className="text-gray-900 font-bold text-[10px] uppercase tracking-wider">{event.category}</Text>
+                                    <Text className="text-gray-900 font-bold text-[10px] uppercase tracking-wider">{item.category}</Text>
                                 </View>
                             </View>
 
                             <View className="flex-row justify-between items-start mb-3">
                                 <View className="flex-1 pr-4">
-                                    <Text className="text-gray-900 font-black text-xl mb-1.5 leading-tight">{event.title}</Text>
+                                    <Text className="text-gray-900 font-black text-xl mb-1.5 leading-tight">{item.title}</Text>
                                     <View className="flex-row items-center">
                                         <MapPin size={14} color="#9CA3AF" />
-                                        <Text className="text-gray-500 text-sm font-medium ml-1.5">{event.location}</Text>
+                                        <Text className="text-gray-500 text-sm font-medium ml-1.5">{item.location}</Text>
                                     </View>
                                 </View>
-                                <View className="bg-violet-50 w-14 h-16 rounded-2xl items-center justify-center border border-violet-100 shadow-sm">
-                                    <Text className="text-violet-600 font-black text-lg">{event.date.split(' ')[1]}</Text>
-                                    <Text className="text-violet-400 font-bold text-[10px] uppercase">{event.date.split(' ')[0]}</Text>
+                                <View className="bg-gray-900 w-14 h-16 rounded-2xl items-center justify-center shadow-sm">
+                                    <Text className="text-white font-black text-lg">{item.date.split(' ')[1]}</Text>
+                                    <Text className="text-gray-400 font-bold text-[10px] uppercase">{item.date.split(' ')[0]}</Text>
                                 </View>
                             </View>
 
                             <View className="flex-row items-center justify-between mt-3 pt-4 border-t border-gray-50">
                                 <View className="flex-row items-center bg-gray-50 px-3 py-1.5 rounded-full">
                                     <Clock size={14} color="#6B7280" />
-                                    <Text className="text-gray-600 text-xs font-semibold ml-1.5">{event.time}</Text>
+                                    <Text className="text-gray-600 text-xs font-semibold ml-1.5">{item.time}</Text>
                                 </View>
                                 <View className="flex-row items-center gap-2">
                                     <Users size={16} color="#9CA3AF" />
                                     <Text className="text-gray-500 text-xs font-bold">
-                                        <Text className="text-gray-900">{event.volunteers}</Text>/{event.needed} Volunteers
+                                        <Text className="text-gray-900">{item.volunteers}</Text>/{item.needed} Volunteers
                                     </Text>
                                 </View>
                             </View>
@@ -192,9 +199,15 @@ export default function VolunteerEvents() {
             </ScrollView>
 
             <AppBottomSheet
-                visible={showCreateSheet}
-                onClose={() => setShowCreateSheet(false)}
-                type="create_event"
+                visible={showCreateSheet || showCalendarSheet || clickedEvent !== null}
+                onClose={() => {
+                    setShowCreateSheet(false);
+                    setShowCalendarSheet(false);
+                    setClickedEvent(null);
+                }}
+                type={clickedEvent ? "event_detail" : showCalendarSheet ? "event_calendar" : "create_event"}
+                event={clickedEvent}
+                eventsList={EVENTS}
             />
         </View>
     );
