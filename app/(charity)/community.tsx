@@ -39,12 +39,7 @@ export default function CommunityScreen() {
                 </View>
 
                 {/* Stats Cards */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.statsContainer}
-                    contentContainerStyle={styles.statsContent}
-                >
+                <View style={styles.statsRow}>
                     <View style={styles.statCard}>
                         <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
                             <Heart size={16} color="#374151" />
@@ -68,7 +63,7 @@ export default function CommunityScreen() {
                         <Text style={styles.statValue}>32%</Text>
                         <Text style={styles.statLabel}>Growth Rate</Text>
                     </View>
-                </ScrollView>
+                </View>
 
                 {/* Tab Selector */}
                 <View style={styles.tabContainer}>
@@ -215,12 +210,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    statsContainer: {
+    statsRow: {
+        flexDirection: 'row',
         paddingHorizontal: 24,
-        marginBottom: 24,
-    },
-    statsContent: {
         gap: 12,
+        marginBottom: 24,
     },
     statCard: {
         backgroundColor: '#F9FAFB',
