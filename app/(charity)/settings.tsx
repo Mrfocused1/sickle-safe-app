@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, ScrollView, Pressable, StyleSheet, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { router } from 'expo-router';
 import {
     Building2,
     Users,
@@ -21,6 +22,11 @@ export default function SettingsScreen() {
     const [emailNotifications, setEmailNotifications] = useState(true);
     const [pushNotifications, setPushNotifications] = useState(true);
     const [twoFactorAuth, setTwoFactorAuth] = useState(false);
+
+    const handleLogout = () => {
+        // Navigate back to role selection screen
+        router.replace('/(onboarding)/role-selection');
+    };
 
     const settingsSections = [
         {
@@ -178,7 +184,7 @@ export default function SettingsScreen() {
                     </View>
 
                     {/* Logout Button */}
-                    <Pressable style={styles.logoutButton}>
+                    <Pressable style={styles.logoutButton} onPress={handleLogout}>
                         <LogOut size={20} color="#DC2626" />
                         <Text style={styles.logoutText}>Log Out</Text>
                     </Pressable>
