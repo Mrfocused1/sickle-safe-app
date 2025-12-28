@@ -30,8 +30,8 @@ export default function FundingGoalsScreen() {
     };
 
     const formatCurrency = (value: number) => {
-        if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-        return `$${(value / 1000).toFixed(0)}K`;
+        if (value >= 1000000) return `£${(value / 1000000).toFixed(1)}M`;
+        return `£${(value / 1000).toFixed(0)}K`;
     };
 
     return (
@@ -74,8 +74,8 @@ export default function FundingGoalsScreen() {
                             step={10000}
                             value={annualGoal}
                             onChange={setAnnualGoal}
-                            color="#D97706"
-                            labels={{ min: '$10K', max: '$10M+' }}
+                            color="#374151"
+                            labels={{ min: '£10K', max: '£10M+' }}
                         />
                         <View style={styles.goalDisplay}>
                             <Text style={styles.goalValue}>{formatCurrency(annualGoal)}</Text>
@@ -91,7 +91,7 @@ export default function FundingGoalsScreen() {
                         options={FOCUS_AREAS}
                         selectedValues={focusArea}
                         onChange={setFocusArea}
-                        color="#D97706"
+                        color="#374151"
                         maxSelections={1}
                     />
 
@@ -106,12 +106,12 @@ export default function FundingGoalsScreen() {
                             step={10}
                             value={beneficiaryCount}
                             onChange={setBeneficiaryCount}
-                            color="#D97706"
+                            color="#374151"
                             labels={{ min: '10', max: '10K+' }}
                         />
                         <View style={styles.beneficiaryDisplay}>
                             <View className="flex-row items-center">
-                                <Users size={20} color="#D97706" className="mr-2" />
+                                <Users size={20} color="#374151" className="mr-2" />
                                 <Text style={styles.beneficiaryValue}>{beneficiaryCount.toLocaleString()} people</Text>
                             </View>
                             <Text style={styles.beneficiaryLabel}>Estimated count of individuals to help</Text>
@@ -121,14 +121,14 @@ export default function FundingGoalsScreen() {
                     {/* Allocation Preview Card */}
                     <View style={styles.allocationCard}>
                         <View className="flex-row items-center mb-4">
-                            <PieChart size={20} color="#D97706" className="mr-2" />
+                            <PieChart size={20} color="#374151" className="mr-2" />
                             <Text style={styles.allocationTitle}>Resource Allocation Preview</Text>
                         </View>
                         <Text style={styles.allocationText}>
                             Based on your selection, approximately <Text style={styles.bold}>80%</Text> of funds will be prioritized for <Text style={styles.bold}>{FOCUS_AREAS.find(a => a.value === focusArea[0])?.label}</Text>.
                         </Text>
                         <View style={styles.progressBarContainer}>
-                            <View style={[styles.progressBarFull, { width: '80%', backgroundColor: '#D97706' }]} />
+                            <View style={[styles.progressBarFull, { width: '80%', backgroundColor: '#374151' }]} />
                             <View style={[styles.progressBarFull, { width: '20%', backgroundColor: '#e2e8f0' }]} />
                         </View>
                     </View>
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     titleAccent: {
-        color: '#D97706',
+        color: '#374151',
     },
     subtitle: {
         fontSize: 16,
@@ -265,10 +265,10 @@ const styles = StyleSheet.create({
     primaryButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#D97706',
+        backgroundColor: '#374151',
         paddingVertical: 16,
         borderRadius: 16,
-        shadowColor: '#D97706',
+        shadowColor: '#374151',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 16,

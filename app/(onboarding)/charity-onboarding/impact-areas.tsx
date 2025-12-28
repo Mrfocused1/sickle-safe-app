@@ -85,7 +85,7 @@ export default function ImpactAreasScreen() {
                         options={IMPACT_CATEGORIES}
                         selectedValues={categories}
                         onChange={setCategories}
-                        color="#D97706"
+                        color="#374151"
                         maxSelections={4}
                     />
 
@@ -97,7 +97,7 @@ export default function ImpactAreasScreen() {
                         options={GEOGRAPHIC_FOCUS}
                         selectedValues={geoFocus}
                         onChange={setGeoFocus}
-                        color="#D97706"
+                        color="#374151"
                         maxSelections={1}
                     />
 
@@ -109,14 +109,14 @@ export default function ImpactAreasScreen() {
                         options={PARTNER_PREFERENCES}
                         selectedValues={partners}
                         onChange={setPartners}
-                        color="#D97706"
+                        color="#374151"
                         maxSelections={3}
                     />
 
                     {/* Impact Summary Card */}
                     <View style={styles.infoCard}>
                         <View className="flex-row items-center mb-3">
-                            <ShieldCheck size={20} color="#D97706" className="mr-2" />
+                            <ShieldCheck size={20} color="#374151" className="mr-2" />
                             <Text style={styles.infoTitle}>Network Strategy</Text>
                         </View>
                         <Text style={styles.infoText}>
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     titleAccent: {
-        color: '#D97706',
+        color: '#374151',
     },
     subtitle: {
         fontSize: 16,
@@ -218,10 +218,10 @@ const styles = StyleSheet.create({
     primaryButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#D97706',
+        backgroundColor: '#374151',
         paddingVertical: 16,
         borderRadius: 16,
-        shadowColor: '#D97706',
+        shadowColor: '#374151',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 16,

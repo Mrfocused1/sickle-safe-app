@@ -85,7 +85,7 @@ export default function OrganizationInfoScreen() {
                                 options={ORG_TYPES}
                                 selectedValues={orgType}
                                 onChange={setOrgType}
-                                color="#D97706"
+                                color="#374151"
                                 maxSelections={1}
                             />
 
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     titleAccent: {
-        color: '#D97706',
+        color: '#374151',
     },
     subtitle: {
         fontSize: 16,
@@ -192,10 +192,10 @@ const styles = StyleSheet.create({
     primaryButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#D97706',
+        backgroundColor: '#374151',
         paddingVertical: 16,
         borderRadius: 16,
-        shadowColor: '#D97706',
+        shadowColor: '#374151',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 16,

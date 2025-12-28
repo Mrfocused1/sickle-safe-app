@@ -73,7 +73,7 @@ export default function VerificationScreen() {
                             <View style={styles.statusBadge}>
                                 <Text style={styles.statusBadgeText}>Pending Review</Text>
                             </View>
-                            <FileText size={20} color="#D97706" />
+                            <FileText size={20} color="#374151" />
                         </View>
                         <Text style={styles.statusTitle}>Organization Review</Text>
                         <Text style={styles.statusDescription}>
@@ -81,7 +81,7 @@ export default function VerificationScreen() {
                         </Text>
                         <View style={styles.timeline}>
                             <View style={styles.timelineItem}>
-                                <CheckCircle2 size={16} color="#D97706" />
+                                <CheckCircle2 size={16} color="#374151" />
                                 <Text style={styles.timelineText}>Profile Information Submitted</Text>
                             </View>
                             <View style={styles.timelineLine} />
@@ -105,7 +105,7 @@ export default function VerificationScreen() {
                                 value={agreedToTerms}
                                 onValueChange={setAgreedToTerms}
                                 trackColor={{ false: '#E5E7EB', true: '#D1D5DB' }}
-                                thumbColor={agreedToTerms ? '#D97706' : '#F3F4F6'}
+                                thumbColor={agreedToTerms ? '#374151' : '#F3F4F6'}
                             />
                         </View>
 
@@ -126,7 +126,7 @@ export default function VerificationScreen() {
                     </View>
 
                     <View style={styles.noticeBox}>
-                        <AlertCircle size={18} color="#D97706" className="mr-2" />
+                        <AlertCircle size={18} color="#374151" className="mr-2" />
                         <Text style={styles.noticeText}>
                             By proceeding, you confirm you are an authorized representative of the organization.
                         </Text>
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     titleAccent: {
-        color: '#D97706',
+        color: '#374151',
     },
     subtitle: {
         fontSize: 16,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
     },
     bold: {
         fontWeight: '800',
-        color: '#D97706',
+        color: '#374151',
     },
     timeline: {
         marginTop: 8,
@@ -326,10 +326,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#D97706',
+        backgroundColor: '#374151',
         paddingVertical: 16,
         borderRadius: 16,
-        shadowColor: '#D97706',
+        shadowColor: '#374151',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.3,
         shadowRadius: 16,
