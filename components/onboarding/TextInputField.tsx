@@ -9,9 +9,11 @@ interface TextInputFieldProps {
   placeholder?: string;
   color?: string;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad' | 'url';
   maxLength?: number;
   autoFocus?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
 }
 
 export default function TextInputField({
@@ -24,6 +26,8 @@ export default function TextInputField({
   keyboardType = 'default',
   maxLength,
   autoFocus = false,
+  multiline = false,
+  numberOfLines = 1,
 }: TextInputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -43,13 +47,16 @@ export default function TextInputField({
           onChangeText={onChange}
           placeholder={placeholder}
           placeholderTextColor="#9CA3AF"
-          style={styles.input}
+          style={[styles.input, multiline && styles.inputMultiline]}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           autoCapitalize={autoCapitalize}
           keyboardType={keyboardType}
           maxLength={maxLength}
           autoFocus={autoFocus}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
+          textAlignVertical={multiline ? 'top' : 'center'}
         />
         {value.length > 0 && (
           <Pressable onPress={handleClear} style={styles.clearButton}>
@@ -90,6 +97,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
     paddingVertical: 16,
+  },
+  inputMultiline: {
+    minHeight: 100,
+    paddingTop: 16,
+    paddingBottom: 16,
   },
   clearButton: {
     padding: 4,

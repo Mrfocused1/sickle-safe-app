@@ -98,24 +98,33 @@ export default function ChipSelection({
 }: ChipSelectionProps) {
   const handleToggle = (value: string) => {
     if (selectedValues.includes(value)) {
+      // Don't allow deselecting if maxSelections is 1 (mandatory selection)
+      if (maxSelections === 1) return;
       onChange(selectedValues.filter((v) => v !== value));
     } else {
       if (maxSelections && selectedValues.length >= maxSelections) {
-        // Replace the first selected item
-        onChange([...selectedValues.slice(1), value]);
+        if (maxSelections === 1) {
+          // Replace selection
+          onChange([value]);
+        } else {
+          // Replace first item (FIFO) or ignore? FIFO is usually better for multi-select max
+          onChange([...selectedValues.slice(1), value]);
+        }
       } else {
         onChange([...selectedValues, value]);
       }
     }
   };
 
-  const isMaxReached = maxSelections ? selectedValues.length >= maxSelections : false;
+  // Only "disable" (visual/interaction) if it's a multi-select and we want to stop at max
+  // For single-select (max=1), we never disable so they can switch.
+  const isMaxReached = maxSelections && maxSelections > 1 ? selectedValues.length >= maxSelections : false;
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
-        {maxSelections && (
+        {maxSelections && maxSelections > 1 && (
           <Text style={styles.counter}>
             {selectedValues.length}/{maxSelections}
           </Text>

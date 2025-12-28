@@ -33,7 +33,6 @@ export default function BackButton({
       ]}
     >
       <ChevronLeft size={24} color={color} />
-      <Text style={[styles.label, { color }]}>{label}</Text>
     </Pressable>
   );
 }

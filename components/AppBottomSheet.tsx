@@ -16,15 +16,16 @@ import {
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { BlurView } from 'expo-blur';
 import Slider from '@react-native-community/slider';
-import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome, Ionicons, Feather } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FundingOpportunity } from '../data/funding_data';
 
 const { width, height } = Dimensions.get('window');
 
-type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | 'metrics_info' | 'message_selection' | 'notification_settings' | 'edit_member' | 'create_event' | 'event_detail' | 'event_calendar' | null;
+type MetricType = 'pain' | 'hydration' | 'meds' | 'mood' | 'triggers' | 'crisis' | 'task' | 'wellness_summary' | 'member' | 'idea' | 'group' | 'log_selection' | 'community_actions' | 'activity_detail' | 'volunteer_actions' | 'volunteer_log_hours' | 'mission_detail' | 'invite_member' | 'manage_task' | 'request_task' | 'view_care_plan' | 'metrics_info' | 'message_selection' | 'notification_settings' | 'edit_member' | 'create_event' | 'event_detail' | 'event_calendar' | 'funding_detail' | 'funding_ai_helper' | 'learning_module' | 'module_lesson' | 'quiz_start' | 'quiz_question' | 'quiz_results' | null;
 
 interface AppBottomSheetProps {
     visible: boolean;
@@ -49,9 +50,13 @@ interface AppBottomSheetProps {
     onTriggersUpdate?: (triggers: string[], notes?: string) => void;
     onCrisisUpdate?: (startTime: string, level: number, notes?: string) => void;
     eventsList?: Array<{ id: number; title: string; category: string; date: string; time: string; location: string; volunteers: number; needed: number; image: string }>;
+    fundingItem?: FundingOpportunity;
+    educationModule?: any;
+    educationLesson?: any;
+    quizItem?: any;
 }
 
-export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, event, eventsList, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate, onCrisisUpdate }: AppBottomSheetProps) {
+export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, event, eventsList, fundingItem, educationModule, educationLesson, quizItem, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate, onCrisisUpdate }: AppBottomSheetProps) {
     const insets = useSafeAreaInsets();
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
@@ -79,6 +84,16 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     const [eventLink, setEventLink] = useState('');
     const [eventTitle, setEventTitle] = useState('');
     const [eventCategoryTitle, setEventCategoryTitle] = useState('');
+    const [fundingStep, setFundingStep] = useState(1);
+    const [fundingAnswers, setFundingAnswers] = useState<Record<string, string>>({});
+    const [isGeneratingFunding, setIsGeneratingFunding] = useState(false);
+    const [generatedFundingText, setGeneratedFundingText] = useState('');
+    const [currentLessonIndex, setCurrentLessonIndex] = useState(0);
+    const [moduleProgress, setModuleProgress] = useState<Record<string, number>>({});
+    const [quizAnswers, setQuizAnswers] = useState<Record<string, string | number>>({});
+    const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
+    const [quizResult, setQuizResult] = useState({ score: 0, passed: false });
+    const [showExplanation, setShowExplanation] = useState(false);
     const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Common SCD medications for quick suggestions
@@ -309,6 +324,20 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return { title: event?.title || 'Event Detail', icon: 'event', color: '#10b981' };
             case 'event_calendar':
                 return { title: 'Event Schedule', icon: 'event-note', color: '#6366f1' };
+            case 'funding_detail':
+                return { title: fundingItem?.title || 'Funding Detail', icon: fundingItem?.icon || 'account-balance', color: fundingItem?.color || '#10b981' };
+            case 'funding_ai_helper':
+                return { title: 'AI Application Helper', icon: 'auto-awesome', color: '#8b5cf6' };
+            case 'learning_module':
+                return { title: educationModule?.title || 'Learning Module', icon: educationModule?.icon || 'school', color: educationModule?.color || '#3b82f6' };
+            case 'module_lesson':
+                return { title: educationLesson?.title || 'Lesson', icon: 'menu-book', color: educationModule?.color || '#3b82f6' };
+            case 'quiz_start':
+                return { title: quizItem?.title || 'Quick Quiz', icon: quizItem?.icon || 'quiz', color: quizItem?.color || '#f59e0b' };
+            case 'quiz_question':
+                return { title: 'Question ' + (currentQuestionIdx + 1), icon: 'help_outline', color: quizItem?.color || '#f59e0b' };
+            case 'quiz_results':
+                return { title: 'Quiz Results', icon: 'assessment', color: quizResult.passed ? '#10b981' : '#f43f5e' };
             default:
                 return { title: '', icon: '', color: '#000' };
         }
@@ -1563,6 +1592,583 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         </View>
                     </View>
                 );
+            case 'funding_detail':
+                return (
+                    <View style={{ gap: 24 }}>
+                        {/* Summary Card */}
+                        <View style={{ backgroundColor: '#f8fafc', padding: 24, borderRadius: 24, borderWidth: 1, borderColor: '#f1f5f9' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                                <View style={{ width: 64, height: 64, borderRadius: 20, backgroundColor: (fundingItem?.color || '#3b82f6') + '15', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <MaterialIcons name={fundingItem?.icon as any || 'account-balance'} size={32} color={fundingItem?.color || '#3b82f6'} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 4 }}>{fundingItem?.title}</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#64748b' }}>{fundingItem?.organization}</Text>
+                                </View>
+                            </View>
+
+                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                                <View style={{ backgroundColor: '#ffffff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#475569' }}>{fundingItem?.category}</Text>
+                                </View>
+                                {fundingItem?.amount && (
+                                    <View style={{ backgroundColor: '#ffffff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: '#e2e8f0' }}>
+                                        <Text style={{ fontSize: 12, fontWeight: '700', color: '#10b981' }}>{fundingItem.amount}</Text>
+                                    </View>
+                                )}
+                            </View>
+                        </View>
+
+                        {/* Description Section */}
+                        <View style={{ gap: 10 }}>
+                            <Text style={styles.sectionLabel}>About this Support</Text>
+                            <Text style={{ fontSize: 15, color: '#4b5563', lineHeight: 24, fontWeight: '500' }}>{fundingItem?.description}</Text>
+                        </View>
+
+                        {/* AI Helper CTA */}
+                        {fundingItem?.requiresAIHelper && (
+                            <Pressable
+                                style={{
+                                    backgroundColor: '#8b5cf6',
+                                    padding: 20,
+                                    borderRadius: 20,
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: 12,
+                                    shadowColor: '#8b5cf6',
+                                    shadowOffset: { width: 0, height: 10 },
+                                    shadowOpacity: 0.2,
+                                    shadowRadius: 15,
+                                    elevation: 8
+                                }}
+                                onPress={() => {
+                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                    setActiveType('funding_ai_helper');
+                                    setFundingStep(1);
+                                }}
+                            >
+                                <Ionicons name="sparkles" size={24} color="#ffffff" />
+                                <Text style={{ color: '#ffffff', fontSize: 18, fontWeight: '800' }}>Apply with AI Helper</Text>
+                            </Pressable>
+                        )}
+
+                        {/* Eligibility Section */}
+                        <View style={{ gap: 12 }}>
+                            <Text style={styles.sectionLabel}>Who can apply?</Text>
+                            <View style={{ gap: 8 }}>
+                                {fundingItem?.eligibility.map((item, idx) => (
+                                    <View key={idx} style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
+                                        <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: fundingItem?.color || '#3b82f6' }} />
+                                        <Text style={{ fontSize: 14, fontWeight: '600', color: '#4b5563' }}>{item}</Text>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+
+                        {/* External Link */}
+                        <Pressable
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                backgroundColor: '#fdf4ff',
+                                padding: 16,
+                                borderRadius: 16,
+                                borderWidth: 1,
+                                borderColor: '#fae8ff'
+                            }}
+                            onPress={() => alert('Opening ' + fundingItem?.organization + ' official website...')}
+                        >
+                            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                                <MaterialIcons name="public" size={20} color="#a855f7" />
+                                <View>
+                                    <Text style={{ fontSize: 15, fontWeight: '700', color: '#7e22ce' }}>Official Website</Text>
+                                    <Text style={{ fontSize: 12, fontWeight: '500', color: '#a855f7' }}>View official application details</Text>
+                                </View>
+                            </View>
+                            <MaterialIcons name="chevron-right" size={20} color="#a855f7" />
+                        </Pressable>
+                    </View>
+                );
+            case 'funding_ai_helper':
+                const steps = [
+                    {
+                        title: 'Daily Challenges',
+                        question: 'How does Sickle Cell affect your daily activities (cooking, cleaning, etc.)?',
+                        key: 'daily_life'
+                    },
+                    {
+                        title: 'Pain & Crisis',
+                        question: 'Describe the frequency and severity of your pain crises.',
+                        key: 'pain'
+                    },
+                    {
+                        title: 'Mobility',
+                        question: 'How far can you walk without severe pain or exhaustion?',
+                        key: 'mobility'
+                    }
+                ];
+
+                const currentQuestion = steps[fundingStep - 1];
+
+                const generateApplication = () => {
+                    setIsGeneratingFunding(true);
+                    // Mock AI generation delay
+                    setTimeout(() => {
+                        let text = `Subject: Application for ${fundingItem?.title}\n\n`;
+                        text += `I am writing to formally apply for ${fundingItem?.title}. As someone living with Sickle Cell Disease, I face significant daily challenges that align with your support criteria.\n\n`;
+
+                        text += `Medical Impact:\n`;
+                        text += `Client experiences ${fundingAnswers.pain?.toLowerCase() || 'chronic pain'}. This results in ${fundingAnswers.daily_life?.toLowerCase() || 'difficulties with daily tasks'}.\n\n`;
+
+                        text += `Mobility Assessment:\n`;
+                        text += `Functional mobility is limited to ${fundingAnswers.mobility?.toLowerCase() || 'short distances'}, which severely impacts standard independent living capability.\n\n`;
+
+                        text += `Verification:\n`;
+                        text += `My clinical history confirms chronic symptomatic sickle cell with associated fatigue and pain. I request consideration for this assistance to help manage these extra costs.`;
+
+                        setGeneratedFundingText(text);
+                        setIsGeneratingFunding(false);
+                        setFundingStep(4);
+                    }, 2000);
+                };
+
+                return (
+                    <View style={{ flex: 1, gap: 20 }}>
+                        {fundingStep <= 3 ? (
+                            <>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                    <Text style={{ fontSize: 13, fontWeight: '800', color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: 1 }}>Step {fundingStep} of 3</Text>
+                                    <View style={{ flexDirection: 'row', gap: 4 }}>
+                                        {[1, 2, 3].map(s => (
+                                            <View key={s} style={{ width: 24, height: 4, borderRadius: 2, backgroundColor: s <= fundingStep ? '#8b5cf6' : '#e2e8f0' }} />
+                                        ))}
+                                    </View>
+                                </View>
+
+                                <View style={{ gap: 8 }}>
+                                    <Text style={{ fontSize: 24, fontWeight: '900', color: '#1e293b' }}>{currentQuestion.title}</Text>
+                                    <Text style={{ fontSize: 16, color: '#64748b', fontWeight: '500', lineHeight: 24 }}>{currentQuestion.question}</Text>
+                                </View>
+
+                                <TextInput
+                                    style={{
+                                        backgroundColor: '#f8fafc',
+                                        borderRadius: 20,
+                                        padding: 20,
+                                        height: 150,
+                                        fontSize: 16,
+                                        fontWeight: '500',
+                                        color: '#1e293b',
+                                        borderWidth: 1,
+                                        borderColor: '#e2e8f0',
+                                        textAlignVertical: 'top'
+                                    }}
+                                    placeholder="Type your answer here..."
+                                    multiline
+                                    value={fundingAnswers[currentQuestion.key] || ''}
+                                    onChangeText={(text) => setFundingAnswers(prev => ({ ...prev, [currentQuestion.key]: text }))}
+                                />
+
+                                <Pressable
+                                    style={{
+                                        backgroundColor: '#1F2937',
+                                        padding: 18,
+                                        borderRadius: 18,
+                                        alignItems: 'center',
+                                        marginTop: 'auto',
+                                        opacity: fundingAnswers[currentQuestion.key] ? 1 : 0.5
+                                    }}
+                                    disabled={!fundingAnswers[currentQuestion.key]}
+                                    onPress={() => {
+                                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                        if (fundingStep < 3) {
+                                            setFundingStep(fundingStep + 1);
+                                        } else {
+                                            generateApplication();
+                                        }
+                                    }}
+                                >
+                                    <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '800' }}>
+                                        {fundingStep < 3 ? 'Continue' : 'Generate Application'}
+                                    </Text>
+                                </Pressable>
+                            </>
+                        ) : fundingStep === 4 ? (
+                            <View style={{ flex: 1, gap: 20 }}>
+                                <View style={{ alignItems: 'center', paddingVertical: 20 }}>
+                                    {isGeneratingFunding ? (
+                                        <>
+                                            <Ionicons name="sparkles" size={48} color="#8b5cf6" style={{ marginBottom: 16 }} />
+                                            <Text style={{ fontSize: 20, fontWeight: '900', color: '#1e293b' }}>Generating Text...</Text>
+                                            <Text style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>Converting your answers to medical terminology</Text>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+                                                <MaterialIcons name="check" size={28} color="#10b981" />
+                                            </View>
+                                            <Text style={{ fontSize: 20, fontWeight: '900', color: '#1e293b' }}>Application Ready</Text>
+                                            <Text style={{ fontSize: 14, color: '#64748b', marginTop: 8 }}>Review and copy the generated text below</Text>
+                                        </>
+                                    )}
+                                </View>
+
+                                {!isGeneratingFunding && (
+                                    <>
+                                        <View style={{ backgroundColor: '#f8fafc', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: '#e2e8f0', flex: 1 }}>
+                                            <ScrollView showsVerticalScrollIndicator={false}>
+                                                <Text style={{ fontSize: 14, color: '#475569', lineHeight: 22, fontWeight: '500' }}>{generatedFundingText}</Text>
+                                            </ScrollView>
+                                        </View>
+
+                                        <View style={{ flexDirection: 'row', gap: 12 }}>
+                                            <Pressable
+                                                style={{ flex: 1, backgroundColor: '#f1f5f9', padding: 18, borderRadius: 18, alignItems: 'center' }}
+                                                onPress={() => {
+                                                    setFundingStep(1);
+                                                    setFundingAnswers({});
+                                                    setActiveType('funding_detail');
+                                                }}
+                                            >
+                                                <Text style={{ color: '#64748b', fontSize: 16, fontWeight: '800' }}>Discard</Text>
+                                            </Pressable>
+                                            <Pressable
+                                                style={{ flex: 2, backgroundColor: '#8b5cf6', padding: 18, borderRadius: 18, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 }}
+                                                onPress={() => {
+                                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                                    alert('Application text copied to clipboard!');
+                                                    onClose();
+                                                }}
+                                            >
+                                                <MaterialIcons name="content-copy" size={20} color="#ffffff" />
+                                                <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '800' }}>Copy to Clipboard</Text>
+                                            </Pressable>
+                                        </View>
+                                    </>
+                                )}
+                            </View>
+                        ) : null}
+                    </View>
+                );
+            case 'learning_module':
+                return (
+                    <View style={{ gap: 24 }}>
+                        {/* Module Overview Card */}
+                        <View style={{ backgroundColor: (educationModule?.bg || '#eff6ff'), padding: 24, borderRadius: 28, borderWidth: 1, borderColor: (educationModule?.border || '#dbeafe') }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                                <View style={{ width: 64, height: 64, borderRadius: 22, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <MaterialIcons name={educationModule?.icon as any || 'school'} size={32} color={educationModule?.color || '#3b82f6'} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#111827', marginBottom: 4 }}>{educationModule?.title}</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '600', color: '#64748b' }}>{educationModule?.totalDuration || '20 min'} • {educationModule?.lessons?.length || 0} Lessons</Text>
+                                </View>
+                            </View>
+                            <Text style={{ fontSize: 14, color: '#4b5563', lineHeight: 22, fontWeight: '500' }}>{educationModule?.description}</Text>
+                        </View>
+
+                        {/* Lesson List */}
+                        <View style={{ gap: 12 }}>
+                            <Text style={styles.sectionLabel}>Course Content</Text>
+                            {(educationModule?.lessons || []).map((lesson: any, idx: number) => {
+                                const isCompleted = (moduleProgress[educationModule?.id] || 0) > (idx / educationModule?.lessons?.length);
+                                return (
+                                    <Pressable
+                                        key={idx}
+                                        onPress={() => {
+                                            Haptics.selectionAsync();
+                                            setCurrentLessonIndex(idx);
+                                            setActiveType('module_lesson');
+                                        }}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            backgroundColor: '#fff',
+                                            padding: 16,
+                                            borderRadius: 20,
+                                            borderWidth: 1,
+                                            borderColor: '#f1f5f9',
+                                            gap: 16
+                                        }}
+                                    >
+                                        <View style={{ width: 32, height: 32, borderRadius: 10, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Text style={{ fontSize: 14, fontWeight: '800', color: '#94a3b8' }}>{idx + 1}</Text>
+                                        </View>
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ fontSize: 15, fontWeight: '700', color: '#1e293b', marginBottom: 2 }}>{lesson.title}</Text>
+                                            <Text style={{ fontSize: 12, color: '#94a3b8', fontWeight: '600' }}>{lesson.duration}</Text>
+                                        </View>
+                                        <MaterialIcons name={isCompleted ? "check-circle" : "play-circle-outline"} size={22} color={isCompleted ? "#10b981" : "#cbd5e1"} />
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+                    </View>
+                );
+            case 'module_lesson':
+                const currentLesson = educationModule?.lessons?.[currentLessonIndex];
+                const isLastLesson = currentLessonIndex === educationModule?.lessons?.length - 1;
+                return (
+                    <View style={{ flex: 1 }}>
+                        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+                            <View style={{ gap: 24 }}>
+                                <View style={{ gap: 8 }}>
+                                    <Text style={{ fontSize: 12, fontWeight: '800', color: (educationModule?.color || '#3b82f6'), textTransform: 'uppercase', letterSpacing: 1 }}>
+                                        LESSON {currentLessonIndex + 1} OF {educationModule?.lessons?.length}
+                                    </Text>
+                                    <Text style={{ fontSize: 24, fontWeight: '900', color: '#111827' }}>{currentLesson?.title}</Text>
+                                </View>
+
+                                <Text style={{ fontSize: 16, color: '#475569', lineHeight: 28, fontWeight: '500' }}>
+                                    {currentLesson?.content}
+                                </Text>
+
+                                {currentLesson?.keyPoints && (
+                                    <View style={{ backgroundColor: '#f8fafc', padding: 24, borderRadius: 24, gap: 16 }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                            <MaterialIcons name="auto-awesome" size={18} color={educationModule?.color || '#3b82f6'} />
+                                            <Text style={{ fontSize: 15, fontWeight: '800', color: '#1e293b' }}>Key Takeaways</Text>
+                                        </View>
+                                        <View style={{ gap: 12 }}>
+                                            {currentLesson.keyPoints.map((point: string, i: number) => (
+                                                <View key={i} style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                                                    <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: (educationModule?.color || '#3b82f6') }} />
+                                                    <Text style={{ fontSize: 14, color: '#4b5563', fontWeight: '600' }}>{point}</Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    </View>
+                                )}
+                            </View>
+                        </ScrollView>
+
+                        <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', paddingTop: 20, flexDirection: 'row', gap: 12 }}>
+                            <Pressable
+                                onPress={() => setActiveType('learning_module')}
+                                style={{ flex: 1, height: 56, borderRadius: 18, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <Text style={{ fontSize: 16, fontWeight: '700', color: '#64748b' }}>Exit</Text>
+                            </Pressable>
+                            <Pressable
+                                onPress={() => {
+                                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                    if (!isLastLesson) {
+                                        setCurrentLessonIndex(currentLessonIndex + 1);
+                                    } else {
+                                        // Update progress and exit
+                                        setModuleProgress(prev => ({
+                                            ...prev,
+                                            [educationModule?.id]: 1
+                                        }));
+                                        setActiveType('learning_module');
+                                    }
+                                }}
+                                style={{ flex: 2, height: 56, borderRadius: 18, backgroundColor: (educationModule?.color || '#3b82f6'), alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 }}
+                            >
+                                <Text style={{ fontSize: 16, fontWeight: '700', color: '#fff' }}>
+                                    {isLastLesson ? 'Complete Module' : 'Next Lesson'}
+                                </Text>
+                                <MaterialIcons name="arrow-forward" size={18} color="#fff" />
+                            </Pressable>
+                        </View>
+                    </View>
+                );
+            case 'quiz_start':
+                return (
+                    <View style={{ gap: 24 }}>
+                        <View style={{ backgroundColor: (quizItem?.color || '#f59e0b') + '10', padding: 24, borderRadius: 28, borderWidth: 1, borderColor: (quizItem?.color || '#f59e0b') + '20' }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+                                <View style={{ width: 64, height: 64, borderRadius: 22, backgroundColor: '#ffffff', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <MaterialIcons name={quizItem?.icon as any || 'quiz'} size={32} color={quizItem?.color || '#f59e0b'} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <View className="bg-amber-50 self-start px-2 py-0.5 rounded-md mb-1">
+                                        <Text className="text-amber-600 text-[10px] font-black uppercase">{quizItem?.subtitle || 'CHALLENGE'}</Text>
+                                    </View>
+                                    <Text style={{ fontSize: 20, fontWeight: '900', color: '#111827' }}>{quizItem?.title}</Text>
+                                </View>
+                            </View>
+                            <Text style={{ fontSize: 14, color: '#4b5563', lineHeight: 22, fontWeight: '500' }}>{quizItem?.description}</Text>
+                        </View>
+
+                        <View style={{ gap: 12 }}>
+                            <Text style={styles.sectionLabel}>Quiz Details</Text>
+                            <View className="flex-row items-center justify-between bg-white p-4 rounded-2xl border border-gray-100">
+                                <View className="flex-row items-center gap-3">
+                                    <Feather name="help-circle" size={18} color="#64748b" />
+                                    <Text className="text-gray-600 font-bold">Total Questions</Text>
+                                </View>
+                                <Text className="text-gray-900 font-black">{quizItem?.questions?.length || 0}</Text>
+                            </View>
+                            <View className="flex-row items-center justify-between bg-white p-4 rounded-2xl border border-gray-100">
+                                <View className="flex-row items-center gap-3">
+                                    <Feather name="target" size={18} color="#64748b" />
+                                    <Text className="text-gray-600 font-bold">Passing Score</Text>
+                                </View>
+                                <Text className="text-gray-900 font-black">{quizItem?.passingScore}%</Text>
+                            </View>
+                        </View>
+
+                        <Pressable
+                            style={{ backgroundColor: quizItem?.color || '#8b5cf6', padding: 20, borderRadius: 20, alignItems: 'center', marginTop: 20 }}
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                                setQuizAnswers({});
+                                setCurrentQuestionIdx(0);
+                                setActiveType('quiz_question');
+                            }}
+                        >
+                            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '800' }}>Start Quiz</Text>
+                        </Pressable>
+                    </View>
+                );
+            case 'quiz_question':
+                const q = quizItem?.questions?.[currentQuestionIdx];
+                const progress = ((currentQuestionIdx + 1) / (quizItem?.questions?.length || 1)) * 100;
+
+                return (
+                    <View style={{ flex: 1 }}>
+                        <View style={{ height: 4, backgroundColor: '#f1f5f9', borderRadius: 2, marginBottom: 24, overflow: 'hidden' }}>
+                            <View style={{ width: `${progress}%`, height: '100%', backgroundColor: quizItem?.color || '#f59e0b' }} />
+                        </View>
+
+                        <Text style={{ fontSize: 18, fontWeight: '800', color: '#111827', lineHeight: 28, marginBottom: 32 }}>
+                            {q?.question}
+                        </Text>
+
+                        <View style={{ gap: 12 }}>
+                            {(q?.options || []).map((option: string, idx: number) => {
+                                const isSelected = quizAnswers[q.id] === option;
+                                return (
+                                    <Pressable
+                                        key={idx}
+                                        onPress={() => {
+                                            Haptics.selectionAsync();
+                                            setQuizAnswers(prev => ({ ...prev, [q.id]: option }));
+                                            setShowExplanation(true);
+                                        }}
+                                        disabled={showExplanation}
+                                        style={{
+                                            padding: 20,
+                                            borderRadius: 20,
+                                            backgroundColor: isSelected ? (showExplanation ? (option === q.correctAnswer ? '#f0fdf4' : '#fef2f2') : '#f8fbfc') : '#fff',
+                                            borderWidth: 2,
+                                            borderColor: isSelected ? (showExplanation ? (option === q.correctAnswer ? '#10b981' : '#f43f5e') : (quizItem?.color || '#8b5cf6')) : '#f1f5f9',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between'
+                                        }}
+                                    >
+                                        <Text style={{ fontSize: 15, fontWeight: '700', color: isSelected ? '#111827' : '#475569', flex: 1 }}>
+                                            {option}
+                                        </Text>
+                                        {showExplanation && (
+                                            <MaterialIcons
+                                                name={option === q.correctAnswer ? "check-circle" : (isSelected ? "cancel" : "radio-button-unchecked")}
+                                                size={24}
+                                                color={option === q.correctAnswer ? "#10b981" : (isSelected ? "#f43f5e" : "#cbd5e1")}
+                                            />
+                                        )}
+                                    </Pressable>
+                                );
+                            })}
+                        </View>
+
+                        {showExplanation && (
+                            <View style={{ backgroundColor: '#f8fafc', padding: 20, borderRadius: 20, marginTop: 24, borderLeftWidth: 4, borderLeftColor: quizAnswers[q.id] === q.correctAnswer ? '#10b981' : '#f43f5e' }}>
+                                <Text style={{ fontSize: 12, fontWeight: '800', color: quizAnswers[q.id] === q.correctAnswer ? '#10b981' : '#f43f5e', textTransform: 'uppercase', marginBottom: 4 }}>
+                                    {quizAnswers[q.id] === q.correctAnswer ? 'Correct!' : 'Keep Learning'}
+                                </Text>
+                                <Text style={{ fontSize: 14, color: '#475569', lineHeight: 22, fontWeight: '500' }}>
+                                    {q.explanation}
+                                </Text>
+                            </View>
+                        )}
+
+                        {showExplanation && (
+                            <Pressable
+                                style={{ backgroundColor: '#111827', padding: 20, borderRadius: 20, alignItems: 'center', marginTop: 'auto' }}
+                                onPress={() => {
+                                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                    if (currentQuestionIdx < (quizItem?.questions?.length - 1)) {
+                                        setCurrentQuestionIdx(currentQuestionIdx + 1);
+                                        setShowExplanation(false);
+                                    } else {
+                                        // Finalize quiz
+                                        let correctCount = 0;
+                                        quizItem.questions.forEach((quest: any) => {
+                                            if (quizAnswers[quest.id] === quest.correctAnswer) correctCount++;
+                                        });
+                                        const finalScore = Math.round((correctCount / quizItem.questions.length) * 100);
+                                        setQuizResult({ score: finalScore, passed: finalScore >= quizItem.passingScore });
+                                        if (finalScore >= quizItem.passingScore) {
+                                            setShowConfetti(true);
+                                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                        } else {
+                                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+                                        }
+                                        setActiveType('quiz_results');
+                                    }
+                                }}
+                            >
+                                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800' }}>
+                                    {currentQuestionIdx < (quizItem?.questions?.length - 1) ? 'Next Question' : 'View Results'}
+                                </Text>
+                            </Pressable>
+                        )}
+                    </View>
+                );
+            case 'quiz_results':
+                return (
+                    <View style={{ alignItems: 'center', gap: 24 }}>
+                        <View style={{ width: 120, height: 120, borderRadius: 60, backgroundColor: quizResult.passed ? '#f0fdf4' : '#fff1f2', alignItems: 'center', justifyContent: 'center' }}>
+                            <MaterialIcons name={quizResult.passed ? "auto-awesome" : "sentiment-very-dissatisfied"} size={64} color={quizResult.passed ? "#10b981" : "#f43f5e"} />
+                        </View>
+
+                        <View style={{ alignItems: 'center' }}>
+                            <Text style={{ fontSize: 32, fontWeight: '900', color: '#111827' }}>{quizResult.score}%</Text>
+                            <Text style={{ fontSize: 18, fontWeight: '700', color: quizResult.passed ? '#10b981' : '#f43f5e', marginTop: 4 }}>
+                                {quizResult.passed ? 'Excellent! Quiz Passed' : 'Not quite. Try again!'}
+                            </Text>
+                        </View>
+
+                        <View style={{ width: '100%', backgroundColor: '#f8fafc', padding: 24, borderRadius: 28, gap: 16 }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b' }}>Weekly Streak</Text>
+                                <Text style={{ fontSize: 14, fontWeight: '800', color: '#fbbf24' }}>5 Days 🔥</Text>
+                            </View>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b' }}>Accuracy</Text>
+                                <Text style={{ fontSize: 14, fontWeight: '800', color: '#1e293b' }}>{quizResult.passed ? 'High' : 'Improving'}</Text>
+                            </View>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', gap: 12, width: '100%' }}>
+                            <Pressable
+                                style={{ flex: 1, backgroundColor: '#f1f5f9', padding: 18, borderRadius: 18, alignItems: 'center' }}
+                                onPress={() => {
+                                    setQuizAnswers({});
+                                    setCurrentQuestionIdx(0);
+                                    setShowExplanation(false);
+                                    setActiveType('quiz_start');
+                                }}
+                            >
+                                <Text style={{ color: '#64748b', fontSize: 16, fontWeight: '800' }}>Retake</Text>
+                            </Pressable>
+                            <Pressable
+                                style={{ flex: 2, backgroundColor: '#111827', padding: 18, borderRadius: 18, alignItems: 'center' }}
+                                onPress={() => {
+                                    onClose();
+                                    setShowConfetti(false);
+                                }}
+                            >
+                                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '800' }}>Complete</Text>
+                            </Pressable>
+                        </View>
+                    </View>
+                );
             case 'event_calendar':
                 return (
                     <View style={{ gap: 24 }}>
@@ -1673,7 +2279,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={[
                             styles.content,
-                            (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event') && { height: height * 0.9 }
+                            (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event' || activeType === 'volunteer_actions' || activeType === 'volunteer_log_hours' || activeType === 'log_selection' || activeType === 'community_actions' || activeType === 'funding_detail' || activeType === 'funding_ai_helper' || activeType === 'learning_module' || activeType === 'module_lesson') && { height: height * 0.9 }
                         ]}
                     >
                         <View style={styles.modalCard}>
@@ -1701,7 +2307,9 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                                         activeType === 'request_task' ? 'Be a hero today' :
                                                                             activeType === 'event_calendar' ? 'View upcoming community initiatives' :
                                                                                 activeType === 'event_detail' ? 'Event Information' :
-                                                                                    'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                                                                    activeType === 'learning_module' ? 'Master your health journey' :
+                                                                                        activeType === 'module_lesson' ? 'Topic Deep Dive' :
+                                                                                            'Recording for Today, ' + new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                                     </Text>
                                 </View>
                                 <Pressable onPress={goBack} style={styles.closeButton}>
@@ -1733,7 +2341,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
 
                             </ScrollView>
 
-                            {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && (
+                            {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && activeType !== 'learning_module' && activeType !== 'module_lesson' && (
                                 <View style={{
                                     paddingHorizontal: 24,
                                     paddingTop: 16,

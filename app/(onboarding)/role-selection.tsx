@@ -3,7 +3,7 @@ import { View, Text, Pressable, ScrollView, Image, Dimensions, StyleSheet } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Heart, Users, HandHeart } from 'lucide-react-native';
+import { Heart, Users, HandHeart, Gift } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Video, ResizeMode } from 'expo-av';
 import OnboardingProgress from '../../components/OnboardingProgress';
@@ -11,7 +11,7 @@ import { BackButton } from '../../components/onboarding';
 
 const { width } = Dimensions.get('window');
 
-type Role = 'overcomer' | 'helper' | 'volunteer';
+type Role = 'overcomer' | 'helper' | 'volunteer' | 'charity';
 
 interface RoleData {
   title: string;
@@ -53,6 +53,14 @@ export default function RoleSelectionScreen() {
       color: '#3B82F6',
       bgColor: '#EFF6FF',
     },
+    charity: {
+      title: 'The Charity',
+      subtitle: 'Organization / Foundation',
+      description: 'Support the community through funding, awareness, and centralized resource management.',
+      icon: Gift,
+      color: '#D97706',
+      bgColor: '#FFFBEB',
+    },
   };
 
   const handleContinue = () => {
@@ -60,8 +68,10 @@ export default function RoleSelectionScreen() {
       router.push('/(onboarding)/overcomer/productivity');
     } else if (selectedRole === 'helper') {
       router.push('/(onboarding)/helper/real-time-alerts');
-    } else {
+    } else if (selectedRole === 'volunteer') {
       router.push('/(onboarding)/volunteer/advocacy');
+    } else {
+      router.push('/(onboarding)/charity/organization-info');
     }
   };
 
@@ -99,7 +109,7 @@ export default function RoleSelectionScreen() {
         {/* Content */}
         <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
           {/* Header */}
-          <View className="mb-6">
+          <View className="mt-10 mb-6">
             <Text className="text-4xl font-black text-gray-900 leading-none tracking-tighter mb-4">
               Step Into Your{'\n'}
               <Text className="text-red-500">New Role</Text>

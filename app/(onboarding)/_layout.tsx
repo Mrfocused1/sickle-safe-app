@@ -18,6 +18,10 @@ export default function OnboardingLayout() {
             <Stack.Screen name="volunteer/advocacy" />
             <Stack.Screen name="overcomer/safety-net" />
             <Stack.Screen name="overcomer/triggers" />
+            <Stack.Screen name="charity/organization-info" />
+            <Stack.Screen name="charity/funding-goals" />
+            <Stack.Screen name="charity/impact-areas" />
+            <Stack.Screen name="charity/verification" />
         </Stack>
     );
 }

@@ -111,6 +111,9 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
   }, [visible]);
 
   const handleClose = (callback?: () => void) => {
+    // If a transition callback is provided, run it immediately for zero-lag navigation
+    if (callback) callback();
+
     Animated.parallel([
       Animated.timing(backdropOpacity, { toValue: 0, duration: 200, useNativeDriver: true }),
       Animated.timing(scaleAnim1, { toValue: 0, duration: 150, useNativeDriver: true }),
@@ -122,7 +125,6 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
       Animated.timing(widgetAnim3, { toValue: 0, duration: 150, useNativeDriver: true }),
     ]).start(() => {
       onClose();
-      if (callback) setTimeout(callback, 50);
     });
   };
 
@@ -162,11 +164,17 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
         </Animated.View>
 
         <Animated.View style={[styles.menuItem, styles.item2Position, { transform: [{ scale: scaleAnim2 }] }]}>
-          <Pressable onPress={() => { alert('Log Wellness (Coming Soon)'); handleClose(); }} style={styles.actionButton}>
-            <View style={[styles.iconContainer, styles.greenIcon]}>
-              <Feather name="activity" size={28} color="#ffffff" />
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              handleClose(() => router.push('/(overcomer)/funding'));
+            }}
+            style={styles.actionButton}
+          >
+            <View style={[styles.iconContainer, styles.emeraldIcon]}>
+              <MaterialIcons name="account-balance" size={28} color="#ffffff" />
             </View>
-            <Text style={styles.label}>Wellness</Text>
+            <Text style={styles.label}>Funding</Text>
           </Pressable>
         </Animated.View>
 
@@ -193,6 +201,7 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
             <Text style={styles.label}>New Post</Text>
           </Pressable>
         </Animated.View>
+
       </View>
 
       {/* Close Button */}
@@ -399,6 +408,9 @@ const styles = StyleSheet.create({
   },
   orangeIcon: {
     backgroundColor: '#F59E0B',
+  },
+  emeraldIcon: {
+    backgroundColor: '#10B981',
   },
   label: {
     marginTop: 6,

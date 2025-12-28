@@ -91,7 +91,7 @@ export default function OvercomerLayout() {
           name="community"
           options={{
             title: 'Community',
-            tabBarIcon: ({ color }) => <MaterialIcons name="forum" size={24} color={color} />,
+            tabBarIcon: ({ color }) => <MaterialIcons name="groups" size={24} color={color} />,
           }}
         />
         <Tabs.Screen
@@ -99,6 +99,12 @@ export default function OvercomerLayout() {
           options={{
             title: 'Profile',
             tabBarIcon: ({ color }) => <MaterialIcons name="person" size={24} color={color} />,
+          }}
+        />
+        <Tabs.Screen
+          name="funding"
+          options={{
+            href: null,
           }}
         />
       </Tabs>
