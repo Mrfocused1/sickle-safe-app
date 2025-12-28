@@ -121,10 +121,9 @@ export default function RoleSelectionScreen() {
 
           {/* Role Cards */}
           <View className="mb-6">
-            {(Object.keys(rolesData) as Role[]).map((role) => {
+            {(['overcomer', 'helper', 'volunteer', 'charity'] as Role[]).map((role) => {
               const roleData = rolesData[role];
-              // Temporarily replace Icon with a simple View to test for context issues
-              // const Icon = roleData.icon;
+              const Icon = roleData.icon;
               const isSelected = selectedRole === role;
 
               return (
@@ -146,7 +145,7 @@ export default function RoleSelectionScreen() {
                     className="w-14 h-14 rounded-2xl items-center justify-center mr-4"
                     style={{ backgroundColor: roleData.bgColor }}
                   >
-                    <View className="w-6 h-6 rounded-full" style={{ backgroundColor: roleData.color }} />
+                    <Icon size={24} color={roleData.color} />
                   </View>
                   <View className="flex-1">
                     <Text className={`font-black text-lg ${isSelected ? 'text-gray-900' : 'text-gray-400'}`}>
