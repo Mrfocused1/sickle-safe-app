@@ -1,67 +1,51 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, Image, Dimensions, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, ImageBackground, Dimensions, StyleSheet, StatusBar as RNStatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Heart, Users, HandHeart, Gift } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Video, ResizeMode } from 'expo-av';
-import OnboardingProgress from '../../components/OnboardingProgress';
-import { BackButton } from '../../components/onboarding';
+import { X, Check } from 'lucide-react-native';
+import { BlurView } from 'expo-blur';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 type Role = 'overcomer' | 'helper' | 'volunteer' | 'charity';
 
 interface RoleData {
+  id: Role;
   title: string;
   subtitle: string;
   description: string;
-  icon: typeof Heart;
-  color: string;
-  bgColor: string;
 }
 
-// RoleSelectionScreen moved rolesData inside
-
 export default function RoleSelectionScreen() {
-  console.log('RoleSelectionScreen rendering...');
   const [selectedRole, setSelectedRole] = useState<Role>('overcomer');
 
-  const rolesData: Record<Role, RoleData> = {
-    overcomer: {
+  const roles: RoleData[] = [
+    {
+      id: 'overcomer',
       title: 'The Overcomer',
       subtitle: 'Patient / Self-Manager',
       description: 'Track pain crises, hydration, and manage your health journey with personalized insights.',
-      icon: Heart,
-      color: '#EF4444',
-      bgColor: '#FEF2F2',
     },
-    helper: {
+    {
+      id: 'helper',
       title: 'The Helper',
       subtitle: 'Guardian or Carer',
       description: 'Monitor loved ones, receive alerts, and coordinate care with shared health logs.',
-      icon: Users,
-      color: '#10B981',
-      bgColor: '#ECFDF5',
     },
-    volunteer: {
+    {
+      id: 'volunteer',
       title: 'The Volunteer',
       subtitle: 'Community Supporter',
       description: 'Connect with patients and support community events, contributing to a stronger network of care.',
-      icon: HandHeart,
-      color: '#3B82F6',
-      bgColor: '#EFF6FF',
     },
-    charity: {
+    {
+      id: 'charity',
       title: 'The Charity',
       subtitle: 'Organization / Foundation',
       description: 'Support the community through funding, awareness, and centralized resource management.',
-      icon: Gift,
-      color: '#D97706',
-      bgColor: '#f8fafc',
     },
-  };
+  ];
 
   const handleContinue = () => {
     if (selectedRole === 'overcomer') {
@@ -75,119 +59,332 @@ export default function RoleSelectionScreen() {
     }
   };
 
-  const currentRoleData = rolesData[selectedRole];
+  const selectedData = roles.find(r => r.id === selectedRole)!;
 
   return (
-    <View className="flex-1 bg-white">
-      <StatusBar style="dark" />
+    <View style={styles.container}>
+      <StatusBar style="light" />
 
-      {/* Video Background */}
-      <Video
-        source={{ uri: 'https://assets.mixkit.co/videos/preview/mixkit-diverse-group-of-people-talking-and-gesticulating-41310-large.mp4' }}
-        rate={1.0}
-        volume={0}
-        isMuted={true}
-        resizeMode={ResizeMode.COVER}
-        shouldPlay
-        isLooping
+      <ImageBackground
+        source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9OlBEHzyWfQvRImMsHQ4nISl3Pk7CobJvJHsgFIkNL2DYi9m7izL_W7_-Y2HmgF9aaZDW-K98s_sgbvaj0S1f3oHTFPntMqmYcoGKwIZPygTAuqH23J7PZ6HYSMULdTSCnMAv56h7zlRhfiGSd7dNV2hhuSSVlYKwEoMm5Fhvyf75BUEsJ62V9LmTuuH4F1-KDAmIU6_o9uJMHQ07uqKqtqlc9WVOMHKBlOfI9eAriyTPIjJkrtQ_Ie6Aqw0A4do9gEsAraW60x28' }}
         style={StyleSheet.absoluteFill}
-      />
+        resizeMode="cover"
+      >
+        <View style={styles.overlay} />
 
-      <LinearGradient
-        colors={['rgba(255,255,255,0.6)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.9)']}
-        className="absolute inset-0"
-      />
-
-      <SafeAreaView className="flex-1">
-        {/* Header with Back Button */}
-        <View className="flex-row items-center justify-between px-4 pt-2">
-          <BackButton />
-          <OnboardingProgress currentStep={3} variant="light" />
-          <View style={{ width: 80 }} />
-        </View>
-
-        {/* Content */}
-        <ScrollView className="flex-1 px-8" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+        <SafeAreaView style={styles.safeArea}>
           {/* Header */}
-          <View className="mt-10 mb-6">
-            <Text className="text-4xl font-black text-gray-900 leading-none tracking-tighter mb-4">
-              Step Into Your{'\n'}
-              <Text className="text-red-500">New Role</Text>
-            </Text>
-            <Text className="text-base text-gray-700 font-bold leading-relaxed">
-              Select how you'll be participating in the community.
-            </Text>
+          <View style={styles.header}>
+            <View style={styles.progressContainer}>
+              <View style={styles.dot} />
+              <View style={styles.dot} />
+              <View style={[styles.dot, styles.activeDot]} />
+            </View>
+            <Pressable style={styles.closeButton} onPress={() => router.back()}>
+              <X size={20} color="#fff" />
+            </Pressable>
           </View>
 
-          {/* Role Cards */}
-          <View className="mb-6">
-            {(['overcomer', 'helper', 'volunteer', 'charity'] as Role[]).map((role) => {
-              const roleData = rolesData[role];
-              const Icon = roleData.icon;
-              const isSelected = selectedRole === role;
-
-              return (
-                <Pressable
-                  key={role}
-                  onPress={() => setSelectedRole(role)}
-                  className={`p-5 rounded-[32px] border-2 flex-row items-center mb-4 ${isSelected ? 'border-red-600 bg-white' : 'border-gray-200'}`}
-                  style={isSelected ? {
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 20 },
-                    shadowOpacity: 0.25,
-                    shadowRadius: 25,
-                    elevation: 10,
-                  } : {
-                    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-                  }}
-                >
-                  <View
-                    className="w-14 h-14 rounded-2xl items-center justify-center mr-4"
-                    style={{ backgroundColor: roleData.bgColor }}
-                  >
-                    <Icon size={24} color={roleData.color} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className={`font-black text-lg ${isSelected ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {roleData.title}
-                    </Text>
-                    <Text className={`font-bold text-[10px] uppercase tracking-widest mt-0.5 ${isSelected ? 'text-red-600' : 'text-gray-400'}`}>
-                      {roleData.subtitle}
-                    </Text>
-                  </View>
-                  <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${isSelected ? 'border-red-600 bg-red-600' : 'border-gray-300'}`}>
-                    {isSelected && <View className="w-2 h-2 rounded-full bg-white" />}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* Description Panel */}
-          <View className="bg-red-50 p-6 rounded-3xl border border-red-100 mb-8">
-            <Text className="text-gray-700 text-sm leading-relaxed font-bold">
-              {currentRoleData.description}
-            </Text>
-          </View>
-        </ScrollView>
-
-        {/* Bottom CTA */}
-        <View className="px-8 pb-10">
-          <Pressable
-            onPress={handleContinue}
-            className="w-full bg-red-600 py-4 rounded-[16px] active:scale-[0.98]"
-            style={{
-              shadowColor: '#7f1d1d',
-              shadowOffset: { width: 0, height: 8 },
-              shadowOpacity: 0.2,
-              shadowRadius: 16,
-              elevation: 8,
-            }}
+          <ScrollView
+            className="flex-1"
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
           >
-            <Text className="text-white font-extrabold text-base text-center">Continue</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+            {/* Title Section */}
+            <View style={styles.titleSection}>
+              <Text style={styles.title}>Step Into Your{'\n'}New Role</Text>
+              <Text style={styles.subtitle}>Select how you'll be participating in the community.</Text>
+            </View>
+
+            {/* Selection Grid */}
+            <View style={styles.gridContainer}>
+              {/* Column 1 */}
+              <View style={styles.column}>
+                {/* Overcomer Card */}
+                <RoleCard
+                  role={roles[0]}
+                  isSelected={selectedRole === 'overcomer'}
+                  onSelect={() => setSelectedRole('overcomer')}
+                />
+
+                {/* Dynamic Info Bubble - Shows below the selected role if it's in this column */}
+                {(selectedRole === 'overcomer' || selectedRole === 'charity') && (
+                  <View style={styles.infoBubble}>
+                    <View style={[styles.bubbleArrow, selectedRole === 'charity' ? styles.arrowBottom : styles.arrowTop]} />
+                    <Text style={styles.infoText}>{selectedData.description}</Text>
+                  </View>
+                )}
+
+                {/* Charity Card */}
+                <RoleCard
+                  role={roles[3]}
+                  isSelected={selectedRole === 'charity'}
+                  onSelect={() => setSelectedRole('charity')}
+                />
+              </View>
+
+              {/* Column 2 */}
+              <View style={[styles.column, { paddingTop: 40 }]}>
+                {/* Helper Card */}
+                <RoleCard
+                  role={roles[1]}
+                  isSelected={selectedRole === 'helper'}
+                  onSelect={() => setSelectedRole('helper')}
+                />
+
+                {/* Dynamic Info Bubble - Shows between cards for helper/volunteer */}
+                {(selectedRole === 'helper' || selectedRole === 'volunteer') && (
+                  <View style={styles.infoBubble}>
+                    <View style={[styles.bubbleArrow, selectedRole === 'volunteer' ? styles.arrowBottom : styles.arrowTop]} />
+                    <Text style={styles.infoText}>{selectedData.description}</Text>
+                  </View>
+                )}
+
+                {/* Volunteer Card */}
+                <RoleCard
+                  role={roles[2]}
+                  isSelected={selectedRole === 'volunteer'}
+                  onSelect={() => setSelectedRole('volunteer')}
+                />
+              </View>
+            </View>
+          </ScrollView>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Pressable style={styles.continueButton} onPress={handleContinue}>
+              <Text style={styles.continueText}>CONTINUE</Text>
+            </Pressable>
+            <Pressable style={styles.loginLink}>
+              <Text style={styles.loginText}>LOG IN</Text>
+            </Pressable>
+            <View style={styles.homeIndicator} />
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     </View>
   );
 }
+
+function RoleCard({ role, isSelected, onSelect }: { role: RoleData; isSelected: boolean; onSelect: () => void }) {
+  return (
+    <Pressable
+      onPress={onSelect}
+      style={[
+        styles.card,
+        isSelected && styles.cardActive
+      ]}
+    >
+      {isSelected && (
+        <View style={styles.checkIcon}>
+          <Check size={12} color="#EF4444" strokeWidth={3} />
+        </View>
+      )}
+      <View style={styles.cardContent}>
+        <Text style={styles.cardTitle}>{role.title}</Text>
+        <Text style={styles.cardSubtitle}>{role.subtitle}</Text>
+      </View>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+  },
+  safeArea: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    height: 60,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    flex: 1,
+    justifyContent: 'center',
+    marginLeft: 40,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  activeDot: {
+    backgroundColor: '#fff',
+    width: 20,
+  },
+  closeButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(55,65,81,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  titleSection: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 40,
+  },
+  title: {
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#fff',
+    textAlign: 'center',
+    lineHeight: 40,
+    letterSpacing: -1,
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#D1D5DB',
+    textAlign: 'center',
+    fontWeight: '500',
+    paddingHorizontal: 20,
+    lineHeight: 22,
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  column: {
+    flex: 1,
+    gap: 16,
+  },
+  card: {
+    height: 180,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 24,
+    padding: 20,
+    justifyContent: 'flex-end',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  cardActive: {
+    backgroundColor: 'rgba(239,68,68,0.1)',
+    borderColor: '#EF4444',
+    borderWidth: 2,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  checkIcon: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardContent: {
+    gap: 2,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#fff',
+    lineHeight: 22,
+  },
+  cardSubtitle: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoBubble: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    position: 'relative',
+  },
+  infoText: {
+    fontSize: 13,
+    color: '#E5E7EB',
+    lineHeight: 18,
+    fontWeight: '500',
+  },
+  bubbleArrow: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    backgroundColor: 'rgba(55,65,81,0.2)',
+    borderLeftWidth: 1,
+    borderTopWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    left: '50%',
+    marginLeft: -7,
+    transform: [{ rotate: '45deg' }],
+  },
+  arrowTop: {
+    top: -8,
+  },
+  arrowBottom: {
+    bottom: -8,
+    transform: [{ rotate: '225deg' }],
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingBottom: 20,
+    gap: 16,
+    alignItems: 'center',
+  },
+  continueButton: {
+    width: '100%',
+    backgroundColor: '#EF4444',
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  continueText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  loginLink: {
+    padding: 8,
+  },
+  loginText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  homeIndicator: {
+    width: 120,
+    height: 5,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 3,
+    marginTop: 10,
+  },
+});
