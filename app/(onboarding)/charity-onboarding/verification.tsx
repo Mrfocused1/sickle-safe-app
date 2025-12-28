@@ -120,7 +120,7 @@ export default function VerificationScreen() {
                                 value={agreedToPrivacy}
                                 onValueChange={setAgreedToPrivacy}
                                 trackColor={{ false: '#E5E7EB', true: '#D1D5DB' }}
-                                thumbColor={agreedToPrivacy ? '#D97706' : '#F3F4F6'}
+                                thumbColor={agreedToPrivacy ? '#374151' : '#F3F4F6'}
                             />
                         </View>
                     </View>
