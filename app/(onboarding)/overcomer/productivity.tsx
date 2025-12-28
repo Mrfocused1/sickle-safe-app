@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -68,117 +68,120 @@ export default function SickleTypeScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
-      <LinearGradient
-        colors={['#ffffff', '#fef2f2', '#ffffff']}
-        locations={[0, 0.5, 1]}
+      <ImageBackground
+        source={require('../../../assets/images/role_selection_bg.png')}
         style={StyleSheet.absoluteFill}
-      />
+        resizeMode="cover"
+      >
+        <View style={styles.overlay} />
 
-      <SafeAreaView style={styles.safeArea}>
-        {/* Header */}
-        <View style={styles.header}>
-          <BackButton />
-          <View style={styles.stepIndicator}>
-            <Text style={styles.stepText}>Step 1 of 4</Text>
-          </View>
-          <Pressable onPress={() => router.push('/(overcomer)')}>
-            <Text style={styles.skipText}>Skip</Text>
-          </Pressable>
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: '25%' }]} />
-          </View>
-        </View>
-
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Icon */}
-          <View style={styles.iconContainer}>
-            <Heart size={32} color="#EF4444" />
+        <SafeAreaView style={styles.safeArea}>
+          {/* Header */}
+          <View style={styles.header}>
+            <BackButton color="#FFF" />
+            <View style={styles.stepIndicator}>
+              <Text style={styles.stepText}>Step 1 of 4</Text>
+            </View>
+            <Pressable onPress={() => router.push('/(overcomer)')}>
+              <Text style={styles.skipText}>Skip</Text>
+            </Pressable>
           </View>
 
-          {/* Title */}
-          <Text style={styles.title}>
-            What type of{'\n'}
-            <Text style={styles.titleAccent}>Sickle Cell</Text> do you have?
-          </Text>
-
-          <Text style={styles.subtitle}>
-            This helps us personalize your health tracking and provide relevant information.
-          </Text>
-
-          {/* Multi Selection */}
-          <View style={styles.inputSection}>
-            <MultiSelection
-              label=""
-              options={sickleTypes}
-              selectedValues={selectedTypes}
-              onChange={setSelectedTypes}
-              color="#EF4444"
-            />
-
-            {isAdding ? (
-              <View style={styles.addingContainer}>
-                <TextInputField
-                  label="Other Type"
-                  value={newTypeName}
-                  onChange={setNewTypeName}
-                  placeholder="e.g. HbS/Hereditary Persistence"
-                  autoFocus
-                />
-                <View style={styles.addingActions}>
-                  <Pressable
-                    onPress={() => setIsAdding(false)}
-                    style={styles.cancelButton}
-                  >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={handleAddType}
-                    disabled={!newTypeName.trim()}
-                    style={[
-                      styles.addButton,
-                      !newTypeName.trim() && styles.addButtonDisabled
-                    ]}
-                  >
-                    <Text style={styles.addButtonText}>Add</Text>
-                  </Pressable>
-                </View>
-              </View>
-            ) : (
-              <Pressable
-                onPress={() => setIsAdding(true)}
-                style={styles.addTypeButton}
-              >
-                <Plus size={20} color="#EF4444" strokeWidth={2.5} />
-                <Text style={styles.addTypeButtonText}>Add Other Type</Text>
-              </Pressable>
-            )}
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: '25%' }]} />
+            </View>
           </View>
-        </ScrollView>
 
-        {/* Bottom CTA */}
-        <View style={styles.bottomSection}>
-          <Pressable
-            onPress={handleContinue}
-            disabled={!isValid}
-            style={[
-              styles.primaryButton,
-              !isValid && styles.primaryButtonDisabled,
-            ]}
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.buttonText}>Continue</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+            {/* Icon */}
+            <View style={styles.iconContainer}>
+              <Heart size={32} color="#EF4444" fill="#EF4444" />
+            </View>
+
+            {/* Title */}
+            <Text style={styles.title}>
+              What type of{'\n'}
+              <Text style={styles.titleAccent}>Sickle Cell</Text> do you have?
+            </Text>
+
+            <Text style={styles.subtitle}>
+              This helps us personalize your health tracking and provide relevant information.
+            </Text>
+
+            {/* Multi Selection */}
+            <View style={styles.inputSection}>
+              <MultiSelection
+                label=""
+                options={sickleTypes}
+                selectedValues={selectedTypes}
+                onChange={setSelectedTypes}
+                color="#EF4444"
+                variant="aura"
+              />
+
+              {isAdding ? (
+                <View style={styles.addingContainer}>
+                  <TextInputField
+                    label="Other Type"
+                    value={newTypeName}
+                    onChange={setNewTypeName}
+                    placeholder="e.g. HbS/Hereditary Persistence"
+                    autoFocus
+                  />
+                  <View style={styles.addingActions}>
+                    <Pressable
+                      onPress={() => setIsAdding(false)}
+                      style={styles.cancelButton}
+                    >
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={handleAddType}
+                      disabled={!newTypeName.trim()}
+                      style={[
+                        styles.addButton,
+                        !newTypeName.trim() && styles.addButtonDisabled
+                      ]}
+                    >
+                      <Text style={styles.addButtonText}>Add</Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={() => setIsAdding(true)}
+                  style={styles.addTypeButton}
+                >
+                  <Plus size={20} color="#EF4444" strokeWidth={2.5} />
+                  <Text style={styles.addTypeButtonText}>Add Other Type</Text>
+                </Pressable>
+              )}
+            </View>
+          </ScrollView>
+
+          {/* Bottom CTA */}
+          <View style={styles.bottomSection}>
+            <Pressable
+              onPress={handleContinue}
+              disabled={!isValid}
+              style={[
+                styles.primaryButton,
+                !isValid && styles.primaryButtonDisabled,
+              ]}
+            >
+              <Text style={styles.buttonText}>Continue</Text>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </ImageBackground>
     </View>
   );
 }
@@ -186,7 +189,11 @@ export default function SickleTypeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
   },
   safeArea: {
     flex: 1,
@@ -199,20 +206,22 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   stepIndicator: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.2)',
   },
   stepText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#EF4444',
+    color: '#FFF',
   },
   skipText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: '#D1D5DB',
     paddingHorizontal: 8,
   },
   progressContainer: {
@@ -221,7 +230,7 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 4,
-    backgroundColor: '#E5E7EB',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -242,15 +251,17 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   title: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#111827',
+    color: '#FFF',
     lineHeight: 38,
     letterSpacing: -0.5,
     marginBottom: 12,
@@ -261,7 +272,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#6B7280',
+    color: '#D1D5DB',
     lineHeight: 24,
     marginBottom: 32,
   },
@@ -276,33 +287,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#EF4444',
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: 18,
+    borderRadius: 100,
     shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 8,
   },
   primaryButtonDisabled: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: 'rgba(239, 68, 68, 0.3)',
     shadowOpacity: 0,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#fff',
+    letterSpacing: 1,
   },
   addTypeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#FEF2F2',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
     borderStyle: 'dashed',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   addTypeButtonText: {
     fontSize: 16,
@@ -311,10 +323,12 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   addingContainer: {
-    backgroundColor: '#FEF2F2',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     padding: 16,
-    borderRadius: 20,
+    borderRadius: 24,
     marginTop: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   addingActions: {
     flexDirection: 'row',
@@ -329,7 +343,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#6B7280',
+    color: '#9CA3AF',
   },
   addButton: {
     backgroundColor: '#EF4444',
@@ -338,7 +352,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   addButtonDisabled: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: 'rgba(239, 68, 68, 0.3)',
   },
   addButtonText: {
     fontSize: 14,
