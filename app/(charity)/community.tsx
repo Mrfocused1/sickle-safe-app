@@ -46,27 +46,39 @@ export default function CommunityScreen() {
                     contentContainerStyle={styles.statsContent}
                 >
                     <View style={styles.statCard}>
-                        <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
-                            <Heart size={18} color="#374151" />
+                        <View style={styles.statRow}>
+                            <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
+                                <Heart size={16} color="#374151" />
+                            </View>
+                            <View style={styles.statContent}>
+                                <Text style={styles.statValue}>248</Text>
+                                <Text style={styles.statLabel}>Active Donors</Text>
+                            </View>
                         </View>
-                        <Text style={styles.statValue}>248</Text>
-                        <Text style={styles.statLabel}>Active Donors</Text>
                     </View>
 
                     <View style={styles.statCard}>
-                        <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
-                            <Users size={18} color="#374151" />
+                        <View style={styles.statRow}>
+                            <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
+                                <Users size={16} color="#374151" />
+                            </View>
+                            <View style={styles.statContent}>
+                                <Text style={styles.statValue}>1,247</Text>
+                                <Text style={styles.statLabel}>Beneficiaries</Text>
+                            </View>
                         </View>
-                        <Text style={styles.statValue}>1,247</Text>
-                        <Text style={styles.statLabel}>Beneficiaries</Text>
                     </View>
 
                     <View style={styles.statCard}>
-                        <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
-                            <TrendingUp size={18} color="#374151" />
+                        <View style={styles.statRow}>
+                            <View style={[styles.statIcon, { backgroundColor: '#f1f5f9' }]}>
+                                <TrendingUp size={16} color="#374151" />
+                            </View>
+                            <View style={styles.statContent}>
+                                <Text style={styles.statValue}>32%</Text>
+                                <Text style={styles.statLabel}>Growth Rate</Text>
+                            </View>
                         </View>
-                        <Text style={styles.statValue}>32%</Text>
-                        <Text style={styles.statLabel}>Growth Rate</Text>
                     </View>
                 </ScrollView>
 
@@ -225,18 +237,25 @@ const styles = StyleSheet.create({
     statCard: {
         backgroundColor: '#F9FAFB',
         borderRadius: 16,
-        padding: 12,
-        width: 120,
+        padding: 14,
+        minWidth: 140,
         borderWidth: 1,
         borderColor: '#F3F4F6',
     },
+    statRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
     statIcon: {
-        width: 32,
-        height: 32,
-        borderRadius: 8,
+        width: 36,
+        height: 36,
+        borderRadius: 10,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 8,
+    },
+    statContent: {
+        flex: 1,
     },
     statValue: {
         fontSize: 20,
