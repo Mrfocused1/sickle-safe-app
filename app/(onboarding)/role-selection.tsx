@@ -64,7 +64,7 @@ export default function RoleSelectionScreen() {
       <StatusBar style="light" />
 
       <ImageBackground
-        source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD9OlBEHzyWfQvRImMsHQ4nISl3Pk7CobJvJHsgFIkNL2DYi9m7izL_W7_-Y2HmgF9aaZDW-K98s_sgbvaj0S1f3oHTFPntMqmYcoGKwIZPygTAuqH23J7PZ6HYSMULdTSCnMAv56h7zlRhfiGSd7dNV2hhuSSVlYKwEoMm5Fhvyf75BUEsJ62V9LmTuuH4F1-KDAmIU6_o9uJMHQ07uqKqtqlc9WVOMHKBlOfI9eAriyTPIjJkrtQ_Ie6Aqw0A4do9gEsAraW60x28' }}
+        source={require('../../assets/images/role_selection_bg.png')}
         style={StyleSheet.absoluteFill}
         resizeMode="cover"
       >
