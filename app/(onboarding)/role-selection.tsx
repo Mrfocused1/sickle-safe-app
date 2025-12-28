@@ -59,8 +59,6 @@ export default function RoleSelectionScreen() {
     }
   };
 
-  const selectedData = roles.find(r => r.id === selectedRole)!;
-
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -100,20 +98,11 @@ export default function RoleSelectionScreen() {
             <View style={styles.gridContainer}>
               {/* Column 1 */}
               <View style={styles.column}>
-                {/* Overcomer Card */}
                 <RoleCard
                   role={roles[0]}
                   isSelected={selectedRole === 'overcomer'}
                   onSelect={() => setSelectedRole('overcomer')}
                 />
-
-                {/* Dynamic Info Bubble - Shows below the selected role if it's in this column */}
-                {(selectedRole === 'overcomer' || selectedRole === 'charity') && (
-                  <View style={styles.infoBubble}>
-                    <View style={[styles.bubbleArrow, selectedRole === 'charity' ? styles.arrowBottom : styles.arrowTop]} />
-                    <Text style={styles.infoText}>{selectedData.description}</Text>
-                  </View>
-                )}
 
                 {/* Charity Card */}
                 <RoleCard
@@ -124,21 +113,13 @@ export default function RoleSelectionScreen() {
               </View>
 
               {/* Column 2 */}
-              <View style={[styles.column, { paddingTop: 40 }]}>
+              <View style={styles.column}>
                 {/* Helper Card */}
                 <RoleCard
                   role={roles[1]}
                   isSelected={selectedRole === 'helper'}
                   onSelect={() => setSelectedRole('helper')}
                 />
-
-                {/* Dynamic Info Bubble - Shows between cards for helper/volunteer */}
-                {(selectedRole === 'helper' || selectedRole === 'volunteer') && (
-                  <View style={styles.infoBubble}>
-                    <View style={[styles.bubbleArrow, selectedRole === 'volunteer' ? styles.arrowBottom : styles.arrowTop]} />
-                    <Text style={styles.infoText}>{selectedData.description}</Text>
-                  </View>
-                )}
 
                 {/* Volunteer Card */}
                 <RoleCard
@@ -312,39 +293,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-  },
-  infoBubble: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    position: 'relative',
-  },
-  infoText: {
-    fontSize: 13,
-    color: '#E5E7EB',
-    lineHeight: 18,
-    fontWeight: '500',
-  },
-  bubbleArrow: {
-    position: 'absolute',
-    width: 14,
-    height: 14,
-    backgroundColor: 'rgba(55,65,81,0.2)',
-    borderLeftWidth: 1,
-    borderTopWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    left: '50%',
-    marginLeft: -7,
-    transform: [{ rotate: '45deg' }],
-  },
-  arrowTop: {
-    top: -8,
-  },
-  arrowBottom: {
-    bottom: -8,
-    transform: [{ rotate: '225deg' }],
   },
   footer: {
     paddingHorizontal: 24,
