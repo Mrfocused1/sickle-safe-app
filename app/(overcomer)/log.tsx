@@ -1,13 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import CrisisLogModal from '../../components/CrisisLogModal';
 import AppBottomSheet from '../../components/AppBottomSheet';
+import { ConversationListSheet, ContactPicker, GroupCreator, ChatSheet } from '../../components/messaging';
 import { useRouter } from 'expo-router';
 import { healthLogStorage } from '../../services/healthLogStorage';
+import { messagingStorage } from '../../services/messagingStorage';
 import { DailyHealthLog, DailyLogSummary, PainEntry, HydrationEntry, MoodEntry, TriggerEntry, CrisisEpisode, MoodLevel } from '../../types/healthLog';
+import { CurrentUser, Conversation } from '../../types/messaging';
+
+// Mood to icon and color mapping
+const getMoodDisplay = (mood: MoodLevel | null | undefined): { icon: string; color: string } => {
+  switch (mood) {
+    case 'Awful':
+      return { icon: 'sentiment-very-dissatisfied', color: '#ef4444' }; // Red
+    case 'Not Good':
+      return { icon: 'sentiment-dissatisfied', color: '#f97316' }; // Orange
+    case 'Okay':
+      return { icon: 'sentiment-neutral', color: '#eab308' }; // Yellow
+    case 'Good':
+      return { icon: 'sentiment-satisfied', color: '#22c55e' }; // Green
+    case 'Great':
+      return { icon: 'sentiment-very-satisfied', color: '#10b981' }; // Emerald
+    default:
+      return { icon: 'mood', color: '#10b981' }; // Default green with generic mood icon
+  }
+};
 
 export default function LogScreen() {
   const insets = useSafeAreaInsets();
@@ -19,6 +40,21 @@ export default function LogScreen() {
   const [summary, setSummary] = useState<DailyLogSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Messaging state
+  const [showMessageSelection, setShowMessageSelection] = useState(false);
+  const [showConversationList, setShowConversationList] = useState(false);
+  const [conversationFilterType, setConversationFilterType] = useState<'all' | 'direct' | 'group'>('all');
+  const [showContactPicker, setShowContactPicker] = useState(false);
+  const [showGroupCreator, setShowGroupCreator] = useState(false);
+  const [showChatSheet, setShowChatSheet] = useState(false);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+  const [currentUser] = useState<CurrentUser>({
+    id: 'current_user',
+    name: 'Maya',
+    role: 'overcomer',
+  });
+
   // Derived state for medications (for backward compatibility)
   const medications = dailyLog?.medications.list ?? [];
   const checkedMeds = dailyLog?.medications.checked ?? [];
@@ -27,7 +63,18 @@ export default function LogScreen() {
   // Load daily log when date changes
   useEffect(() => {
     loadDailyLog();
+    loadUnreadCount();
   }, [selectedDate]);
+
+  const loadUnreadCount = async () => {
+    try {
+      await messagingStorage.initializeWithMockData();
+      const count = await messagingStorage.getTotalUnreadCount();
+      setTotalUnreadCount(count);
+    } catch (error) {
+      console.error('Failed to load unread count:', error);
+    }
+  };
 
   const loadDailyLog = async () => {
     setIsLoading(true);
@@ -182,14 +229,48 @@ export default function LogScreen() {
               <Text style={{ fontSize: 22, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 }}>Health Log</Text>
             </View>
             <Pressable
-              onPress={() => router.push('/profile')}
-              className="w-12 h-12 rounded-2xl bg-gray-100 items-center justify-center border border-gray-200 overflow-hidden shadow-sm active:scale-95"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowMessageSelection(true);
+              }}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: '#10B981',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+                elevation: 6,
+                position: 'relative',
+              }}
             >
-              <Image
-                source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCORMa38YShjxWXHcbH-MfY1UZF9LvIjHefqm4MnmpLYEROxwh8VpTJetiR_BPF_Kt4A676WuCNDwR6TmAHY5CN6SnaFzheHF0M5FtIlw80jCm2wH4NOcOa-IqaDBuomapbokmokeLN4wPVLAKg_jiKNzkeDzcjGH0r2qvVI1wF9rSlEq-KXsGO67Ujocu1a-guDc9qfSpuY_B_7PiQhy4P-zUFKocITqdWQuKu6QB8e9zr2Z-7vDyE00NRn5JxUXrBpBU36ttjbSZi' }}
-                className="w-full h-full"
-                resizeMode="cover"
-              />
+              <MaterialIcons name="chat-bubble" size={22} color="#ffffff" />
+              {totalUnreadCount > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -4,
+                    minWidth: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: '#EF4444',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingHorizontal: 4,
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#fff' }}>
+                    {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                  </Text>
+                </View>
+              )}
             </Pressable>
           </View>
 
@@ -285,11 +366,11 @@ export default function LogScreen() {
           />
 
           <LogItem
-            icon="mood"
+            icon={getMoodDisplay(summary?.latestMood).icon}
             label="Mood & Energy"
             value={summary?.latestMood ?? '--'}
             status={dailyLog?.mood.length ? `${dailyLog.mood.length} ${dailyLog.mood.length === 1 ? 'entry' : 'entries'} today` : 'No entries yet'}
-            color="#10b981"
+            color={getMoodDisplay(summary?.latestMood).color}
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setActiveSheetType('mood');
@@ -370,6 +451,90 @@ export default function LogScreen() {
           triggers: [],
           timestamp: new Date().toISOString()
         })}
+      />
+
+      {/* Message Selection Sheet */}
+      <AppBottomSheet
+        visible={showMessageSelection}
+        onClose={() => setShowMessageSelection(false)}
+        type="message_selection"
+        onNewDM={() => {
+          setShowMessageSelection(false);
+          setShowContactPicker(true);
+        }}
+        onNewGroup={() => {
+          setShowMessageSelection(false);
+          setShowGroupCreator(true);
+        }}
+        onOpenDMInbox={() => {
+          setShowMessageSelection(false);
+          setConversationFilterType('direct');
+          setShowConversationList(true);
+        }}
+        onOpenGroupInbox={() => {
+          setShowMessageSelection(false);
+          setConversationFilterType('group');
+          setShowConversationList(true);
+        }}
+      />
+
+      {/* Messaging Sheets */}
+      <ConversationListSheet
+        visible={showConversationList}
+        onClose={() => {
+          setShowConversationList(false);
+          setConversationFilterType('all');
+          loadUnreadCount();
+        }}
+        filterType={conversationFilterType}
+        currentUser={currentUser}
+        onNewDM={() => setShowContactPicker(true)}
+        onNewGroup={() => setShowGroupCreator(true)}
+        onOpenChat={(conversation) => {
+          setActiveConversation(conversation);
+          setShowChatSheet(true);
+        }}
+      />
+
+      <ContactPicker
+        visible={showContactPicker}
+        onClose={() => setShowContactPicker(false)}
+        onSelect={(conversation: Conversation) => {
+          setShowContactPicker(false);
+          setActiveConversation(conversation);
+          setShowChatSheet(true);
+          loadUnreadCount();
+        }}
+        currentUser={currentUser}
+      />
+
+      <GroupCreator
+        visible={showGroupCreator}
+        onClose={() => setShowGroupCreator(false)}
+        onCreate={(conversation: Conversation) => {
+          setShowGroupCreator(false);
+          setActiveConversation(conversation);
+          setShowChatSheet(true);
+          loadUnreadCount();
+        }}
+        currentUser={currentUser}
+      />
+
+      <ChatSheet
+        visible={showChatSheet}
+        onClose={() => {
+          setShowChatSheet(false);
+          setActiveConversation(null);
+          loadUnreadCount();
+        }}
+        onBack={() => {
+          setShowChatSheet(false);
+          setActiveConversation(null);
+          setShowConversationList(true);
+          loadUnreadCount();
+        }}
+        conversation={activeConversation}
+        currentUser={currentUser}
       />
     </View>
   );

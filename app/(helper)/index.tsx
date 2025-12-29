@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
@@ -23,9 +23,13 @@ import {
     Sun,
     TrendingDown,
     Info,
-    CheckCircle2
+    CheckCircle2,
+    Smile
 } from 'lucide-react-native';
 import AppBottomSheet from '../../components/AppBottomSheet';
+import { ConversationListSheet, ContactPicker, GroupCreator, ChatSheet } from '../../components/messaging';
+import { messagingStorage } from '../../services/messagingStorage';
+import { CurrentUser, Conversation } from '../../types/messaging';
 
 const QUICK_ACTIONS = [
     { id: 'log', label: 'Log Incident', icon: 'edit-calendar', color: '#4f46e5' },
@@ -78,6 +82,19 @@ const METRICS_TODAY = [
         description: 'Perfect adherence. All doses taken.',
         icon: CheckCircle2,
         changeColor: '#10b981'
+    },
+    {
+        id: 'mood',
+        label: 'MOOD',
+        value: '7',
+        total: '10',
+        change: '+1',
+        progress: 0.7,
+        color: '#8b5cf6',
+        bg: '#f5f3ff',
+        description: 'Feeling better than yesterday.',
+        icon: Smile,
+        changeColor: '#10b981'
     }
 ];
 
@@ -90,8 +107,38 @@ const AVA_MEMBER = {
     isEmergency: false
 };
 
+// Separate component to avoid hooks in map
+const MetricCard = ({ metric, progressValue }: { metric: typeof METRICS_TODAY[0], progressValue: Animated.SharedValue<number> }) => {
+    const animatedBarStyle = useAnimatedStyle(() => ({
+        width: `${progressValue.value * metric.progress * 100}%`
+    }));
+
+    return (
+        <View className="bg-white rounded-[28px] p-4 mb-3 shadow-sm border border-gray-100">
+            <View className="flex-row justify-between items-center mb-0.5">
+                <Text style={{ fontSize: 10, fontWeight: '800', color: '#94a3b8', letterSpacing: 0.5 }}>{metric.label}</Text>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: metric.changeColor }}>{metric.change}</Text>
+            </View>
+
+            <View className="flex-row items-baseline mb-2">
+                <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a' }}>{metric.value}</Text>
+                <View style={{ width: 3 }} />
+                <Text style={{ fontSize: 12, fontWeight: '600', color: '#94a3b8' }}>/{metric.total}</Text>
+            </View>
+
+            <View className="h-1.5 bg-gray-50 rounded-full overflow-hidden">
+                <Animated.View
+                    className="h-full rounded-full"
+                    style={[{ backgroundColor: metric.color }, animatedBarStyle]}
+                />
+            </View>
+        </View>
+    );
+};
+
 export default function CaregiverDashboard() {
     const router = useRouter();
+    const params = useLocalSearchParams();
     const insets = useSafeAreaInsets();
     const [activeActivity, setActiveActivity] = React.useState<any>(null);
     const [activeType, setActiveType] = React.useState<any>(null);
@@ -99,7 +146,33 @@ export default function CaregiverDashboard() {
     const floatValue = useSharedValue(0);
     const progressValue = useSharedValue(0);
 
+    // Messaging state
+    const [showMessageSelection, setShowMessageSelection] = useState(false);
+    const [showConversationList, setShowConversationList] = useState(false);
+    const [conversationFilterType, setConversationFilterType] = useState<'all' | 'direct' | 'group'>('all');
+    const [showContactPicker, setShowContactPicker] = useState(false);
+    const [showGroupCreator, setShowGroupCreator] = useState(false);
+    const [showChatSheet, setShowChatSheet] = useState(false);
+    const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+    const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+    const [currentUser] = useState<CurrentUser>({
+        id: 'current_user',
+        name: 'Marcus',
+        role: 'helper',
+    });
+
+    const loadUnreadCount = async () => {
+        try {
+            await messagingStorage.initializeWithMockData();
+            const count = await messagingStorage.getTotalUnreadCount();
+            setTotalUnreadCount(count);
+        } catch (error) {
+            console.error('Failed to load unread count:', error);
+        }
+    };
+
     useEffect(() => {
+        loadUnreadCount();
         floatValue.value = withRepeat(
             withTiming(1, { duration: 6000, easing: Easing.inOut(Easing.sin) }),
             -1,
@@ -112,6 +185,18 @@ export default function CaregiverDashboard() {
             easing: Easing.out(Easing.exp)
         });
     }, []);
+
+    // Handle openMessages param from CaregiverAddMenuModal
+    useFocusEffect(
+        React.useCallback(() => {
+            if (params.openMessages === 'true') {
+                setTimeout(() => {
+                    setShowMessageSelection(true);
+                    router.setParams({ openMessages: undefined });
+                }, 100);
+            }
+        }, [params.openMessages])
+    );
 
     const animatedCircleStyle = useAnimatedStyle(() => ({
         transform: [
@@ -140,11 +225,49 @@ export default function CaregiverDashboard() {
                             <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }} className="mb-1">Good Morning,</Text>
                             <Text style={{ fontSize: 22, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 }}>Marcus</Text>
                         </View>
-                        <Pressable className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center border border-gray-200">
-                            <Image
-                                source={{ uri: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200' }}
-                                className="w-full h-full rounded-full"
-                            />
+                        <Pressable
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setShowMessageSelection(true);
+                            }}
+                            style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 22,
+                                backgroundColor: '#10B981',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.15,
+                                shadowRadius: 8,
+                                elevation: 6,
+                                position: 'relative',
+                            }}
+                        >
+                            <MaterialIcons name="chat-bubble" size={22} color="#ffffff" />
+                            {totalUnreadCount > 0 && (
+                                <View
+                                    style={{
+                                        position: 'absolute',
+                                        top: -4,
+                                        right: -4,
+                                        minWidth: 20,
+                                        height: 20,
+                                        borderRadius: 10,
+                                        backgroundColor: '#EF4444',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        paddingHorizontal: 4,
+                                        borderWidth: 2,
+                                        borderColor: '#fff',
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#fff' }}>
+                                        {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                                    </Text>
+                                </View>
+                            )}
                         </Pressable>
                     </View>
 
@@ -210,45 +333,9 @@ export default function CaregiverDashboard() {
                         </Pressable>
                     </View>
 
-                    {METRICS_TODAY.map((metric, index) => {
-                        const animatedBarStyle = useAnimatedStyle(() => ({
-                            width: `${progressValue.value * metric.progress * 100}%`
-                        }));
-
-                        return (
-                            <View key={metric.id} className="bg-white rounded-[28px] p-4 mb-3 shadow-sm border border-gray-100 flex-row items-center">
-                                <View
-                                    className="w-12 h-12 rounded-full items-center justify-center mr-4"
-                                    style={{ backgroundColor: metric.bg }}
-                                >
-                                    <metric.icon size={20} color={metric.color} strokeWidth={2.5} />
-                                </View>
-
-                                <View className="flex-1">
-                                    <View className="flex-row justify-between items-center mb-0.5">
-                                        <Text style={{ fontSize: 10, fontWeight: '800', color: '#94a3b8', letterSpacing: 0.5 }}>{metric.label}</Text>
-                                        <Text style={{ fontSize: 11, fontWeight: '800', color: metric.changeColor }}>{metric.change}</Text>
-                                    </View>
-
-                                    <View className="flex-row items-baseline mb-2">
-                                        <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a' }}>{metric.value}</Text>
-                                        <View style={{ width: 3 }} />
-                                        <Text style={{ fontSize: 12, fontWeight: '600', color: '#94a3b8' }}>/{metric.total}</Text>
-                                    </View>
-
-                                    {/* Animated Progress Bar */}
-                                    <View className="h-1.5 bg-gray-50 rounded-full overflow-hidden">
-                                        <Animated.View
-                                            className="h-full rounded-full"
-                                            style={[{
-                                                backgroundColor: metric.color,
-                                            }, animatedBarStyle]}
-                                        />
-                                    </View>
-                                </View>
-                            </View>
-                        );
-                    })}
+                    {METRICS_TODAY.map((metric) => (
+                        <MetricCard key={metric.id} metric={metric} progressValue={progressValue} />
+                    ))}
                 </View>
 
                 <View className="px-6 mb-8">
@@ -356,6 +443,90 @@ export default function CaregiverDashboard() {
                 activity={activeActivity}
                 member={AVA_MEMBER}
                 task={activeTask}
+            />
+
+            {/* Message Selection Sheet */}
+            <AppBottomSheet
+                visible={showMessageSelection}
+                onClose={() => setShowMessageSelection(false)}
+                type="message_selection"
+                onNewDM={() => {
+                    setShowMessageSelection(false);
+                    setShowContactPicker(true);
+                }}
+                onNewGroup={() => {
+                    setShowMessageSelection(false);
+                    setShowGroupCreator(true);
+                }}
+                onOpenDMInbox={() => {
+                    setShowMessageSelection(false);
+                    setConversationFilterType('direct');
+                    setShowConversationList(true);
+                }}
+                onOpenGroupInbox={() => {
+                    setShowMessageSelection(false);
+                    setConversationFilterType('group');
+                    setShowConversationList(true);
+                }}
+            />
+
+            {/* Messaging Sheets */}
+            <ConversationListSheet
+                visible={showConversationList}
+                onClose={() => {
+                    setShowConversationList(false);
+                    setConversationFilterType('all');
+                    loadUnreadCount();
+                }}
+                filterType={conversationFilterType}
+                currentUser={currentUser}
+                onNewDM={() => setShowContactPicker(true)}
+                onNewGroup={() => setShowGroupCreator(true)}
+                onOpenChat={(conversation) => {
+                    setActiveConversation(conversation);
+                    setShowChatSheet(true);
+                }}
+            />
+
+            <ContactPicker
+                visible={showContactPicker}
+                onClose={() => setShowContactPicker(false)}
+                onSelect={(conversation: Conversation) => {
+                    setShowContactPicker(false);
+                    setActiveConversation(conversation);
+                    setShowChatSheet(true);
+                    loadUnreadCount();
+                }}
+                currentUser={currentUser}
+            />
+
+            <GroupCreator
+                visible={showGroupCreator}
+                onClose={() => setShowGroupCreator(false)}
+                onCreate={(conversation: Conversation) => {
+                    setShowGroupCreator(false);
+                    setActiveConversation(conversation);
+                    setShowChatSheet(true);
+                    loadUnreadCount();
+                }}
+                currentUser={currentUser}
+            />
+
+            <ChatSheet
+                visible={showChatSheet}
+                onClose={() => {
+                    setShowChatSheet(false);
+                    setActiveConversation(null);
+                    loadUnreadCount();
+                }}
+                onBack={() => {
+                    setShowChatSheet(false);
+                    setActiveConversation(null);
+                    setShowConversationList(true);
+                    loadUnreadCount();
+                }}
+                conversation={activeConversation}
+                currentUser={currentUser}
             />
         </View>
     );

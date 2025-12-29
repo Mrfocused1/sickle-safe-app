@@ -1,8 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DailyHealthLog, DailyLogSummary, DateKey, MoodLevel } from '../types/healthLog';
+import {
+  Medication,
+  migrateLegacyMedication,
+  createMedication,
+} from '../types/medication';
+import { getDefaultMedicationsForTypes, SickleCellType } from '../constants/medicationDefaults';
 
 const STORAGE_KEY_PREFIX = '@sickle_safe_health_log_';
 const MEDICATIONS_DEFAULT_KEY = '@sickle_safe_default_medications';
+const MEDICATIONS_V2_KEY = '@sickle_safe_default_medications_v2';
 
 // Utility to format Date to YYYY-MM-DD
 export const formatDateKey = (date: Date): DateKey => {
@@ -87,13 +94,155 @@ export const healthLogStorage = {
   },
 
   /**
-   * Save default medications list
+   * Save default medications list (legacy string format)
    */
   async saveDefaultMedications(meds: string[]): Promise<void> {
     try {
       await AsyncStorage.setItem(MEDICATIONS_DEFAULT_KEY, JSON.stringify(meds));
     } catch (error) {
       console.error('Error saving default medications:', error);
+    }
+  },
+
+  /**
+   * Get default medications as structured objects (V2)
+   */
+  async getDefaultMedicationsV2(): Promise<Medication[]> {
+    try {
+      // First try to get V2 format
+      const v2Data = await AsyncStorage.getItem(MEDICATIONS_V2_KEY);
+      if (v2Data) {
+        return JSON.parse(v2Data);
+      }
+
+      // Fall back to legacy format and migrate
+      const legacyData = await AsyncStorage.getItem(MEDICATIONS_DEFAULT_KEY);
+      if (legacyData) {
+        const legacyMeds: string[] = JSON.parse(legacyData);
+        const migratedMeds = legacyMeds.map(migrateLegacyMedication);
+        // Save migrated data to V2 key
+        await this.saveDefaultMedicationsV2(migratedMeds);
+        return migratedMeds;
+      }
+
+      // Return default medications
+      const defaults: Medication[] = [
+        createMedication('Hydroxyurea', { times: ['8:00 AM'] }),
+        createMedication('Folic Acid', { times: ['8:00 AM'] }),
+        createMedication('Pain Relief', { frequency: 'as_needed', times: [] }),
+      ];
+      return defaults;
+    } catch (error) {
+      console.error('Error getting default medications V2:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Save default medications as structured objects (V2)
+   */
+  async saveDefaultMedicationsV2(meds: Medication[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(MEDICATIONS_V2_KEY, JSON.stringify(meds));
+    } catch (error) {
+      console.error('Error saving default medications V2:', error);
+    }
+  },
+
+  /**
+   * Initialize medications based on sickle cell type from onboarding
+   */
+  async initializeMedicationsForSickleCellType(types: SickleCellType[]): Promise<Medication[]> {
+    try {
+      // Get default medications based on sickle cell types
+      const medications = getDefaultMedicationsForTypes(types);
+
+      // Save to V2 storage
+      await this.saveDefaultMedicationsV2(medications);
+
+      // Also save legacy format for backward compatibility
+      const legacyFormat = medications.map((med) => {
+        if (med.frequency === 'as_needed') {
+          return `${med.name} (As needed)`;
+        }
+        return `${med.name} (${med.times[0] || '8:00 AM'})`;
+      });
+      await this.saveDefaultMedications(legacyFormat);
+
+      return medications;
+    } catch (error) {
+      console.error('Error initializing medications:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Add a new medication to defaults
+   */
+  async addMedication(med: Medication): Promise<void> {
+    try {
+      const currentMeds = await this.getDefaultMedicationsV2();
+      currentMeds.push(med);
+      await this.saveDefaultMedicationsV2(currentMeds);
+
+      // Update legacy format
+      const legacyMeds = await this.getDefaultMedications();
+      const legacyFormat =
+        med.frequency === 'as_needed'
+          ? `${med.name} (As needed)`
+          : `${med.name} (${med.times[0] || '8:00 AM'})`;
+      legacyMeds.push(legacyFormat);
+      await this.saveDefaultMedications(legacyMeds);
+    } catch (error) {
+      console.error('Error adding medication:', error);
+    }
+  },
+
+  /**
+   * Update an existing medication
+   */
+  async updateMedication(updatedMed: Medication): Promise<void> {
+    try {
+      const currentMeds = await this.getDefaultMedicationsV2();
+      const index = currentMeds.findIndex((m) => m.id === updatedMed.id);
+      if (index !== -1) {
+        updatedMed.updatedAt = new Date().toISOString();
+        currentMeds[index] = updatedMed;
+        await this.saveDefaultMedicationsV2(currentMeds);
+
+        // Update legacy format
+        const legacyMeds = currentMeds.map((med) => {
+          if (med.frequency === 'as_needed') {
+            return `${med.name} (As needed)`;
+          }
+          return `${med.name} (${med.times[0] || '8:00 AM'})`;
+        });
+        await this.saveDefaultMedications(legacyMeds);
+      }
+    } catch (error) {
+      console.error('Error updating medication:', error);
+    }
+  },
+
+  /**
+   * Delete a medication by ID
+   */
+  async deleteMedication(medId: string): Promise<void> {
+    try {
+      const currentMeds = await this.getDefaultMedicationsV2();
+      const filteredMeds = currentMeds.filter((m) => m.id !== medId);
+      await this.saveDefaultMedicationsV2(filteredMeds);
+
+      // Update legacy format
+      const legacyMeds = filteredMeds.map((med) => {
+        if (med.frequency === 'as_needed') {
+          return `${med.name} (As needed)`;
+        }
+        return `${med.name} (${med.times[0] || '8:00 AM'})`;
+      });
+      await this.saveDefaultMedications(legacyMeds);
+    } catch (error) {
+      console.error('Error deleting medication:', error);
     }
   },
 

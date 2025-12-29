@@ -1,12 +1,14 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { View, Pressable, Animated } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import CaregiverAddMenuModal from '../../components/CaregiverAddMenuModal';
+import { messagingStorage } from '../../services/messagingStorage';
 
 export default function CaregiverLayout() {
     const [showAddMenu, setShowAddMenu] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const rotation = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -16,6 +18,24 @@ export default function CaregiverLayout() {
             useNativeDriver: true,
         }).start();
     }, [showAddMenu]);
+
+    // Load unread message count
+    useEffect(() => {
+        const loadUnreadCount = async () => {
+            try {
+                await messagingStorage.initializeWithMockData();
+                const count = await messagingStorage.getTotalUnreadCount();
+                setUnreadCount(count);
+            } catch (error) {
+                console.error('Error loading unread count:', error);
+            }
+        };
+        loadUnreadCount();
+    }, [showAddMenu]); // Refresh when menu closes
+
+    const handleOpenMessages = () => {
+        router.push({ pathname: '/(helper)', params: { openMessages: 'true' } });
+    };
 
     const rotateInterpolate = rotation.interpolate({
         inputRange: [0, 1],
@@ -29,7 +49,13 @@ export default function CaregiverLayout() {
 
     return (
         <>
-            <CaregiverAddMenuModal visible={showAddMenu} onClose={() => setShowAddMenu(false)} fabRotation={rotation} />
+            <CaregiverAddMenuModal
+                visible={showAddMenu}
+                onClose={() => setShowAddMenu(false)}
+                fabRotation={rotation}
+                onOpenMessages={handleOpenMessages}
+                unreadCount={unreadCount}
+            />
             <Tabs
                 screenOptions={{
                     headerShown: false,
@@ -101,6 +127,12 @@ export default function CaregiverLayout() {
                 />
                 <Tabs.Screen
                     name="guide"
+                    options={{
+                        href: null,
+                    }}
+                />
+                <Tabs.Screen
+                    name="post/[id]"
                     options={{
                         href: null,
                     }}

@@ -12,6 +12,8 @@ import {
     Animated,
     ScrollView,
     Image,
+    PanResponder,
+    Keyboard,
 } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { BlurView } from 'expo-blur';
@@ -22,6 +24,16 @@ import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FundingOpportunity } from '../data/funding_data';
+import {
+    Medication,
+    MedicationFrequency,
+    FREQUENCY_LABELS,
+    createMedication,
+    formatMedicationDisplay,
+    getMedicationSubtext,
+    migrateLegacyMedication,
+} from '../types/medication';
+import { healthLogStorage } from '../services/healthLogStorage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -54,12 +66,20 @@ interface AppBottomSheetProps {
     educationModule?: any;
     educationLesson?: any;
     quizItem?: any;
+    // Messaging callbacks
+    onNewDM?: () => void;
+    onNewGroup?: () => void;
+    onOpenDMInbox?: () => void;
+    onOpenGroupInbox?: () => void;
 }
 
-export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, event, eventsList, fundingItem, educationModule, educationLesson, quizItem, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate, onCrisisUpdate }: AppBottomSheetProps) {
+export default function AppBottomSheet({ visible, onClose, type, task, member, activity, mission, event, eventsList, fundingItem, educationModule, educationLesson, quizItem, medsData, onMedsUpdate, onPainUpdate, onHydrationUpdate, onMoodUpdate, onTriggersUpdate, onCrisisUpdate, onNewDM, onNewGroup, onOpenDMInbox, onOpenGroupInbox }: AppBottomSheetProps) {
     const insets = useSafeAreaInsets();
     const [value, setValue] = useState('');
     const [notes, setNotes] = useState('');
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+    const [showNotesModal, setShowNotesModal] = useState(false);
+    const [tempNotes, setTempNotes] = useState('');
     const [selectedHelpers, setSelectedHelpers] = useState<string[]>([]);
     const [activeType, setActiveType] = useState<MetricType>(type);
     const [medications, setMedications] = useState(['Hydroxyurea (8:00 AM)', 'Folic Acid (8:00 AM)', 'Pain Relief (As needed)']);
@@ -74,8 +94,49 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     const [isSearchingMeds, setIsSearchingMeds] = useState(false);
     const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
     const [permission, requestPermission] = useCameraPermissions();
+    // Edit Medication Overlay State
+    const [showEditMedOverlay, setShowEditMedOverlay] = useState(false);
+    const [editingMedIndex, setEditingMedIndex] = useState<number | null>(null);
+    const [editMedName, setEditMedName] = useState('');
+    const [editMedDosage, setEditMedDosage] = useState('');
+    const [editMedFrequency, setEditMedFrequency] = useState<MedicationFrequency>('once_daily');
+    const [editMedTimes, setEditMedTimes] = useState<string[]>(['8:00 AM']);
+    const [editMedNotes, setEditMedNotes] = useState('');
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const toastAnim = useRef(new Animated.Value(-100)).current;
+    const slideAnim = useRef(new Animated.Value(0)).current;
+
+    const panResponder = useRef(
+        PanResponder.create({
+            onStartShouldSetPanResponder: () => true,
+            onMoveShouldSetPanResponder: (_, gestureState) => {
+                return gestureState.dy > 5;
+            },
+            onPanResponderMove: (_, gestureState) => {
+                if (gestureState.dy > 0) {
+                    slideAnim.setValue(gestureState.dy);
+                }
+            },
+            onPanResponderRelease: (_, gestureState) => {
+                if (gestureState.dy > 100 || gestureState.vy > 0.5) {
+                    Animated.timing(slideAnim, {
+                        toValue: height,
+                        duration: 200,
+                        useNativeDriver: true,
+                    }).start(() => {
+                        onClose();
+                        slideAnim.setValue(0);
+                    });
+                } else {
+                    Animated.spring(slideAnim, {
+                        toValue: 0,
+                        useNativeDriver: true,
+                        bounciness: 8,
+                    }).start();
+                }
+            },
+        })
+    ).current;
     const [showToast, setShowToast] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [startTime, setStartTime] = useState('');
@@ -196,6 +257,71 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
         lookupMedicationByBarcode(data);
     };
 
+    // Open medication edit overlay
+    const openEditMedOverlay = (med: string, index: number) => {
+        // Parse legacy format: "Medication Name (8:00 AM)" or "Medication Name (As needed)"
+        const match = med.match(/^(.+?)\s*\((.+?)\)$/);
+        if (match) {
+            const name = match[1].trim();
+            const timeOrFreq = match[2].trim();
+
+            setEditMedName(name);
+            setEditMedDosage('');
+            if (timeOrFreq.toLowerCase() === 'as needed') {
+                setEditMedFrequency('as_needed');
+                setEditMedTimes([]);
+            } else {
+                setEditMedFrequency('once_daily');
+                setEditMedTimes([timeOrFreq]);
+            }
+        } else {
+            setEditMedName(med);
+            setEditMedDosage('');
+            setEditMedFrequency('once_daily');
+            setEditMedTimes(['8:00 AM']);
+        }
+        setEditMedNotes('');
+        setEditingMedIndex(index);
+        setShowEditMedOverlay(true);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    };
+
+    // Save edited medication
+    const saveEditedMedication = () => {
+        if (editingMedIndex === null || !editMedName.trim()) return;
+
+        // Build the new medication string in legacy format
+        let newMedString = editMedName.trim();
+        if (editMedDosage.trim()) {
+            newMedString += ` ${editMedDosage.trim()}`;
+        }
+        if (editMedFrequency === 'as_needed') {
+            newMedString += ' (As needed)';
+        } else if (editMedTimes.length > 0) {
+            newMedString += ` (${editMedTimes[0]})`;
+        } else {
+            newMedString += ' (8:00 AM)';
+        }
+
+        const newList = [...medications];
+        newList[editingMedIndex] = newMedString;
+        setMedications(newList);
+
+        // Update checked list if the old med was checked
+        const oldMed = medications[editingMedIndex];
+        if (checkedMeds.includes(oldMed)) {
+            const newChecked = checkedMeds.map(m => m === oldMed ? newMedString : m);
+            setCheckedMeds(newChecked);
+            if (onMedsUpdate) onMedsUpdate(newList, newChecked);
+        } else {
+            if (onMedsUpdate) onMedsUpdate(newList, checkedMeds);
+        }
+
+        setShowEditMedOverlay(false);
+        setEditingMedIndex(null);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    };
+
     const navigateTo = (newType: MetricType) => {
         setHistory(prev => [...prev, activeType]);
         setActiveType(newType);
@@ -244,6 +370,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
         if (visible) {
             setActiveType(type || 'log_selection');
             setHistory([]);
+            slideAnim.setValue(0);
             if (medsData) {
                 setMedications(medsData.list);
                 setCheckedMeds(medsData.checked);
@@ -271,6 +398,16 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             setShowDatePicker(false);
         }
     }, [visible, type]);
+
+    // Keyboard visibility listener for sheets with text inputs
+    useEffect(() => {
+        const showSub = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+        const hideSub = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     const getHeaderInfo = () => {
         switch (activeType) {
@@ -315,7 +452,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'metrics_info':
                 return { title: 'Today\'s Metrics', icon: 'info', color: '#64748b' };
             case 'message_selection':
-                return { title: 'Send Message', icon: 'textsms', color: '#6366f1' };
+                return { title: 'New Conversation', icon: null, color: '#0ea5e9', hideHeader: true };
             case 'notification_settings':
                 return { title: 'Notifications', icon: 'notifications', color: '#8b5cf6' };
             case 'edit_member':
@@ -401,7 +538,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                 return (
                     <View style={styles.contentSection}>
                         <Text style={styles.sectionLabel}>Medications Checklist</Text>
-                        {medications.map((med) => (
+                        {medications.map((med, index) => (
                             <View key={med} style={styles.checkItem}>
                                 <Pressable
                                     onPress={() => {
@@ -422,6 +559,13 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                         />
                                     </View>
                                     <Text style={[styles.checkLabel, checkedMeds.includes(med) && { color: header.color, textDecorationLine: 'line-through', opacity: 0.6 }]}>{med}</Text>
+                                </Pressable>
+                                <Pressable
+                                    onPress={() => openEditMedOverlay(med, index)}
+                                    style={{ padding: 6 }}
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                >
+                                    <MaterialIcons name="more-vert" size={20} color="#64748b" />
                                 </Pressable>
                                 <Pressable
                                     onPress={() => {
@@ -733,9 +877,9 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                             </View>
                         </View>
 
-                        <Text style={styles.sectionLabel}>Insights</Text>
-                        <View style={styles.insightBox}>
-                            <Text style={styles.insightText}>
+                        <View style={styles.insightCard}>
+                            <Text style={styles.insightTitle}>Daily Insight</Text>
+                            <Text style={styles.insightMessage}>
                                 You're doing great with hydration today! Try to take your evening meds by 8 PM to stay on schedule.
                             </Text>
                         </View>
@@ -1114,13 +1258,13 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                     <Pressable
                                         key={helper.name}
                                         onPress={() => setSelectedHelpers(prev => prev.includes(helper.name) ? prev.filter(h => h !== helper.name) : [...prev, helper.name])}
-                                        style={[styles.actionBox, isRequest && { borderWidth: 2, borderStyle: 'dotted', borderColor: isSelected ? '#10b981' : '#e2e8f0', backgroundColor: isSelected ? '#ecfdf5' : 'transparent', borderRadius: 24 }]}
+                                        style={[styles.actionBox, isRequest && { backgroundColor: isSelected ? '#ecfdf5' : 'transparent', borderRadius: 24 }]}
                                     >
                                         <View style={[styles.memberAvatarWrapper, { width: 50, height: 50, marginBottom: 8, opacity: isSelected || isRequest ? 1 : 0.6 }]}>
                                             {helper.avatar ? (
                                                 <Image source={{ uri: helper.avatar }} style={[styles.memberAvatarLarge, { width: 50, height: 50, borderWidth: isSelected ? 3 : 0, borderColor: header.color }]} />
                                             ) : (
-                                                <View style={[styles.actionIconCircle, { width: 50, height: 50, margin: 0, backgroundColor: isSelected ? header.color + '20' : '#f8fafc', borderWidth: 1, borderColor: isSelected ? header.color : isRequest ? '#e2e8f0' : '#f1f5f9', borderStyle: isRequest ? 'dotted' : 'solid' }]}>
+                                                <View style={[styles.actionIconCircle, { width: 50, height: 50, margin: 0, backgroundColor: isSelected ? header.color + '20' : '#f8fafc', borderWidth: 1, borderColor: isSelected ? header.color : '#f1f5f9' }]}>
                                                     <MaterialIcons name={isRequest ? "add" : "help"} size={24} color={isSelected ? header.color : isRequest ? '#94a3b8' : '#3b82f6'} />
                                                 </View>
                                             )}
@@ -1212,38 +1356,76 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
             case 'message_selection':
                 return (
                     <View style={styles.contentSection}>
+                        <Text style={{ fontSize: 22, fontWeight: '800', color: '#0f172a', marginBottom: 20 }}>New Conversation</Text>
                         <View style={{ gap: 16 }}>
                             <Pressable
-                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f8fafc', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#e2e8f0' }}
-                                onPress={() => { alert('Opening SMS...'); onClose(); }}
+                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0f9ff', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#bae6fd' }}
+                                onPress={() => { onNewDM?.(); }}
                             >
-                                <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: '#6366f1', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
-                                    <MaterialIcons name="textsms" size={24} color="#fff" />
+                                <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: '#0ea5e9', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <MaterialIcons name="person" size={28} color="#fff" />
                                 </View>
-                                <View>
-                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#1e293b' }}>Text Message</Text>
-                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#64748b' }}>Send a standard SMS</Text>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#0c4a6e' }}>Direct Message</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#0ea5e9', marginTop: 2 }}>Chat one-on-one with someone</Text>
                                 </View>
-                                <MaterialIcons name="chevron-right" size={24} color="#94a3b8" style={{ marginLeft: 'auto' }} />
+                                <MaterialIcons name="chevron-right" size={24} color="#0ea5e9" />
                             </Pressable>
 
                             <Pressable
-                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0fdf4', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#bbf7d0' }}
-                                onPress={() => { alert('Opening WhatsApp...'); onClose(); }}
+                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#faf5ff', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#e9d5ff' }}
+                                onPress={() => { onNewGroup?.(); }}
                             >
-                                <View style={{ width: 52, height: 52, borderRadius: 18, backgroundColor: '#22c55e', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
-                                    <FontAwesome name="whatsapp" size={28} color="#fff" />
+                                <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: '#a855f7', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <MaterialIcons name="groups" size={28} color="#fff" />
                                 </View>
-                                <View>
-                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#166534' }}>WhatsApp</Text>
-                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#22c55e' }}>Chat on WhatsApp</Text>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#581c87' }}>Group Message</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#a855f7', marginTop: 2 }}>Chat with your care circle</Text>
                                 </View>
-                                <MaterialIcons name="chevron-right" size={24} color="#22c55e" style={{ marginLeft: 'auto' }} />
+                                <MaterialIcons name="chevron-right" size={24} color="#a855f7" />
                             </Pressable>
                         </View>
-                        <Pressable onPress={goBack} style={{ alignItems: 'center', marginTop: 32 }}>
-                            <Text style={{ fontSize: 14, fontWeight: '700', color: '#64748b' }}>Go Back</Text>
-                        </Pressable>
+
+                        {/* Inbox Section */}
+                        <Text style={{ fontSize: 22, fontWeight: '800', color: '#0f172a', marginBottom: 20, marginTop: 32 }}>Inbox</Text>
+                        <View style={{ gap: 16 }}>
+                            <Pressable
+                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0f9ff', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#bae6fd', position: 'relative' }}
+                                onPress={() => { onOpenDMInbox?.(); }}
+                            >
+                                <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: '#0ea5e9', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <MaterialIcons name="person" size={28} color="#fff" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#0c4a6e' }}>Direct Messages</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#0ea5e9', marginTop: 2 }}>View your conversations</Text>
+                                </View>
+                                <MaterialIcons name="chevron-right" size={24} color="#0ea5e9" />
+                                {/* Notification Badge */}
+                                <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#ef4444', width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, fontWeight: '800', color: '#fff' }}>3</Text>
+                                </View>
+                            </Pressable>
+
+                            <Pressable
+                                style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#faf5ff', padding: 20, borderRadius: 24, borderWidth: 1, borderColor: '#e9d5ff', position: 'relative' }}
+                                onPress={() => { onOpenGroupInbox?.(); }}
+                            >
+                                <View style={{ width: 56, height: 56, borderRadius: 20, backgroundColor: '#a855f7', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
+                                    <MaterialIcons name="groups" size={28} color="#fff" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={{ fontSize: 18, fontWeight: '800', color: '#581c87' }}>Group Messages</Text>
+                                    <Text style={{ fontSize: 13, fontWeight: '500', color: '#a855f7', marginTop: 2 }}>View group conversations</Text>
+                                </View>
+                                <MaterialIcons name="chevron-right" size={24} color="#a855f7" />
+                                {/* Notification Badge */}
+                                <View style={{ position: 'absolute', top: 12, right: 12, backgroundColor: '#ef4444', width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }}>
+                                    <Text style={{ fontSize: 12, fontWeight: '800', color: '#fff' }}>5</Text>
+                                </View>
+                            </Pressable>
+                        </View>
                     </View>
                 );
             case 'notification_settings':
@@ -2268,6 +2450,11 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
     return (
         <>
             <Modal visible={visible} transparent animationType="slide" onRequestClose={goBack}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1 }}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                >
                 <View style={styles.container}>
                     <Animated.View style={[StyleSheet.absoluteFill, { opacity: fadeAnim }]}>
                         <Pressable style={StyleSheet.absoluteFill} onPress={goBack}>
@@ -2275,15 +2462,28 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         </Pressable>
                     </Animated.View>
 
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        style={[
-                            styles.content,
-                            (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event' || activeType === 'volunteer_actions' || activeType === 'volunteer_log_hours' || activeType === 'log_selection' || activeType === 'community_actions' || activeType === 'funding_detail' || activeType === 'funding_ai_helper' || activeType === 'learning_module' || activeType === 'module_lesson' || activeType === 'manage_task' || activeType === 'request_task' || activeType === 'task' || activeType === 'wellness_summary') && { height: height * 0.85 }
-                        ]}
-                    >
-                        <View style={styles.modalCard}>
-                            <View style={styles.grabber} />
+                    <Animated.View style={{ transform: [{ translateY: slideAnim }] }}>
+                        <View
+                            style={[
+                                styles.content,
+                                (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event' || activeType === 'volunteer_actions' || activeType === 'volunteer_log_hours' || activeType === 'log_selection' || activeType === 'community_actions' || activeType === 'funding_detail' || activeType === 'funding_ai_helper' || activeType === 'learning_module' || activeType === 'module_lesson' || activeType === 'task') && { height: height * 0.85 },
+                                (activeType === 'request_task') && { height: height * 0.55 },
+                                (activeType === 'hydration') && { height: height * 0.65 },
+                                (activeType === 'meds') && { height: height * 0.75 },
+                                (activeType === 'pain') && { minHeight: height * 0.65 },
+                                (activeType === 'mood') && { minHeight: height * 0.62 },
+                                (activeType === 'triggers') && { minHeight: height * 0.65 },
+                                (activeType === 'crisis') && { minHeight: height * 0.68 },
+                                (activeType === 'wellness_summary' || activeType === 'metrics_info' || activeType === 'manage_task') && { minHeight: height * 0.55 },
+                                (activeType === 'activity_detail') && { minHeight: height * 0.38 },
+                                (activeType === 'member') && { height: height * 0.85 }
+                            ]}
+                        >
+                            <View style={styles.modalCard}>
+                                <View {...panResponder.panHandlers} style={styles.grabberArea}>
+                                    <View style={styles.grabber} />
+                                </View>
+                            {activeType !== 'message_selection' ? (
                             <View style={styles.header}>
                                 <View style={[styles.iconContainer, { backgroundColor: `${header.color}15` }]}>
                                     <MaterialIcons name={header.icon as any} size={28} color={header.color} />
@@ -2316,32 +2516,45 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                     <MaterialIcons name={history.length > 0 ? "arrow-back" : "close"} size={24} color="#94a3b8" />
                                 </Pressable>
                             </View>
+                            ) : (
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20, paddingBottom: 8 }}>
+                                <Pressable onPress={onClose} style={styles.closeButton}>
+                                    <MaterialIcons name="close" size={24} color="#94a3b8" />
+                                </Pressable>
+                            </View>
+                            )}
 
                             <ScrollView
                                 showsVerticalScrollIndicator={false}
                                 contentContainerStyle={styles.scrollContent}
                                 style={{ flex: 1 }}
+                                keyboardShouldPersistTaps="always"
+                                keyboardDismissMode="on-drag"
                             >
                                 {renderContent()}
 
                                 {(activeType === 'pain' || activeType === 'hydration' || activeType === 'meds' || activeType === 'mood' || activeType === 'triggers' || activeType === 'crisis' || activeType === 'idea' || activeType === 'log_selection' || activeType === 'create_event') && (
                                     <View style={styles.notesSection}>
                                         <Text style={styles.sectionLabel}>Additional Notes</Text>
-                                        <TextInput
-                                            style={styles.textArea}
-                                            placeholder="How are you feeling otherwise?"
-                                            placeholderTextColor="#94a3b8"
-                                            multiline
-                                            numberOfLines={4}
-                                            value={notes}
-                                            onChangeText={setNotes}
-                                        />
+                                        <Pressable
+                                            style={[styles.textArea, { justifyContent: 'flex-start' }]}
+                                            onPress={() => {
+                                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                                setTempNotes(notes);
+                                                setShowNotesModal(true);
+                                            }}
+                                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                        >
+                                            <Text style={{ color: notes ? '#1e293b' : '#94a3b8', fontSize: 16 }}>
+                                                {notes || 'Tap to add notes...'}
+                                            </Text>
+                                        </Pressable>
                                     </View>
                                 )}
 
                             </ScrollView>
 
-                            {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && activeType !== 'learning_module' && activeType !== 'module_lesson' && (
+                            {activeType !== 'activity_detail' && activeType !== 'metrics_info' && activeType !== 'member' && activeType !== 'message_selection' && activeType !== 'learning_module' && activeType !== 'module_lesson' && activeType !== 'wellness_summary' && (
                                 <View style={{
                                     paddingHorizontal: 24,
                                     paddingTop: 16,
@@ -2426,8 +2639,206 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                 </View>
                             )}
                         </View>
-                    </KeyboardAvoidingView>
+                        </View>
+                    </Animated.View>
                 </View>
+
+                {/* Compact Notes Input Overlay */}
+                {showNotesModal && (
+                    <Pressable
+                        style={styles.notesModalOverlay}
+                        onPress={() => setShowNotesModal(false)}
+                    >
+                        <KeyboardAvoidingView
+                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                            style={styles.notesModalKeyboardView}
+                        >
+                            <Pressable
+                                style={styles.notesModalContent}
+                                onPress={(e) => e.stopPropagation()}
+                            >
+                                <View style={styles.notesModalHandle} />
+                                <View style={styles.notesModalHeader}>
+                                    <Text style={styles.notesModalTitle}>Additional Notes</Text>
+                                    <Pressable onPress={() => setShowNotesModal(false)} style={styles.notesModalCloseButton}>
+                                        <MaterialIcons name="close" size={24} color="#6B7280" />
+                                    </Pressable>
+                                </View>
+                                <View style={styles.notesModalInputContainer}>
+                                    <TextInput
+                                        style={styles.notesModalInput}
+                                        value={tempNotes}
+                                        onChangeText={setTempNotes}
+                                        placeholder="How are you feeling otherwise?"
+                                        placeholderTextColor="#9CA3AF"
+                                        autoFocus={true}
+                                        returnKeyType="done"
+                                        onSubmitEditing={() => {
+                                            setNotes(tempNotes);
+                                            setShowNotesModal(false);
+                                        }}
+                                    />
+                                    <Pressable
+                                        onPress={() => {
+                                            setNotes(tempNotes);
+                                            setShowNotesModal(false);
+                                            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                                        }}
+                                        style={styles.notesModalDoneButton}
+                                    >
+                                        <MaterialIcons name="check" size={24} color="#fff" />
+                                    </Pressable>
+                                </View>
+                                <Text style={styles.notesModalHint}>
+                                    Add any additional context about how you're feeling
+                                </Text>
+                            </Pressable>
+                        </KeyboardAvoidingView>
+                    </Pressable>
+                )}
+
+                {/* Edit Medication Overlay */}
+                {showEditMedOverlay && (
+                    <Pressable
+                        style={styles.editMedOverlay}
+                        onPress={() => setShowEditMedOverlay(false)}
+                    >
+                        <KeyboardAvoidingView
+                            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                            style={styles.editMedKeyboardView}
+                            pointerEvents="box-none"
+                        >
+                            <View
+                                style={styles.editMedContent}
+                                onStartShouldSetResponder={() => true}
+                            >
+                                <View style={styles.editMedHandle} />
+                                <View style={styles.editMedHeader}>
+                                    <Text style={styles.editMedTitle}>Edit Medication</Text>
+                                    <Pressable onPress={() => setShowEditMedOverlay(false)} style={styles.editMedCloseButton}>
+                                        <MaterialIcons name="close" size={24} color="#6B7280" />
+                                    </Pressable>
+                                </View>
+
+                                <ScrollView
+                                    style={{ maxHeight: 450 }}
+                                    showsVerticalScrollIndicator={false}
+                                    keyboardShouldPersistTaps="always"
+                                >
+                                    {/* Medication Name */}
+                                    <View style={styles.editMedField}>
+                                        <Text style={styles.editMedLabel}>Medication Name</Text>
+                                        <TextInput
+                                            style={styles.editMedInput}
+                                            value={editMedName}
+                                            onChangeText={setEditMedName}
+                                            placeholder="Enter medication name"
+                                            placeholderTextColor="#9CA3AF"
+                                        />
+                                    </View>
+
+                                    {/* Dosage */}
+                                    <View style={styles.editMedField}>
+                                        <Text style={styles.editMedLabel}>Dosage (optional)</Text>
+                                        <TextInput
+                                            style={styles.editMedInput}
+                                            value={editMedDosage}
+                                            onChangeText={setEditMedDosage}
+                                            placeholder="e.g., 500mg, 1 tablet"
+                                            placeholderTextColor="#9CA3AF"
+                                        />
+                                    </View>
+
+                                    {/* Frequency */}
+                                    <View style={styles.editMedField}>
+                                        <Text style={styles.editMedLabel}>Frequency</Text>
+                                        <View style={styles.frequencyChipsContainer}>
+                                            {(['once_daily', 'twice_daily', 'as_needed'] as MedicationFrequency[]).map((freq) => (
+                                                <Pressable
+                                                    key={freq}
+                                                    onPress={() => {
+                                                        setEditMedFrequency(freq);
+                                                        Haptics.selectionAsync();
+                                                    }}
+                                                    style={[
+                                                        styles.frequencyChip,
+                                                        editMedFrequency === freq && styles.frequencyChipActive,
+                                                    ]}
+                                                >
+                                                    <Text
+                                                        style={[
+                                                            styles.frequencyChipText,
+                                                            editMedFrequency === freq && styles.frequencyChipTextActive,
+                                                        ]}
+                                                    >
+                                                        {FREQUENCY_LABELS[freq]}
+                                                    </Text>
+                                                </Pressable>
+                                            ))}
+                                        </View>
+                                    </View>
+
+                                    {/* Time (only if not as_needed) */}
+                                    {editMedFrequency !== 'as_needed' && (
+                                        <View style={styles.editMedField}>
+                                            <Text style={styles.editMedLabel}>Time</Text>
+                                            <View style={styles.timeChipsContainer}>
+                                                {['6:00 AM', '8:00 AM', '12:00 PM', '6:00 PM', '8:00 PM', '10:00 PM'].map((time) => (
+                                                    <Pressable
+                                                        key={time}
+                                                        onPress={() => {
+                                                            setEditMedTimes([time]);
+                                                            Haptics.selectionAsync();
+                                                        }}
+                                                        style={[
+                                                            styles.timeChip,
+                                                            editMedTimes.includes(time) && styles.timeChipActive,
+                                                        ]}
+                                                    >
+                                                        <Text
+                                                            style={[
+                                                                styles.timeChipText,
+                                                                editMedTimes.includes(time) && styles.timeChipTextActive,
+                                                            ]}
+                                                        >
+                                                            {time}
+                                                        </Text>
+                                                    </Pressable>
+                                                ))}
+                                            </View>
+                                        </View>
+                                    )}
+
+                                    {/* Notes */}
+                                    <View style={styles.editMedField}>
+                                        <Text style={styles.editMedLabel}>Notes (optional)</Text>
+                                        <TextInput
+                                            style={[styles.editMedInput, { height: 80, textAlignVertical: 'top', paddingTop: 12 }]}
+                                            value={editMedNotes}
+                                            onChangeText={setEditMedNotes}
+                                            placeholder="Add any notes about this medication..."
+                                            placeholderTextColor="#9CA3AF"
+                                            multiline
+                                        />
+                                    </View>
+                                </ScrollView>
+
+                                {/* Save Button */}
+                                <Pressable
+                                    onPress={saveEditedMedication}
+                                    disabled={!editMedName.trim()}
+                                    style={[
+                                        styles.editMedSaveButton,
+                                        !editMedName.trim() && styles.editMedSaveButtonDisabled,
+                                    ]}
+                                >
+                                    <Text style={styles.editMedSaveButtonText}>Save Changes</Text>
+                                </Pressable>
+                            </View>
+                        </KeyboardAvoidingView>
+                    </Pressable>
+                )}
+                </KeyboardAvoidingView>
             </Modal>
             {/* Barcode Scanner Modal */}
             <Modal
@@ -2526,7 +2937,8 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                     </CameraView>
                 </View>
             </Modal>
-        </>
+
+                    </>
     );
 }
 
@@ -2534,14 +2946,15 @@ const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'flex-end' },
     content: { width: '100%', maxHeight: height * 0.9, minHeight: height * 0.5, backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: 'hidden' },
     modalCard: { flex: 1, paddingBottom: 0 },
-    grabber: { width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
+    grabberArea: { paddingVertical: 12, alignItems: 'center' },
+    grabber: { width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
     iconContainer: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
     headerText: { flex: 1 },
     headerTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
     headerSub: { fontSize: 13, color: '#64748b', marginTop: 2 },
     closeButton: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center' },
-    scrollContent: { padding: 24, paddingBottom: 180 },
+    scrollContent: { padding: 24, paddingBottom: 100 },
     contentSection: { marginBottom: 24 },
     sectionLabel: { fontSize: 13, fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 },
     scaleContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -2568,6 +2981,9 @@ const styles = StyleSheet.create({
     taskDescription: { fontSize: 15, color: '#475569', lineHeight: 22 },
     insightBox: { backgroundColor: '#f8fafc', borderRadius: 20, padding: 16, borderLeftWidth: 4, borderLeftColor: '#cbd5e1' },
     insightText: { fontSize: 14, color: '#64748b', fontStyle: 'italic', lineHeight: 20 },
+    insightCard: { backgroundColor: '#f0fdf4', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#dcfce7' },
+    insightTitle: { fontSize: 13, fontWeight: '800', color: '#15803d', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 },
+    insightMessage: { fontSize: 14, color: '#166534', lineHeight: 20 },
     summaryCard: { backgroundColor: '#f8fafc', borderRadius: 24, padding: 16, gap: 12, marginBottom: 24 },
     summaryItem: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     summaryIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
@@ -2615,5 +3031,204 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 14,
         fontWeight: '700',
+    },
+    // Compact Notes Modal styles
+    notesModalOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+        zIndex: 9999,
+    },
+    notesModalKeyboardView: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+    notesModalContent: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 24,
+        paddingHorizontal: 20,
+        paddingBottom: Platform.OS === 'ios' ? 20 : 16,
+        paddingTop: 8,
+        margin: 5,
+    },
+    notesModalHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: '#D1D5DB',
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 12,
+    },
+    notesModalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    notesModalTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    notesModalCloseButton: {
+        padding: 4,
+    },
+    notesModalInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    notesModalInput: {
+        flex: 1,
+        height: 56,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 16,
+        paddingHorizontal: 20,
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#111827',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    notesModalDoneButton: {
+        width: 56,
+        height: 56,
+        borderRadius: 16,
+        backgroundColor: '#10B981',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    notesModalHint: {
+        fontSize: 14,
+        color: '#6B7280',
+        textAlign: 'center',
+        marginTop: 12,
+    },
+    // Edit Medication Overlay styles
+    editMedOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+        zIndex: 9999,
+    },
+    editMedKeyboardView: {
+        flex: 1,
+        justifyContent: 'flex-end',
+    },
+    editMedContent: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 24,
+        paddingHorizontal: 20,
+        paddingBottom: Platform.OS === 'ios' ? 24 : 20,
+        paddingTop: 8,
+        margin: 5,
+    },
+    editMedHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: '#D1D5DB',
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 12,
+    },
+    editMedHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    editMedTitle: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: '#111827',
+    },
+    editMedCloseButton: {
+        padding: 4,
+    },
+    editMedField: {
+        marginBottom: 16,
+    },
+    editMedLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#4B5563',
+        marginBottom: 8,
+    },
+    editMedInput: {
+        height: 48,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        fontSize: 16,
+        fontWeight: '500',
+        color: '#111827',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    frequencyChipsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    frequencyChip: {
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 20,
+        backgroundColor: '#F3F4F6',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    frequencyChipActive: {
+        backgroundColor: '#8b5cf6',
+        borderColor: '#8b5cf6',
+    },
+    frequencyChipText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#4B5563',
+    },
+    frequencyChipTextActive: {
+        color: '#FFFFFF',
+    },
+    timeChipsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    timeChip: {
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 16,
+        backgroundColor: '#F3F4F6',
+        borderWidth: 1,
+        borderColor: '#E5E7EB',
+    },
+    timeChipActive: {
+        backgroundColor: '#8b5cf6',
+        borderColor: '#8b5cf6',
+    },
+    timeChipText: {
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#4B5563',
+    },
+    timeChipTextActive: {
+        color: '#FFFFFF',
+    },
+    editMedSaveButton: {
+        backgroundColor: '#8b5cf6',
+        paddingVertical: 16,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 8,
+    },
+    editMedSaveButtonDisabled: {
+        backgroundColor: 'rgba(139, 92, 246, 0.4)',
+    },
+    editMedSaveButtonText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#FFFFFF',
     },
 });

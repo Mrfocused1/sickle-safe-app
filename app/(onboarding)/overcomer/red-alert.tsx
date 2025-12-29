@@ -10,16 +10,10 @@ import { BackButton, CounterInput } from '../../../components/onboarding';
 
 export default function HydrationGoalScreen() {
   const [hydrationGoal, setHydrationGoal] = useState(8);
-  const [showToast, setShowToast] = useState(false);
 
   const handleFinish = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setShowToast(true);
-
-    // Navigate after toast displays
-    setTimeout(() => {
-      router.replace('/(overcomer)');
-    }, 1800);
+    router.replace('/(overcomer)');
   };
 
   const getHydrationTip = (glasses: number) => {
@@ -118,47 +112,6 @@ export default function HydrationGoalScreen() {
           </Pressable>
         </View>
       </SafeAreaView>
-
-      {/* Completion Toast */}
-      {showToast && (
-        <View style={{
-          position: 'absolute',
-          top: 80,
-          left: 24,
-          right: 24,
-          backgroundColor: '#FEE2E2',
-          padding: 20,
-          borderRadius: 20,
-          flexDirection: 'row',
-          alignItems: 'center',
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.15,
-          shadowRadius: 24,
-          elevation: 10,
-          zIndex: 9999,
-        }}>
-          <View style={{
-            width: 40,
-            height: 40,
-            borderRadius: 12,
-            backgroundColor: '#EF4444',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: 16,
-          }}>
-            <Check size={20} color="#ffffff" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#111827' }}>
-              Profile Complete!
-            </Text>
-            <Text style={{ fontSize: 13, fontWeight: '500', color: '#6B7280', marginTop: 2 }}>
-              Welcome to your health journey
-            </Text>
-          </View>
-        </View>
-      )}
     </View>
   );
 }

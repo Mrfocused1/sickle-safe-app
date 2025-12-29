@@ -26,8 +26,11 @@ import Animated, {
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import AddCarePlanModal from '../../components/AddCarePlanModal';
 import AppBottomSheet from '../../components/AppBottomSheet';
+import { ConversationListSheet, ContactPicker, GroupCreator, ChatSheet } from '../../components/messaging';
 import { healthLogStorage } from '../../services/healthLogStorage';
+import { messagingStorage } from '../../services/messagingStorage';
 import { DailyHealthLog, DailyLogSummary } from '../../types/healthLog';
+import { CurrentUser, Conversation } from '../../types/messaging';
 import { useFocusEffect } from '@react-navigation/native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -38,6 +41,19 @@ export default function DashboardScreen() {
   const [activeTask, setActiveTask] = React.useState<any>(null);
   const [activeType, setActiveType] = React.useState<any>('task');
   const [showWellnessSummary, setShowWellnessSummary] = React.useState(false);
+  const [showMessageSelection, setShowMessageSelection] = React.useState(false);
+  const [showConversationList, setShowConversationList] = React.useState(false);
+  const [conversationFilterType, setConversationFilterType] = React.useState<'all' | 'direct' | 'group'>('all');
+  const [showContactPicker, setShowContactPicker] = React.useState(false);
+  const [showGroupCreator, setShowGroupCreator] = React.useState(false);
+  const [showChatSheet, setShowChatSheet] = React.useState(false);
+  const [activeConversation, setActiveConversation] = React.useState<Conversation | null>(null);
+  const [totalUnreadCount, setTotalUnreadCount] = React.useState(0);
+  const [currentUser] = React.useState<CurrentUser>({
+    id: 'current_user',
+    name: 'Maya',
+    role: 'overcomer',
+  });
   const params = useLocalSearchParams();
   const scrollViewRef = React.useRef<ScrollView>(null);
   const carePlanY = React.useRef(0);
@@ -55,6 +71,7 @@ export default function DashboardScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadHealthData();
+      loadUnreadCount();
 
       if (params.openAddCarePlan === 'true') {
         // Delay slightly to ensure layout is ready
@@ -65,8 +82,27 @@ export default function DashboardScreen() {
           router.setParams({ openAddCarePlan: undefined });
         }, 100);
       }
-    }, [params.openAddCarePlan])
+
+      if (params.openMessages === 'true') {
+        // Delay slightly to ensure layout is ready
+        setTimeout(() => {
+          setShowConversationList(true);
+          // Clear params without full navigation to avoid re-triggering
+          router.setParams({ openMessages: undefined });
+        }, 100);
+      }
+    }, [params.openAddCarePlan, params.openMessages])
   );
+
+  const loadUnreadCount = async () => {
+    try {
+      await messagingStorage.initializeWithMockData();
+      const count = await messagingStorage.getTotalUnreadCount();
+      setTotalUnreadCount(count);
+    } catch (error) {
+      console.error('Failed to load unread count:', error);
+    }
+  };
 
   const loadHealthData = async () => {
     try {
@@ -201,7 +237,8 @@ export default function DashboardScreen() {
     const translateY = useSharedValue(0);
     const isDragging = useSharedValue(false);
     const isSwipping = useSharedValue(false);
-    const context = useSharedValue({ y: 0 });
+    const currentShift = useSharedValue(0);
+    const ITEM_HEIGHT = 100; // Approximate height of each card including margin
 
     const borderColor = priority === 'critical' ? '#ef4444' : priority === 'needs_help' ? '#f59e0b' : '#10b981';
     const bgColor = priority === 'critical' ? '#fee2e2' : priority === 'needs_help' ? '#fef3c7' : '#d1fae5';
@@ -225,28 +262,35 @@ export default function DashboardScreen() {
       });
 
     const dragGesture = Gesture.Pan()
-      .activateAfterLongPress(400)
-      .activeOffsetY([-10, 10])
-      .failOffsetX([-10, 10])
+      .activateAfterLongPress(300)
+      .activeOffsetY([-5, 5])
+      .failOffsetX([-15, 15])
       .onBegin(() => {
         isDragging.value = true;
-        runOnJS(Haptics.impactAsync)(Haptics.ImpactFeedbackStyle.Heavy);
+        currentShift.value = 0;
       })
       .onUpdate((event) => {
-        // Strictly vertical
         translateY.value = event.translationY;
+
+        // Calculate the shift based on drag distance
+        const newShift = Math.round(translateY.value / ITEM_HEIGHT);
+        const clampedShift = Math.max(-index, Math.min(allTasksLength - 1 - index, newShift));
+        currentShift.value = clampedShift;
       })
       .onEnd(() => {
-        const threshold = 80; // Adjusted for better stability
-        const shift = Math.round(translateY.value / threshold);
-        if (shift !== 0) {
-          runOnJS(onOrderChange)(index, index + shift);
+        const shift = Math.round(translateY.value / ITEM_HEIGHT);
+        const clampedShift = Math.max(-index, Math.min(allTasksLength - 1 - index, shift));
+
+        if (clampedShift !== 0) {
+          runOnJS(onOrderChange)(index, index + clampedShift);
         }
-        translateY.value = withSpring(0);
+        translateY.value = withSpring(0, { damping: 15, stiffness: 150 });
         isDragging.value = false;
+        currentShift.value = 0;
       })
       .onFinalize(() => {
         isDragging.value = false;
+        currentShift.value = 0;
       });
 
 
@@ -254,15 +298,19 @@ export default function DashboardScreen() {
       transform: [
         { translateX: translateX.value },
         { translateY: translateY.value },
-        { scale: isDragging.value ? 1.05 : 1 },
+        { scale: withSpring(isDragging.value ? 1.03 : 1) },
+        { rotate: isDragging.value ? `${translateY.value * 0.01}deg` : '0deg' },
       ],
       zIndex: isDragging.value ? 1000 : 1,
       borderRadius: 24,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 10 },
-      shadowRadius: 15,
-      shadowOpacity: withSpring(isDragging.value ? 0.15 : 0),
-      backgroundColor: isDragging.value ? '#fff' : 'transparent',
+      shadowOffset: { width: 0, height: isDragging.value ? 15 : 2 },
+      shadowRadius: isDragging.value ? 20 : 5,
+      shadowOpacity: withSpring(isDragging.value ? 0.25 : 0.05),
+      elevation: isDragging.value ? 10 : 2,
+      backgroundColor: '#fff',
+      borderWidth: isDragging.value ? 2 : 0,
+      borderColor: isDragging.value ? '#8b5cf6' : 'transparent',
     }));
 
 
@@ -350,14 +398,48 @@ export default function DashboardScreen() {
                 <Text className="text-brand-title text-brand-dark">Maya</Text>
               </View>
               <Pressable
-                onPress={() => router.push('/profile')}
-                className="w-10 h-10 rounded-full bg-gray-200 border-2 border-white overflow-hidden shadow-sm active:scale-95"
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setShowMessageSelection(true);
+                }}
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 22,
+                  backgroundColor: '#10B981',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 8,
+                  elevation: 6,
+                  position: 'relative',
+                }}
               >
-                <Image
-                  source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCORMa38YShjxWXHcbH-MfY1UZF9LvIjHefqm4MnmpLYEROxwh8VpTJetiR_BPF_Kt4A676WuCNDwR6TmAHY5CN6SnaFzheHF0M5FtIlw80jCm2wH4NOcOa-IqaDBUomapbokmokeLN4wPVLAKg_jiKNzkeDzcjGH0r2qvVI1wF9rSlEq-KXsGO67Ujocu1a-guDc9qfSpuY_B_7PiQhy4P-zUFKocITqdWQuKu6QB8e9zr2Z-7vDyE00NRn5JxUXrBpBU36ttjbSZi' }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
+                <MaterialIcons name="chat-bubble" size={22} color="#ffffff" />
+                {totalUnreadCount > 0 && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: -4,
+                      right: -4,
+                      minWidth: 20,
+                      height: 20,
+                      borderRadius: 10,
+                      backgroundColor: '#EF4444',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingHorizontal: 4,
+                      borderWidth: 2,
+                      borderColor: '#fff',
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#fff' }}>
+                      {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                    </Text>
+                  </View>
+                )}
               </Pressable>
             </View>
           </View>
@@ -580,6 +662,89 @@ export default function DashboardScreen() {
           visible={showWellnessSummary}
           onClose={() => setShowWellnessSummary(false)}
           type="wellness_summary"
+        />
+
+        <AppBottomSheet
+          visible={showMessageSelection}
+          onClose={() => setShowMessageSelection(false)}
+          type="message_selection"
+          onNewDM={() => {
+            setShowMessageSelection(false);
+            setShowContactPicker(true);
+          }}
+          onNewGroup={() => {
+            setShowMessageSelection(false);
+            setShowGroupCreator(true);
+          }}
+          onOpenDMInbox={() => {
+            setShowMessageSelection(false);
+            setConversationFilterType('direct');
+            setShowConversationList(true);
+          }}
+          onOpenGroupInbox={() => {
+            setShowMessageSelection(false);
+            setConversationFilterType('group');
+            setShowConversationList(true);
+          }}
+        />
+
+        {/* Messaging Sheets */}
+        <ConversationListSheet
+          visible={showConversationList}
+          onClose={() => {
+            setShowConversationList(false);
+            setConversationFilterType('all');
+            loadUnreadCount();
+          }}
+          filterType={conversationFilterType}
+          currentUser={currentUser}
+          onNewDM={() => setShowContactPicker(true)}
+          onNewGroup={() => setShowGroupCreator(true)}
+          onOpenChat={(conversation) => {
+            setActiveConversation(conversation);
+            setShowChatSheet(true);
+          }}
+        />
+
+        <ContactPicker
+          visible={showContactPicker}
+          onClose={() => setShowContactPicker(false)}
+          onSelect={(conversation: Conversation) => {
+            setShowContactPicker(false);
+            setActiveConversation(conversation);
+            setShowChatSheet(true);
+            loadUnreadCount();
+          }}
+          currentUser={currentUser}
+        />
+
+        <GroupCreator
+          visible={showGroupCreator}
+          onClose={() => setShowGroupCreator(false)}
+          onCreate={(conversation: Conversation) => {
+            setShowGroupCreator(false);
+            setActiveConversation(conversation);
+            setShowChatSheet(true);
+            loadUnreadCount();
+          }}
+          currentUser={currentUser}
+        />
+
+        <ChatSheet
+          visible={showChatSheet}
+          onClose={() => {
+            setShowChatSheet(false);
+            setActiveConversation(null);
+            loadUnreadCount();
+          }}
+          onBack={() => {
+            setShowChatSheet(false);
+            setActiveConversation(null);
+            setShowConversationList(true);
+            loadUnreadCount();
+          }}
+          conversation={activeConversation}
+          currentUser={currentUser}
         />
       </View>
     </GestureHandlerRootView >

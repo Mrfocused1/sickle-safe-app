@@ -1,12 +1,16 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
 import { View, Pressable, Animated } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import * as Haptics from 'expo-haptics';
 import AddMenuModal from '../../components/AddMenuModal';
+import { userProfileStorage } from '../../services/userProfileStorage';
+import { healthLogStorage } from '../../services/healthLogStorage';
+import { messagingStorage } from '../../services/messagingStorage';
 
 export default function OvercomerLayout() {
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const rotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -16,6 +20,47 @@ export default function OvercomerLayout() {
       useNativeDriver: true,
     }).start();
   }, [showAddMenu]);
+
+  // Load unread message count
+  useEffect(() => {
+    const loadUnreadCount = async () => {
+      try {
+        await messagingStorage.initializeWithMockData();
+        const count = await messagingStorage.getTotalUnreadCount();
+        setUnreadCount(count);
+      } catch (error) {
+        console.error('Error loading unread count:', error);
+      }
+    };
+    loadUnreadCount();
+  }, [showAddMenu]); // Refresh when menu closes
+
+  // Auto-populate medications based on sickle cell type from onboarding
+  useEffect(() => {
+    const initializeMedications = async () => {
+      try {
+        // Check if medications have already been initialized
+        const isInitialized = await userProfileStorage.isMedicationsInitialized();
+        if (isInitialized) return;
+
+        // Get user's sickle cell types from onboarding
+        const sickleCellTypes = await userProfileStorage.getSickleCellTypes();
+        if (sickleCellTypes.length === 0) return;
+
+        // Initialize medications based on sickle cell type
+        await healthLogStorage.initializeMedicationsForSickleCellType(sickleCellTypes);
+
+        // Mark as initialized so we don't re-populate
+        await userProfileStorage.setMedicationsInitialized();
+
+        console.log('Medications auto-populated for types:', sickleCellTypes);
+      } catch (error) {
+        console.error('Error initializing medications:', error);
+      }
+    };
+
+    initializeMedications();
+  }, []);
 
   const rotateInterpolate = rotation.interpolate({
     inputRange: [0, 1],
@@ -27,9 +72,19 @@ export default function OvercomerLayout() {
     setShowAddMenu(!showAddMenu);
   };
 
+  const handleOpenMessages = () => {
+    router.push({ pathname: '/(overcomer)', params: { openMessages: 'true' } });
+  };
+
   return (
     <>
-      <AddMenuModal visible={showAddMenu} onClose={() => setShowAddMenu(false)} fabRotation={rotation} />
+      <AddMenuModal
+        visible={showAddMenu}
+        onClose={() => setShowAddMenu(false)}
+        fabRotation={rotation}
+        onOpenMessages={handleOpenMessages}
+        unreadCount={unreadCount}
+      />
       <Tabs
         screenOptions={{
           headerShown: false,

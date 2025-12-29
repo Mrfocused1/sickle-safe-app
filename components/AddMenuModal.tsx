@@ -13,6 +13,8 @@ interface AddMenuModalProps {
   visible: boolean;
   onClose: () => void;
   fabRotation: Animated.Value;
+  onOpenMessages?: () => void;
+  unreadCount?: number;
 }
 
 // Mini Sparkline component
@@ -57,7 +59,7 @@ const getFormattedDate = () => {
   return `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
 };
 
-export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuModalProps) {
+export default function AddMenuModal({ visible, onClose, fabRotation, onOpenMessages, unreadCount = 0 }: AddMenuModalProps) {
   // Animation values
   const scaleAnim1 = useRef(new Animated.Value(0)).current;
   const scaleAnim2 = useRef(new Animated.Value(0)).current;
@@ -194,11 +196,24 @@ export default function AddMenuModal({ visible, onClose, fabRotation }: AddMenuM
         </Animated.View>
 
         <Animated.View style={[styles.menuItem, styles.item4Position, { transform: [{ scale: scaleAnim4 }] }]}>
-          <Pressable onPress={() => { alert('Create New Post (Coming Soon)'); handleClose(); }} style={styles.actionButton}>
-            <View style={[styles.iconContainer, styles.violetIcon]}>
-              <Feather name="edit-3" size={28} color="#ffffff" />
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              handleClose(() => onOpenMessages?.());
+            }}
+            style={styles.actionButton}
+          >
+            <View style={[styles.iconContainer, styles.messageIcon]}>
+              <MaterialIcons name="chat-bubble" size={26} color="#ffffff" />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
             </View>
-            <Text style={styles.label}>New Post</Text>
+            <Text style={styles.label}>Messages</Text>
           </Pressable>
         </Animated.View>
 
@@ -411,6 +426,28 @@ const styles = StyleSheet.create({
   },
   emeraldIcon: {
     backgroundColor: '#10B981',
+  },
+  messageIcon: {
+    backgroundColor: '#10B981',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#fff',
   },
   label: {
     marginTop: 6,

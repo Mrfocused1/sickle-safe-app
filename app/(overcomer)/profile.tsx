@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -20,7 +20,12 @@ import {
 } from 'lucide-react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import * as Haptics from 'expo-haptics';
 import { LogoutConfirmSheet } from '@/components/LogoutConfirmSheet';
+import AppBottomSheet from '@/components/AppBottomSheet';
+import { ConversationListSheet, ContactPicker, GroupCreator, ChatSheet } from '@/components/messaging';
+import { messagingStorage } from '@/services/messagingStorage';
+import { CurrentUser, Conversation } from '@/types/messaging';
 
 interface MenuItemProps {
   icon: React.ReactNode;
@@ -67,6 +72,35 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [showLogoutSheet, setShowLogoutSheet] = useState(false);
 
+  // Messaging state
+  const [showMessageSelection, setShowMessageSelection] = useState(false);
+  const [showConversationList, setShowConversationList] = useState(false);
+  const [conversationFilterType, setConversationFilterType] = useState<'all' | 'direct' | 'group'>('all');
+  const [showContactPicker, setShowContactPicker] = useState(false);
+  const [showGroupCreator, setShowGroupCreator] = useState(false);
+  const [showChatSheet, setShowChatSheet] = useState(false);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+  const [currentUser] = useState<CurrentUser>({
+    id: 'current_user',
+    name: 'Maya',
+    role: 'overcomer',
+  });
+
+  useEffect(() => {
+    loadUnreadCount();
+  }, []);
+
+  const loadUnreadCount = async () => {
+    try {
+      await messagingStorage.initializeWithMockData();
+      const count = await messagingStorage.getTotalUnreadCount();
+      setTotalUnreadCount(count);
+    } catch (error) {
+      console.error('Failed to load unread count:', error);
+    }
+  };
+
   return (
     <View className="flex-1 bg-white">
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
@@ -81,10 +115,48 @@ export default function ProfileScreen() {
               <Text style={{ fontSize: 28, fontWeight: '800', color: '#0f172a', letterSpacing: -0.5 }}>Profile</Text>
             </View>
             <Pressable
-              onPress={() => router.push('/settings/account')}
-              className="px-4 py-2 rounded-full border border-gray-200 bg-gray-50 active:bg-gray-100"
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setShowMessageSelection(true);
+              }}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: '#10B981',
+                alignItems: 'center',
+                justifyContent: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 8,
+                elevation: 6,
+                position: 'relative',
+              }}
             >
-              <Text className="text-gray-700 font-semibold text-xs">Edit</Text>
+              <MaterialIcons name="chat-bubble" size={22} color="#ffffff" />
+              {totalUnreadCount > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -4,
+                    minWidth: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    backgroundColor: '#EF4444',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    paddingHorizontal: 4,
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#fff' }}>
+                    {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                  </Text>
+                </View>
+              )}
             </Pressable>
           </View>
 
@@ -213,6 +285,90 @@ export default function ProfileScreen() {
       <LogoutConfirmSheet
         visible={showLogoutSheet}
         onClose={() => setShowLogoutSheet(false)}
+      />
+
+      {/* Message Selection Sheet */}
+      <AppBottomSheet
+        visible={showMessageSelection}
+        onClose={() => setShowMessageSelection(false)}
+        type="message_selection"
+        onNewDM={() => {
+          setShowMessageSelection(false);
+          setShowContactPicker(true);
+        }}
+        onNewGroup={() => {
+          setShowMessageSelection(false);
+          setShowGroupCreator(true);
+        }}
+        onOpenDMInbox={() => {
+          setShowMessageSelection(false);
+          setConversationFilterType('direct');
+          setShowConversationList(true);
+        }}
+        onOpenGroupInbox={() => {
+          setShowMessageSelection(false);
+          setConversationFilterType('group');
+          setShowConversationList(true);
+        }}
+      />
+
+      {/* Messaging Sheets */}
+      <ConversationListSheet
+        visible={showConversationList}
+        onClose={() => {
+          setShowConversationList(false);
+          setConversationFilterType('all');
+          loadUnreadCount();
+        }}
+        filterType={conversationFilterType}
+        currentUser={currentUser}
+        onNewDM={() => setShowContactPicker(true)}
+        onNewGroup={() => setShowGroupCreator(true)}
+        onOpenChat={(conversation) => {
+          setActiveConversation(conversation);
+          setShowChatSheet(true);
+        }}
+      />
+
+      <ContactPicker
+        visible={showContactPicker}
+        onClose={() => setShowContactPicker(false)}
+        onSelect={(conversation: Conversation) => {
+          setShowContactPicker(false);
+          setActiveConversation(conversation);
+          setShowChatSheet(true);
+          loadUnreadCount();
+        }}
+        currentUser={currentUser}
+      />
+
+      <GroupCreator
+        visible={showGroupCreator}
+        onClose={() => setShowGroupCreator(false)}
+        onCreate={(conversation: Conversation) => {
+          setShowGroupCreator(false);
+          setActiveConversation(conversation);
+          setShowChatSheet(true);
+          loadUnreadCount();
+        }}
+        currentUser={currentUser}
+      />
+
+      <ChatSheet
+        visible={showChatSheet}
+        onClose={() => {
+          setShowChatSheet(false);
+          setActiveConversation(null);
+          loadUnreadCount();
+        }}
+        onBack={() => {
+          setShowChatSheet(false);
+          setActiveConversation(null);
+          setShowConversationList(true);
+          loadUnreadCount();
+        }}
+        conversation={activeConversation}
+        currentUser={currentUser}
       />
     </View>
   );

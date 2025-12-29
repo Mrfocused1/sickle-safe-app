@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Pressable, Animated, StyleSheet, Dimensions, Modal } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { CountUp, AnimatedProgress } from './SummaryAnimations';
+import * as Haptics from 'expo-haptics';
 
 const { width, height } = Dimensions.get('window');
 
@@ -10,9 +11,11 @@ interface AddMenuModalProps {
   visible: boolean;
   onClose: () => void;
   fabRotation: Animated.Value;
+  onOpenMessages?: () => void;
+  unreadCount?: number;
 }
 
-export default function CaregiverAddMenuModal({ visible, onClose, fabRotation }: AddMenuModalProps) {
+export default function CaregiverAddMenuModal({ visible, onClose, fabRotation, onOpenMessages, unreadCount = 0 }: AddMenuModalProps) {
   const scaleAnim1 = useRef(new Animated.Value(0)).current;
   const scaleAnim2 = useRef(new Animated.Value(0)).current;
   const scaleAnim4 = useRef(new Animated.Value(0)).current;
@@ -211,7 +214,7 @@ export default function CaregiverAddMenuModal({ visible, onClose, fabRotation }:
           </Pressable>
         </Animated.View>
 
-        {/* Item 3 - Far Right - Care Note */}
+        {/* Item 3 - Far Right - Messages */}
         <Animated.View
           style={[
             styles.menuItem,
@@ -223,15 +226,25 @@ export default function CaregiverAddMenuModal({ visible, onClose, fabRotation }:
         >
           <Pressable
             onPress={() => {
-              alert('Add Care Note (Coming Soon)');
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
               handleClose();
+              setTimeout(() => {
+                onOpenMessages?.();
+              }, 200);
             }}
             style={styles.actionButton}
           >
-            <View style={[styles.iconContainer, styles.amberIcon]}>
-              <Feather name="file-text" size={32} color="#ffffff" />
+            <View style={[styles.iconContainer, styles.greenIcon]}>
+              <MaterialIcons name="chat-bubble" size={28} color="#ffffff" />
+              {unreadCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
+              )}
             </View>
-            <Text style={styles.label}>Care Note</Text>
+            <Text style={styles.label}>Messages</Text>
           </Pressable>
         </Animated.View>
       </View>
@@ -331,6 +344,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#F59E0B',
     borderWidth: 2,
     borderColor: '#FCD34D',
+  },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#fff',
   },
   label: {
     marginTop: 8,

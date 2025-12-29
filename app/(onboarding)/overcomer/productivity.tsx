@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, ImageBackground } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, ImageBackground, KeyboardAvoidingView, Platform, Keyboard, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { BackButton, MultiSelection, TextInputField } from '../../../components/onboarding';
-import { Plus, X } from 'lucide-react-native';
+import { BackButton, MultiSelection } from '../../../components/onboarding';
+import { Plus, X, Check } from 'lucide-react-native';
+import { userProfileStorage } from '../../../services/userProfileStorage';
 
 const initialSickleTypes = [
   {
@@ -34,10 +34,24 @@ const initialSickleTypes = [
 export default function SickleTypeScreen() {
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [customTypes, setCustomTypes] = useState<{ value: string; label: string; description: string }[]>([]);
-  const [isAdding, setIsAdding] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const sickleTypes = [...initialSickleTypes, ...customTypes];
+
+  const [showModal, setShowModal] = useState(false);
+
+  const openAddModal = () => {
+    setNewTypeName('');
+    setShowModal(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setNewTypeName('');
+    Keyboard.dismiss();
+  };
 
   const handleAddType = () => {
     if (newTypeName.trim()) {
@@ -50,15 +64,16 @@ export default function SickleTypeScreen() {
       setCustomTypes([...customTypes, newOption]);
       setSelectedTypes([...selectedTypes, value]);
       setNewTypeName('');
-      setIsAdding(false);
+      setShowModal(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedTypes.length > 0) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // TODO: Save to profile
+      // Save sickle cell types to profile for medication auto-population
+      await userProfileStorage.saveSickleCellTypes(selectedTypes, customTypes);
       router.push('/(onboarding)/overcomer/safety-net');
     }
   };
@@ -76,107 +91,141 @@ export default function SickleTypeScreen() {
       >
         <View style={styles.overlay} />
 
-        <SafeAreaView style={styles.safeArea}>
-          {/* Header */}
-          <View style={styles.header}>
-            <BackButton color="#111827" />
-            <View style={styles.stepIndicator}>
-              <Text style={styles.stepText}>Step 1 of 4</Text>
-            </View>
-            <Pressable onPress={() => router.push('/(overcomer)')}>
-              <Text style={styles.skipText}>Skip</Text>
-            </Pressable>
-          </View>
-
-          {/* Progress Bar */}
-          <View style={styles.progressContainer}>
-            <View style={styles.progressTrack}>
-              <View style={[styles.progressFill, { width: '25%' }]} />
-            </View>
-          </View>
-
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+        <SafeAreaView style={styles.safeArea} edges={['top']}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardAvoidingView}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
           >
+            {/* Header */}
+            <View style={styles.header}>
+              <BackButton color="#111827" />
+              <View style={styles.stepIndicator}>
+                <Text style={styles.stepText}>Step 1 of 4</Text>
+              </View>
+              <Pressable onPress={() => router.push('/(overcomer)')}>
+                <Text style={styles.skipText}>Skip</Text>
+              </Pressable>
+            </View>
 
-            {/* Title */}
-            <Text style={styles.title}>
-              What type of{'\n'}
-              <Text style={styles.titleAccent}>Sickle Cell</Text> do you have?
-            </Text>
+            {/* Progress Bar */}
+            <View style={styles.progressContainer}>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: '25%' }]} />
+              </View>
+            </View>
 
-            <Text style={styles.subtitle}>
-              This helps us personalize your health tracking and provide relevant information.
-            </Text>
+            <ScrollView
+              ref={scrollViewRef}
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="on-drag"
+            >
 
-            {/* Multi Selection */}
-            <View style={styles.inputSection}>
-              <MultiSelection
-                label=""
-                options={sickleTypes}
-                selectedValues={selectedTypes}
-                onChange={setSelectedTypes}
-                color="#EF4444"
-                variant="default"
-              />
+              {/* Title */}
+              <Text style={styles.title}>
+                What type of{'\n'}
+                <Text style={styles.titleAccent}>Sickle Cell</Text> do you have?
+              </Text>
 
-              {isAdding ? (
-                <View style={styles.addingContainer}>
-                  <TextInputField
-                    label="Other Type"
-                    value={newTypeName}
-                    onChange={setNewTypeName}
-                    placeholder="e.g. HbS/Hereditary Persistence"
-                    autoFocus
-                    variant="default"
-                  />
-                  <View style={styles.addingActions}>
-                    <Pressable
-                      onPress={() => setIsAdding(false)}
-                      style={styles.cancelButton}
-                    >
-                      <Text style={styles.cancelButtonText}>Cancel</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={handleAddType}
-                      disabled={!newTypeName.trim()}
-                      style={[
-                        styles.addButton,
-                        !newTypeName.trim() && styles.addButtonDisabled
-                      ]}
-                    >
-                      <Text style={styles.addButtonText}>Add</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              ) : (
+              <Text style={styles.subtitle}>
+                This helps us personalize your health tracking and provide relevant information.
+              </Text>
+
+              {/* Multi Selection */}
+              <View style={styles.inputSection}>
+                <MultiSelection
+                  label=""
+                  options={sickleTypes}
+                  selectedValues={selectedTypes}
+                  onChange={setSelectedTypes}
+                  color="#EF4444"
+                  variant="default"
+                />
+
                 <Pressable
-                  onPress={() => setIsAdding(true)}
+                  onPress={openAddModal}
                   style={styles.addTypeButton}
                 >
                   <Plus size={20} color="#EF4444" strokeWidth={2.5} />
                   <Text style={styles.addTypeButtonText}>Add Other Type</Text>
                 </Pressable>
-              )}
-            </View>
-          </ScrollView>
+              </View>
+            </ScrollView>
 
-          {/* Bottom CTA */}
-          <View style={styles.bottomSection}>
-            <Pressable
-              onPress={handleContinue}
-              disabled={!isValid}
-              style={[
-                styles.primaryButton,
-                !isValid && styles.primaryButtonDisabled,
-              ]}
-            >
-              <Text style={styles.buttonText}>Continue</Text>
-            </Pressable>
-          </View>
+            {/* Bottom CTA */}
+            <View style={styles.bottomSection}>
+              <Pressable
+                onPress={handleContinue}
+                disabled={!isValid}
+                style={[
+                  styles.primaryButton,
+                  !isValid && styles.primaryButtonDisabled,
+                ]}
+              >
+                <Text style={styles.buttonText}>Continue</Text>
+              </Pressable>
+            </View>
+          </KeyboardAvoidingView>
         </SafeAreaView>
+
+        {/* Bottom Sheet Modal */}
+        <Modal
+          visible={showModal}
+          transparent
+          animationType="slide"
+          onRequestClose={closeModal}
+        >
+          <Pressable style={styles.modalOverlay} onPress={closeModal}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.modalKeyboardView}
+            >
+              <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+                {/* Handle bar */}
+                <View style={styles.modalHandle} />
+
+                {/* Header */}
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Add Other Type</Text>
+                  <Pressable onPress={closeModal} style={styles.modalCloseButton}>
+                    <X size={24} color="#6B7280" />
+                  </Pressable>
+                </View>
+
+                {/* Input */}
+                <View style={styles.modalInputContainer}>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={newTypeName}
+                    onChangeText={setNewTypeName}
+                    placeholder="e.g. HbS/Hereditary Persistence"
+                    placeholderTextColor="#9CA3AF"
+                    autoFocus
+                    returnKeyType="done"
+                    onSubmitEditing={handleAddType}
+                  />
+                  <Pressable
+                    onPress={handleAddType}
+                    disabled={!newTypeName.trim()}
+                    style={[
+                      styles.modalDoneButton,
+                      !newTypeName.trim() && styles.modalDoneButtonDisabled
+                    ]}
+                  >
+                    <Check size={24} color="#fff" strokeWidth={3} />
+                  </Pressable>
+                </View>
+
+                <Text style={styles.modalHint}>
+                  Enter the name of your sickle cell type
+                </Text>
+              </Pressable>
+            </KeyboardAvoidingView>
+          </Pressable>
+        </Modal>
       </ImageBackground>
     </View>
   );
@@ -235,13 +284,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
     borderRadius: 2,
   },
+  keyboardAvoidingView: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 48,
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   iconContainer: {
     width: 64,
@@ -318,46 +370,84 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     marginLeft: 8,
   },
-  addingContainer: {
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalKeyboardView: {
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
     backgroundColor: '#FFFFFF',
-    padding: 16,
     borderRadius: 24,
-    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 16,
+    paddingTop: 8,
+    margin: 5,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#D1D5DB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalInput: {
+    flex: 1,
+    height: 56,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#111827',
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    shadowColor: '#000',
+  },
+  modalDoneButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  addingActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 12,
-    marginTop: 12,
+  modalDoneButtonDisabled: {
+    backgroundColor: 'rgba(16, 185, 129, 0.3)',
+    shadowOpacity: 0,
   },
-  cancelButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  cancelButtonText: {
+  modalHint: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#6B7280',
-  },
-  addButton: {
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 12,
-  },
-  addButtonDisabled: {
-    backgroundColor: 'rgba(239, 68, 68, 0.3)',
-  },
-  addButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: '500',
+    color: '#9CA3AF',
+    marginTop: 8,
+    textAlign: 'center',
   },
 });

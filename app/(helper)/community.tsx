@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, TextInput, Pressable, Image, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import {
     Search,
@@ -71,6 +72,7 @@ const POSTS = [
 
 export default function CommunityScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [showSheet, setShowSheet] = useState(false);
@@ -127,8 +129,8 @@ export default function CommunityScreen() {
                 removeClippedSubviews={false}
             >
                 {/* Header Section */}
-                <View className="px-6 py-6 bg-white">
-                    <View className="flex-row items-center justify-between mb-4">
+                <View className="px-6 pb-2 bg-white" style={{ paddingTop: insets.top + 8 }}>
+                    <View className="flex-row items-center justify-between mb-2">
                         <View className="flex-1">
                             <Text style={{ fontSize: 34, fontWeight: '900', color: '#0f172a', letterSpacing: -1.2 }}>Community</Text>
                             <Text style={{ fontSize: 16, fontWeight: '500', color: '#64748b', marginTop: 2 }}>Connect with other caregivers</Text>
@@ -146,10 +148,10 @@ export default function CommunityScreen() {
                 </View>
 
                 {/* Sticky Interactive Bar */}
-                <View className="bg-white pb-6 pt-2 border-b border-gray-50" style={{ zIndex: 100 }}>
-                    <View className="px-6">
-                        {/* Search Bar */}
-                        <View className="flex-row items-center bg-gray-50 rounded-[24px] px-5 py-4 border border-gray-100 mb-6 shadow-sm focus-within:border-indigo-200">
+                <View className="bg-white pb-4 pt-2 border-b border-gray-50" style={{ zIndex: 100 }}>
+                    {/* Search Bar */}
+                    <View className="px-6 mb-4">
+                        <View className="flex-row items-center bg-gray-50 rounded-[24px] px-5 py-3 border border-gray-100 shadow-sm focus-within:border-indigo-200">
                             <Search size={18} color="#4f46e5" strokeWidth={2.5} />
                             <TextInput
                                 placeholder="Search medical tips, school advice..."
@@ -161,36 +163,36 @@ export default function CommunityScreen() {
                                 selectionColor="#4f46e5"
                             />
                         </View>
-
-                        {/* Animated Category Selector */}
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={{ paddingRight: 24, gap: 10 }}
-                            keyboardShouldPersistTaps="handled"
-                        >
-                            {CATEGORIES.map((cat) => (
-                                <Pressable
-                                    key={cat.id}
-                                    onPress={() => {
-                                        handleAction();
-                                        setSelectedCategory(cat.id);
-                                    }}
-                                    className={`px-6 py-3 rounded-full border ${selectedCategory === cat.id
-                                        ? 'bg-[#0f172a] border-[#0f172a]'
-                                        : 'bg-white border-gray-200'
-                                        } active:scale-95 transition-all shadow-sm`}
-                                >
-                                    <Text
-                                        style={{ fontSize: 13, fontWeight: '700' }}
-                                        className={selectedCategory === cat.id ? 'text-white' : 'text-gray-600'}
-                                    >
-                                        {cat.label}
-                                    </Text>
-                                </Pressable>
-                            ))}
-                        </ScrollView>
                     </View>
+
+                    {/* Animated Category Selector */}
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ paddingLeft: 24, paddingRight: 24, paddingBottom: 4, gap: 10 }}
+                        keyboardShouldPersistTaps="handled"
+                    >
+                        {CATEGORIES.map((cat) => (
+                            <Pressable
+                                key={cat.id}
+                                onPress={() => {
+                                    handleAction();
+                                    setSelectedCategory(cat.id);
+                                }}
+                                className={`px-6 py-3 rounded-full border ${selectedCategory === cat.id
+                                    ? 'bg-[#0f172a] border-[#0f172a]'
+                                    : 'bg-white border-gray-200'
+                                    } active:scale-95 transition-all shadow-sm`}
+                            >
+                                <Text
+                                    style={{ fontSize: 13, fontWeight: '700' }}
+                                    className={selectedCategory === cat.id ? 'text-white' : 'text-gray-600'}
+                                >
+                                    {cat.label}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </ScrollView>
                 </View>
 
                 {/* Featured Resource Card */}
@@ -220,7 +222,14 @@ export default function CommunityScreen() {
                 <View className="px-6 pb-20 pt-2">
                     {filteredPosts.length > 0 ? (
                         filteredPosts.map((post) => (
-                            <View key={post.id} className="mb-8 bg-white rounded-[32px] p-6 shadow-md border border-gray-50">
+                            <Pressable
+                                key={post.id}
+                                onPress={() => {
+                                    handleAction();
+                                    router.push(`/(helper)/post/${post.id}`);
+                                }}
+                                className="mb-8 bg-white rounded-[32px] p-6 shadow-md border border-gray-50 active:scale-[0.98]"
+                            >
                                 {/* User Info Header */}
                                 <View className="flex-row items-center justify-between mb-5">
                                     <View className="flex-row items-center">
@@ -243,7 +252,8 @@ export default function CommunityScreen() {
                                         </View>
                                     </View>
                                     <Pressable
-                                        onPress={() => {
+                                        onPress={(e) => {
+                                            e.stopPropagation();
                                             handleAction();
                                             setSelectedPostAuthor(post.author);
                                             setShowSheet(true);
@@ -257,7 +267,7 @@ export default function CommunityScreen() {
                                 {/* Content Section */}
                                 <View className="mb-6">
                                     <Text style={{ fontSize: 20, fontWeight: '900', color: '#0f172a', marginBottom: 8, lineHeight: 28, letterSpacing: -0.4 }}>{post.title}</Text>
-                                    <Text style={{ fontSize: 15, fontWeight: '500', color: '#4b5563', lineHeight: 24 }}>{post.content}</Text>
+                                    <Text style={{ fontSize: 15, fontWeight: '500', color: '#4b5563', lineHeight: 24 }} numberOfLines={3}>{post.content}</Text>
                                 </View>
 
                                 {/* Interactive Footer */}
@@ -267,20 +277,20 @@ export default function CommunityScreen() {
                                     </View>
 
                                     <View className="flex-row items-center gap-5">
-                                        <Pressable className="flex-row items-center gap-2 active:scale-95 px-2 py-1" onPress={handleAction}>
+                                        <Pressable className="flex-row items-center gap-2 active:scale-95 px-2 py-1" onPress={(e) => { e.stopPropagation(); handleAction(); }}>
                                             <Heart size={22} color="#94a3b8" strokeWidth={2} />
                                             <Text style={{ fontSize: 14, fontWeight: '800', color: '#64748b' }}>{post.likes}</Text>
                                         </Pressable>
-                                        <Pressable className="flex-row items-center gap-2 active:scale-95 px-2 py-1" onPress={handleAction}>
+                                        <Pressable className="flex-row items-center gap-2 active:scale-95 px-2 py-1" onPress={(e) => { e.stopPropagation(); handleAction(); }}>
                                             <MessageCircle size={22} color="#94a3b8" strokeWidth={2} />
                                             <Text style={{ fontSize: 14, fontWeight: '800', color: '#64748b' }}>{post.comments}</Text>
                                         </Pressable>
-                                        <Pressable className="active:scale-95 p-1" onPress={handleAction}>
+                                        <Pressable className="active:scale-95 p-1" onPress={(e) => { e.stopPropagation(); handleAction(); }}>
                                             <Share2 size={22} color="#94a3b8" strokeWidth={2} />
                                         </Pressable>
                                     </View>
                                 </View>
-                            </View>
+                            </Pressable>
                         ))
                     ) : (
                         <View className="py-32 items-center justify-center">

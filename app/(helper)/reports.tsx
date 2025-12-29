@@ -178,7 +178,7 @@ export default function ReportsScreen() {
                 </View>
 
                 {/* Team Updates */}
-                <View className="px-6 mb-12">
+                <View className="px-6 mb-4">
                     <Text style={{ fontSize: 12, fontWeight: '700', color: '#64748b', letterSpacing: 1, textTransform: 'uppercase' }} className="mb-4 ml-1">Team Communication</Text>
                     <Pressable
                         onPress={() => {

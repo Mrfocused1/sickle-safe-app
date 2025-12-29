@@ -35,7 +35,6 @@ export default function VolunteerOnboardingScreen() {
   const [skills, setSkills] = useState<string[]>([]);
   const [customSkill, setCustomSkill] = useState('');
   const [hoursPerWeek, setHoursPerWeek] = useState(2);
-  const [showToast, setShowToast] = useState(false);
 
   const handleNext = () => {
     if (step < 3) {
@@ -56,11 +55,7 @@ export default function VolunteerOnboardingScreen() {
 
   const handleFinish = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setShowToast(true);
-
-    setTimeout(() => {
-      router.replace('/(volunteer)');
-    }, 1800);
+    router.replace('/(volunteer)');
   };
 
   const getCommitmentLabel = (hours: number) => {
@@ -232,19 +227,6 @@ export default function VolunteerOnboardingScreen() {
           </Pressable>
         </View>
       </SafeAreaView>
-
-      {/* Completion Toast */}
-      {showToast && (
-        <View style={styles.toast}>
-          <View style={styles.toastIcon}>
-            <Check size={20} color="#ffffff" />
-          </View>
-          <View style={styles.toastText}>
-            <Text style={styles.toastTitle}>Welcome, Volunteer!</Text>
-            <Text style={styles.toastSubtitle}>Thank you for joining the community</Text>
-          </View>
-        </View>
-      )}
     </View>
   );
 }
@@ -398,45 +380,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#fff',
-  },
-  toast: {
-    position: 'absolute',
-    top: 80,
-    left: 24,
-    right: 24,
-    backgroundColor: '#EFF6FF',
-    padding: 20,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 10,
-    zIndex: 9999,
-  },
-  toastIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  toastText: {
-    flex: 1,
-  },
-  toastTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  toastSubtitle: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginTop: 2,
   },
 });

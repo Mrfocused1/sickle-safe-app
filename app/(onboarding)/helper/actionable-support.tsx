@@ -4,49 +4,39 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Bell, Check } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { BackButton, ChipSelection } from '../../../components/onboarding';
 
 const alertOptions = [
-  { value: 'crisis', label: 'Crisis Alerts', emoji: '🚨' },
-  { value: 'medication', label: 'Medication', emoji: '💊' },
-  { value: 'hydration', label: 'Hydration', emoji: '💧' },
-  { value: 'appointments', label: 'Appointments', emoji: '📅' },
-  { value: 'checkups', label: 'Daily Check-ins', emoji: '✅' },
-  { value: 'mood', label: 'Mood Changes', emoji: '😔' },
+  { value: 'crisis', label: 'Crisis Alerts' },
+  { value: 'medication', label: 'Medication' },
+  { value: 'hydration', label: 'Hydration' },
+  { value: 'appointments', label: 'Appointments' },
+  { value: 'checkups', label: 'Daily Check-ins' },
+  { value: 'mood', label: 'Mood Changes' },
 ];
 
 const availabilityOptions = [
-  { value: '24-7', label: '24/7 Available', emoji: '🌙' },
-  { value: 'daytime', label: 'Daytime Only', emoji: '☀️' },
-  { value: 'emergencies', label: 'Emergencies Only', emoji: '🆘' },
-  { value: 'scheduled', label: 'Scheduled Times', emoji: '⏰' },
+  { value: '24-7', label: '24/7 Available' },
+  { value: 'daytime', label: 'Daytime Only' },
+  { value: 'emergencies', label: 'Emergencies Only' },
+  { value: 'scheduled', label: 'Scheduled Times' },
 ];
 
 export default function AlertPreferencesScreen() {
   const [alerts, setAlerts] = useState<string[]>(['crisis']);
   const [availability, setAvailability] = useState<string[]>([]);
-  const [showToast, setShowToast] = useState(false);
 
   const handleFinish = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setShowToast(true);
-
-    setTimeout(() => {
-      router.replace('/(helper)');
-    }, 1800);
+    router.replace('/(helper)');
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      <LinearGradient
-        colors={['#ffffff', '#ECFDF5', '#ffffff']}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: '#ffffff' }]} />
 
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
@@ -139,19 +129,6 @@ export default function AlertPreferencesScreen() {
           </Pressable>
         </View>
       </SafeAreaView>
-
-      {/* Completion Toast */}
-      {showToast && (
-        <View style={styles.toast}>
-          <View style={styles.toastIcon}>
-            <Check size={20} color="#ffffff" />
-          </View>
-          <View style={styles.toastText}>
-            <Text style={styles.toastTitle}>Profile Complete!</Text>
-            <Text style={styles.toastSubtitle}>Ready to support your loved ones</Text>
-          </View>
-        </View>
-      )}
     </View>
   );
 }
@@ -283,45 +260,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#fff',
-  },
-  toast: {
-    position: 'absolute',
-    top: 80,
-    left: 24,
-    right: 24,
-    backgroundColor: '#ECFDF5',
-    padding: 20,
-    borderRadius: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 10,
-    zIndex: 9999,
-  },
-  toastIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#10B981',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  toastText: {
-    flex: 1,
-  },
-  toastTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  toastSubtitle: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#6B7280',
-    marginTop: 2,
   },
 });
