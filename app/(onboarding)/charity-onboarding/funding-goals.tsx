@@ -20,9 +20,9 @@ const FOCUS_AREAS = [
 ];
 
 export default function FundingGoalsScreen() {
-    const [annualGoal, setAnnualGoal] = useState(100000);
+    const [annualGoal, setAnnualGoal] = useState(1000);
     const [focusArea, setFocusArea] = useState<string[]>(['research']);
-    const [beneficiaryCount, setBeneficiaryCount] = useState(500);
+    const [beneficiaryCount, setBeneficiaryCount] = useState(10);
 
     const handleContinue = () => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

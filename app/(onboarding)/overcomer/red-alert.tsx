@@ -3,8 +3,8 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Droplets, Check } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Check } from 'lucide-react-native';
+
 import * as Haptics from 'expo-haptics';
 import { BackButton, CounterInput } from '../../../components/onboarding';
 
@@ -34,11 +34,7 @@ export default function HydrationGoalScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      <LinearGradient
-        colors={['#ffffff', '#DBEAFE', '#ffffff']}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+
 
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
@@ -64,10 +60,7 @@ export default function HydrationGoalScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Icon */}
-          <View style={styles.iconContainer}>
-            <Droplets size={32} color="#3B82F6" />
-          </View>
+
 
           {/* Title */}
           <Text style={styles.title}>

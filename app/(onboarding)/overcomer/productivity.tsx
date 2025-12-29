@@ -3,7 +3,6 @@ import { View, Text, Pressable, StyleSheet, ScrollView, ImageBackground } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Heart } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { BackButton, MultiSelection, TextInputField } from '../../../components/onboarding';
@@ -68,7 +67,7 @@ export default function SickleTypeScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
 
       <ImageBackground
         source={require('../../../assets/images/role_selection_bg.png')}
@@ -80,7 +79,7 @@ export default function SickleTypeScreen() {
         <SafeAreaView style={styles.safeArea}>
           {/* Header */}
           <View style={styles.header}>
-            <BackButton color="#FFF" />
+            <BackButton color="#111827" />
             <View style={styles.stepIndicator}>
               <Text style={styles.stepText}>Step 1 of 4</Text>
             </View>
@@ -101,10 +100,6 @@ export default function SickleTypeScreen() {
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {/* Icon */}
-            <View style={styles.iconContainer}>
-              <Heart size={32} color="#EF4444" fill="#EF4444" />
-            </View>
 
             {/* Title */}
             <Text style={styles.title}>
@@ -124,7 +119,7 @@ export default function SickleTypeScreen() {
                 selectedValues={selectedTypes}
                 onChange={setSelectedTypes}
                 color="#EF4444"
-                variant="aura"
+                variant="default"
               />
 
               {isAdding ? (
@@ -135,6 +130,7 @@ export default function SickleTypeScreen() {
                     onChange={setNewTypeName}
                     placeholder="e.g. HbS/Hereditary Persistence"
                     autoFocus
+                    variant="default"
                   />
                   <View style={styles.addingActions}>
                     <Pressable
@@ -193,7 +189,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
   },
   safeArea: {
     flex: 1,
@@ -206,22 +202,22 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   stepIndicator: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 100,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.2)',
+    borderColor: 'rgba(239, 68, 68, 0.15)',
   },
   stepText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#FFF',
+    color: '#EF4444',
   },
   skipText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#D1D5DB',
+    color: '#4B5563',
     paddingHorizontal: 8,
   },
   progressContainer: {
@@ -230,7 +226,7 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     height: 4,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -251,17 +247,17 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: 'rgba(0,0,0,0.03)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(0,0,0,0.05)',
   },
   title: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#FFF',
+    color: '#111827',
     lineHeight: 38,
     letterSpacing: -0.5,
     marginBottom: 12,
@@ -272,7 +268,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#D1D5DB',
+    color: '#4B5563',
     lineHeight: 24,
     marginBottom: 32,
   },
@@ -312,9 +308,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: 'rgba(0,0,0,0.1)',
     borderStyle: 'dashed',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(0,0,0,0.02)',
   },
   addTypeButtonText: {
     fontSize: 16,
@@ -323,12 +319,17 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   addingContainer: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+    backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 24,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   addingActions: {
     flexDirection: 'row',
@@ -343,7 +344,7 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#9CA3AF',
+    color: '#6B7280',
   },
   addButton: {
     backgroundColor: '#EF4444',

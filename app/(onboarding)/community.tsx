@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, Dimensions, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, Pressable, Dimensions, StyleSheet, KeyboardAvoidingView, Platform, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { LinearGradient } from 'expo-linear-gradient';
 import { User } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import OnboardingProgress from '../../components/OnboardingProgress';
 import { TextInputField, BackButton } from '../../components/onboarding';
 
 const { width, height } = Dimensions.get('window');
@@ -26,90 +24,98 @@ export default function CommunityScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
-      {/* Gradient Background */}
-      <LinearGradient
-        colors={['#ffffff', '#fef2f2', '#fff7ed', '#ffffff']}
-        locations={[0, 0.3, 0.6, 1]}
+      <ImageBackground
+        source={require('../../assets/images/role_selection_bg.png')}
         style={StyleSheet.absoluteFill}
-      />
+        resizeMode="cover"
+      >
+        <View style={styles.overlay} />
 
-      <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.keyboardView}
-        >
-          {/* Header with Back Button */}
-          <View style={styles.header}>
-            <BackButton label="" />
-            <OnboardingProgress currentStep={2} variant="light" />
-            <View style={styles.headerSpacer} />
-          </View>
-
-          {/* Content */}
-          <View style={styles.content}>
-            {/* Badge */}
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>Let's get to know you</Text>
-            </View>
-
-            {/* Title */}
-            <Text style={styles.title}>
-              What should we{'\n'}
-              <Text style={styles.titleAccent}>call you?</Text>
-            </Text>
-
-            <Text style={styles.subtitle}>
-              This is how you'll appear to others in the Sickle Safe community.
-            </Text>
-
-            {/* Name Input */}
-            <View style={styles.inputSection}>
-              <TextInputField
-                label="Your name or nickname"
-                value={name}
-                onChange={setName}
-                placeholder="Enter your name"
-                maxLength={30}
-                autoCapitalize="words"
-              />
-            </View>
-
-            {name.trim().length > 0 && (
-              <View style={styles.previewCard}>
-                <View style={styles.previewAvatar}>
-                  <User size={24} color="#fff" />
-                </View>
-                <View>
-                  <Text style={styles.previewName}>{name.trim()}</Text>
-                  <Text style={styles.previewLabel}>Sickle Safe Advocate</Text>
-                </View>
+        <SafeAreaView style={styles.safeArea}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardView}
+          >
+            {/* Header with Back Button */}
+            <View style={styles.header}>
+              <BackButton color="#FFF" />
+              <View style={styles.progressContainer}>
+                <View style={styles.dot} />
+                <View style={[styles.dot, styles.activeDot]} />
+                <View style={styles.dot} />
               </View>
-            )}
-          </View>
+              <View style={styles.headerSpacer} />
+            </View>
 
-          {/* Bottom CTA */}
-          <View style={styles.bottomSection}>
-            <Pressable
-              onPress={handleContinue}
-              disabled={!isValid}
-              style={[
-                styles.primaryButton,
-                !isValid && styles.primaryButtonDisabled,
-              ]}
-            >
-              <Text style={styles.buttonText}>Continue</Text>
-            </Pressable>
+            {/* Content */}
+            <View style={styles.content}>
+              {/* Badge */}
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>Let's get to know you</Text>
+              </View>
 
-            <Pressable style={styles.skipButton}>
-              <Text style={styles.skipText}>
-                Already have an account? <Text style={styles.skipLink}>Log in</Text>
+              {/* Title */}
+              <Text style={styles.title}>
+                What should we{'\n'}
+                <Text style={styles.titleAccent}>call you?</Text>
               </Text>
-            </Pressable>
-          </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
+
+              <Text style={styles.subtitle}>
+                This is how you'll appear to others in the Sickle Safe community.
+              </Text>
+
+              {/* Name Input */}
+              <View style={styles.inputSection}>
+                <TextInputField
+                  label="Your name or nickname"
+                  value={name}
+                  onChange={setName}
+                  placeholder="Enter your name"
+                  maxLength={30}
+                  autoCapitalize="words"
+                  variant="aura"
+                />
+              </View>
+
+              {name.trim().length > 0 && (
+                <View style={styles.previewCard}>
+                  <View style={styles.previewAvatar}>
+                    <User size={24} color="#fff" />
+                  </View>
+                  <View>
+                    <Text style={styles.previewName}>{name.trim()}</Text>
+                    <Text style={styles.previewLabel}>Sickle Safe Advocate</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* Bottom CTA */}
+            <View style={styles.bottomSection}>
+              <Pressable
+                onPress={handleContinue}
+                disabled={!isValid}
+                style={[
+                  styles.primaryButton,
+                  !isValid && styles.primaryButtonDisabled,
+                ]}
+              >
+                <Text style={styles.buttonText}>Continue</Text>
+              </Pressable>
+
+              <Pressable style={styles.skipButton}>
+                <Text style={styles.skipText}>
+                  Already have an account? <Text style={styles.skipLink}>Log in</Text>
+                </Text>
+              </Pressable>
+
+              <View style={styles.homeIndicator} />
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </ImageBackground>
     </View>
   );
 }
@@ -117,7 +123,11 @@ export default function CommunityScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#000',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.75)',
   },
   safeArea: {
     flex: 1,
@@ -132,8 +142,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
   },
+  progressContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  activeDot: {
+    width: 16,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#EF4444',
+  },
   headerSpacer: {
-    width: 80,
+    width: 40,
   },
   content: {
     flex: 1,
@@ -144,25 +171,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#FEF2F2',
-    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 100,
     alignSelf: 'flex-start',
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#EF4444',
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#FFF',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#0f172a',
-    lineHeight: 38,
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#FFF',
+    lineHeight: 40,
     letterSpacing: -1,
     marginBottom: 12,
   },
@@ -170,9 +199,9 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '500',
-    color: '#64748b',
+    color: '#D1D5DB',
     lineHeight: 22,
     marginBottom: 32,
   },
@@ -182,10 +211,12 @@ const styles = StyleSheet.create({
   previewCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F9FAFB',
+    backgroundColor: 'rgba(255,255,255,0.08)',
     padding: 16,
-    borderRadius: 20,
+    borderRadius: 24,
     gap: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   previewAvatar: {
     width: 56,
@@ -194,47 +225,49 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  previewInitial: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#fff',
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   previewName: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#0f172a',
+    color: '#FFF',
   },
   previewLabel: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#64748b',
+    color: '#9CA3AF',
     marginTop: 2,
   },
   bottomSection: {
     paddingHorizontal: 24,
     paddingBottom: 16,
+    alignItems: 'center',
   },
   primaryButton: {
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#EF4444',
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: 18,
+    borderRadius: 100,
     shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 8,
   },
   primaryButtonDisabled: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: 'rgba(239, 68, 68, 0.3)',
     shadowOpacity: 0,
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '900',
     color: '#fff',
+    letterSpacing: 1,
   },
   skipButton: {
     alignItems: 'center',
@@ -243,11 +276,17 @@ const styles = StyleSheet.create({
   skipText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
+    color: '#D1D5DB',
   },
   skipLink: {
-    color: '#111827',
+    color: '#FFF',
     fontWeight: '800',
-    textDecorationLine: 'underline',
+  },
+  homeIndicator: {
+    width: 120,
+    height: 5,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 3,
+    marginTop: 10,
   },
 });

@@ -3,8 +3,6 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AlertCircle } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { BackButton, SliderInput } from '../../../components/onboarding';
 
@@ -29,11 +27,7 @@ export default function FrequencyScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      <LinearGradient
-        colors={['#ffffff', '#FEF2F2', '#ffffff']}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
+
 
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
@@ -59,10 +53,6 @@ export default function FrequencyScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Icon */}
-          <View style={styles.iconContainer}>
-            <AlertCircle size={32} color="#EF4444" />
-          </View>
 
           {/* Title */}
           <Text style={styles.title}>

@@ -71,8 +71,7 @@ export default function ImpactAreasScreen() {
                     showsVerticalScrollIndicator={false}
                 >
                     <Text style={styles.title}>
-                        Impact{'\n'}
-                        <Text style={styles.titleAccent}>Reach</Text>
+                        <Text style={styles.titleAccent}>Impact Reach</Text>
                     </Text>
 
                     <Text style={styles.subtitle}>

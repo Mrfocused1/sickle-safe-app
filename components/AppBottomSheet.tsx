@@ -2279,7 +2279,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                         style={[
                             styles.content,
-                            (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event' || activeType === 'volunteer_actions' || activeType === 'volunteer_log_hours' || activeType === 'log_selection' || activeType === 'community_actions' || activeType === 'funding_detail' || activeType === 'funding_ai_helper' || activeType === 'learning_module' || activeType === 'module_lesson') && { height: height * 0.9 }
+                            (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event' || activeType === 'volunteer_actions' || activeType === 'volunteer_log_hours' || activeType === 'log_selection' || activeType === 'community_actions' || activeType === 'funding_detail' || activeType === 'funding_ai_helper' || activeType === 'learning_module' || activeType === 'module_lesson' || activeType === 'manage_task' || activeType === 'request_task' || activeType === 'task' || activeType === 'wellness_summary') && { height: height * 0.85 }
                         ]}
                     >
                         <View style={styles.modalCard}>
@@ -2532,7 +2532,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
 
 const styles = StyleSheet.create({
     container: { flex: 1, justifyContent: 'flex-end' },
-    content: { width: '100%', maxHeight: height * 0.9, backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: 'hidden' },
+    content: { width: '100%', maxHeight: height * 0.9, minHeight: height * 0.5, backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, overflow: 'hidden' },
     modalCard: { flex: 1, paddingBottom: 0 },
     grabber: { width: 40, height: 4, backgroundColor: '#e2e8f0', borderRadius: 2, alignSelf: 'center', marginTop: 12, marginBottom: 8 },
     header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },

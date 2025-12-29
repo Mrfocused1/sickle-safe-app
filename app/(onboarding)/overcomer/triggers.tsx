@@ -3,20 +3,18 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { AlertCircle } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { BackButton, ChipSelection } from '../../../components/onboarding';
 
 const triggerOptions = [
-    { value: 'cold', label: 'Cold Weather', icon: 'ac-unit' },
-    { value: 'dehydration', label: 'Dehydration', icon: 'water-drop' },
-    { value: 'stress', label: 'Stress', icon: 'psychology' },
-    { value: 'infection', label: 'Infections', icon: 'coronavirus' },
-    { value: 'exercise', label: 'Intense Exercise', icon: 'fitness-center' },
-    { value: 'altitude', label: 'High Altitude', icon: 'landscape' },
-    { value: 'sleep', label: 'Poor Sleep', icon: 'bedtime' },
-    { value: 'alcohol', label: 'Alcohol', icon: 'local-bar' },
+    { value: 'cold', label: 'Cold Weather' },
+    { value: 'dehydration', label: 'Dehydration' },
+    { value: 'stress', label: 'Stress' },
+    { value: 'infection', label: 'Infections' },
+    { value: 'exercise', label: 'Intense Exercise' },
+    { value: 'altitude', label: 'High Altitude' },
+    { value: 'sleep', label: 'Poor Sleep' },
+    { value: 'alcohol', label: 'Alcohol' },
 ];
 
 export default function TriggersScreen() {
@@ -32,11 +30,7 @@ export default function TriggersScreen() {
         <View style={styles.container}>
             <StatusBar style="dark" />
 
-            <LinearGradient
-                colors={['#ffffff', '#FEF2F2', '#ffffff']}
-                locations={[0, 0.5, 1]}
-                style={StyleSheet.absoluteFill}
-            />
+
 
             <SafeAreaView style={styles.safeArea}>
                 {/* Header */}
@@ -62,10 +56,7 @@ export default function TriggersScreen() {
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 >
-                    {/* Icon */}
-                    <View style={styles.iconContainer}>
-                        <AlertCircle size={32} color="#EF4444" />
-                    </View>
+
 
                     {/* Title */}
                     <Text style={styles.title}>

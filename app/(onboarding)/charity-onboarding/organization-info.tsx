@@ -32,7 +32,7 @@ export default function OrganizationInfoScreen() {
         }
     };
 
-    const isValid = orgName.trim().length >= 1 && mission.trim().length >= 1;
+    const isValid = orgName.trim().length >= 1;
 
     return (
         <View style={styles.container}>
@@ -92,7 +92,7 @@ export default function OrganizationInfoScreen() {
                             <View style={styles.spacing} />
 
                             <TextInputField
-                                label="Mission Statement"
+                                label="Mission Statement (Optional)"
                                 value={mission}
                                 onChange={setMission}
                                 placeholder="What is your primary objective?"

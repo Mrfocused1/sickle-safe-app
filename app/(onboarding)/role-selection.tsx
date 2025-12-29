@@ -6,6 +6,9 @@ import { StatusBar } from 'expo-status-bar';
 import { Check } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 
+import { BackButton } from '../../components/onboarding';
+import * as Haptics from 'expo-haptics';
+
 const { width, height } = Dimensions.get('window');
 
 type Role = 'overcomer' | 'helper' | 'volunteer' | 'charity';
@@ -61,7 +64,7 @@ export default function RoleSelectionScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
 
       <ImageBackground
         source={require('../../assets/images/role_selection_bg.png')}
@@ -73,10 +76,19 @@ export default function RoleSelectionScreen() {
         <SafeAreaView style={styles.safeArea}>
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.progressContainer}>
-              <View style={styles.dot} />
-              <View style={styles.dot} />
-              <View style={[styles.dot, styles.activeDot]} />
+            <BackButton color="#111827" />
+            <View style={styles.stepIndicator}>
+              <Text style={styles.stepText}>Step 1 of 4</Text>
+            </View>
+            <Pressable onPress={() => router.push('/(overcomer)')}>
+              <Text style={styles.skipText}>Skip</Text>
+            </Pressable>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressFill, { width: '25%' }]} />
             </View>
           </View>
 
@@ -91,40 +103,19 @@ export default function RoleSelectionScreen() {
               <Text style={styles.subtitle}>Select how you'll be participating in the community.</Text>
             </View>
 
-            {/* Selection Grid */}
-            <View style={styles.gridContainer}>
-              {/* Column 1 */}
-              <View style={styles.column}>
+            {/* Selection List */}
+            <View style={styles.listContainer}>
+              {roles.map((role) => (
                 <RoleCard
-                  role={roles[0]}
-                  isSelected={selectedRole === 'overcomer'}
-                  onSelect={() => setSelectedRole('overcomer')}
+                  key={role.id}
+                  role={role}
+                  isSelected={selectedRole === role.id}
+                  onSelect={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    setSelectedRole(role.id);
+                  }}
                 />
-
-                {/* Charity Card */}
-                <RoleCard
-                  role={roles[3]}
-                  isSelected={selectedRole === 'charity'}
-                  onSelect={() => setSelectedRole('charity')}
-                />
-              </View>
-
-              {/* Column 2 */}
-              <View style={styles.column}>
-                {/* Helper Card */}
-                <RoleCard
-                  role={roles[1]}
-                  isSelected={selectedRole === 'helper'}
-                  onSelect={() => setSelectedRole('helper')}
-                />
-
-                {/* Volunteer Card */}
-                <RoleCard
-                  role={roles[2]}
-                  isSelected={selectedRole === 'volunteer'}
-                  onSelect={() => setSelectedRole('volunteer')}
-                />
-              </View>
+              ))}
             </View>
           </ScrollView>
 
@@ -153,14 +144,14 @@ function RoleCard({ role, isSelected, onSelect }: { role: RoleData; isSelected: 
         isSelected && styles.cardActive
       ]}
     >
-      {isSelected && (
-        <View style={styles.checkIcon}>
-          <Check size={12} color="#EF4444" strokeWidth={3} />
-        </View>
-      )}
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle}>{role.title}</Text>
-        <Text style={styles.cardSubtitle}>{role.subtitle}</Text>
+        <View style={styles.textContainer}>
+          <Text style={[styles.cardTitle, isSelected && styles.activeText]}>{role.title}</Text>
+          <Text style={styles.cardSubtitle}>{role.subtitle}</Text>
+        </View>
+        <View style={[styles.indicator, isSelected && styles.indicatorActive]}>
+          {isSelected && <Check size={14} color="#FFF" strokeWidth={3} />}
+        </View>
       </View>
     </Pressable>
   );
@@ -173,59 +164,76 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(255,255,255,0.92)',
   },
   safeArea: {
     flex: 1,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    height: 60,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+  },
+  stepIndicator: {
+    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.15)',
+  },
+  stepText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#EF4444',
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#4B5563',
+    paddingHorizontal: 8,
   },
   progressContainer: {
-    flexDirection: 'row',
-    gap: 8,
-    flex: 1,
-    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 16,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+  progressTrack: {
+    height: 4,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  activeDot: {
-    backgroundColor: '#fff',
-    width: 20,
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#EF4444',
+    borderRadius: 2,
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingTop: 48,
+    paddingBottom: 24,
   },
   titleSection: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 40,
+    marginBottom: 32,
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: '900',
-    color: '#fff',
-    textAlign: 'center',
-    lineHeight: 40,
-    letterSpacing: -1,
+    color: '#111827',
+    lineHeight: 38,
+    letterSpacing: -0.5,
     marginBottom: 12,
   },
   subtitle: {
     fontSize: 16,
-    color: '#D1D5DB',
-    textAlign: 'center',
     fontWeight: '500',
-    paddingHorizontal: 20,
-    lineHeight: 22,
+    color: '#4B5563',
+    lineHeight: 24,
+  },
+  listContainer: {
+    gap: 12,
   },
   gridContainer: {
     flexDirection: 'row',
@@ -236,51 +244,60 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   card: {
-    height: 180,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderRadius: 24,
-    padding: 20,
-    justifyContent: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-    position: 'relative',
-    overflow: 'hidden',
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
   },
   cardActive: {
-    backgroundColor: 'rgba(239,68,68,0.1)',
+    backgroundColor: 'rgba(239, 68, 68, 0.05)',
     borderColor: '#EF4444',
-    borderWidth: 2,
-    shadowColor: '#EF4444',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
   },
-  checkIcon: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#fff',
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flex: 1,
+  },
+  textContainer: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#374151',
+  },
+  activeText: {
+    color: '#111827',
+  },
+  cardSubtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  indicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardContent: {
-    gap: 2,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#fff',
-    lineHeight: 22,
-  },
-  cardSubtitle: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+  indicatorActive: {
+    backgroundColor: '#EF4444',
+    borderColor: '#EF4444',
   },
   footer: {
     paddingHorizontal: 24,
@@ -311,7 +328,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   loginText: {
-    color: '#fff',
+    color: '#4B5563',
     fontSize: 13,
     fontWeight: '800',
     letterSpacing: 1,
@@ -319,7 +336,7 @@ const styles = StyleSheet.create({
   homeIndicator: {
     width: 120,
     height: 5,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.1)',
     borderRadius: 3,
     marginTop: 10,
   },

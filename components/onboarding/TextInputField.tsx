@@ -14,6 +14,7 @@ interface TextInputFieldProps {
   autoFocus?: boolean;
   multiline?: boolean;
   numberOfLines?: number;
+  variant?: 'default' | 'aura';
 }
 
 export default function TextInputField({
@@ -28,6 +29,7 @@ export default function TextInputField({
   autoFocus = false,
   multiline = false,
   numberOfLines = 1,
+  variant = 'default',
 }: TextInputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -35,19 +37,26 @@ export default function TextInputField({
     onChange('');
   };
 
+  const isAura = variant === 'aura';
+
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={[styles.label, isAura && styles.labelAura]}>{label}</Text>
       <View style={[
         styles.inputContainer,
-        { borderColor: isFocused ? color : '#E5E7EB' }
+        isAura && styles.inputContainerAura,
+        { borderColor: isFocused ? (isAura ? 'rgba(239, 68, 68, 0.5)' : color) : (isAura ? 'rgba(255,255,255,0.15)' : '#E5E7EB') }
       ]}>
         <TextInput
           value={value}
           onChangeText={onChange}
           placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
-          style={[styles.input, multiline && styles.inputMultiline]}
+          placeholderTextColor={isAura ? 'rgba(255,255,255,0.4)' : '#9CA3AF'}
+          style={[
+            styles.input,
+            isAura && styles.inputAura,
+            multiline && styles.inputMultiline
+          ]}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           autoCapitalize={autoCapitalize}
@@ -60,12 +69,12 @@ export default function TextInputField({
         />
         {value.length > 0 && (
           <Pressable onPress={handleClear} style={styles.clearButton}>
-            <X size={18} color="#9CA3AF" />
+            <X size={18} color={isAura ? 'rgba(255,255,255,0.4)' : '#9CA3AF'} />
           </Pressable>
         )}
       </View>
       {maxLength && (
-        <Text style={styles.charCount}>
+        <Text style={[styles.charCount, isAura && styles.charCountAura]}>
           {value.length}/{maxLength}
         </Text>
       )}
@@ -83,6 +92,9 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginBottom: 12,
   },
+  labelAura: {
+    color: '#FFF',
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -91,12 +103,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
   },
+  inputContainerAura: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+  },
   input: {
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
     color: '#111827',
     paddingVertical: 16,
+  },
+  inputAura: {
+    color: '#FFF',
   },
   inputMultiline: {
     minHeight: 100,
@@ -112,5 +131,8 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     textAlign: 'right',
     marginTop: 8,
+  },
+  charCountAura: {
+    color: 'rgba(255,255,255,0.4)',
   },
 });

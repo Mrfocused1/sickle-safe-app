@@ -3,8 +3,6 @@ import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Users } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { BackButton, MultiSelection, CounterInput, TextInputField } from '../../../components/onboarding';
 import { Plus } from 'lucide-react-native';
@@ -78,11 +76,6 @@ export default function RelationshipScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      <LinearGradient
-        colors={['#ffffff', '#ECFDF5', '#ffffff']}
-        locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFill}
-      />
 
       <SafeAreaView style={styles.safeArea}>
         {/* Header */}
@@ -108,10 +101,6 @@ export default function RelationshipScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Icon */}
-          <View style={styles.iconContainer}>
-            <Users size={32} color="#10B981" />
-          </View>
 
           {/* Title */}
           <Text style={styles.title}>
