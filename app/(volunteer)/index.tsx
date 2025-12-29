@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, Pressable, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -13,15 +13,48 @@ import {
     MapPin,
     ArrowRight
 } from 'lucide-react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import Animated from 'react-native-reanimated';
 import AppBottomSheet from '../../components/AppBottomSheet';
+import { ConversationListSheet, ContactPicker, GroupCreator, ChatSheet } from '../../components/messaging';
+import { messagingStorage } from '../../services/messagingStorage';
+import { CurrentUser, Conversation } from '../../types/messaging';
 import * as Haptics from 'expo-haptics';
 
 export default function VolunteerDashboard() {
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const [activeMission, setActiveMission] = React.useState<any>(null);
+
+    // Messaging state
+    const [showMessageSelection, setShowMessageSelection] = useState(false);
+    const [showConversationList, setShowConversationList] = useState(false);
+    const [conversationFilterType, setConversationFilterType] = useState<'all' | 'direct' | 'group'>('all');
+    const [showContactPicker, setShowContactPicker] = useState(false);
+    const [showGroupCreator, setShowGroupCreator] = useState(false);
+    const [showChatSheet, setShowChatSheet] = useState(false);
+    const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
+    const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+    const [currentUser] = useState<CurrentUser>({
+        id: 'current_user',
+        name: 'Volunteer',
+        role: 'volunteer',
+    });
+
+    const loadUnreadCount = async () => {
+        try {
+            await messagingStorage.initializeWithMockData();
+            const count = await messagingStorage.getTotalUnreadCount();
+            setTotalUnreadCount(count);
+        } catch (error) {
+            console.error('Failed to load unread count:', error);
+        }
+    };
+
+    useEffect(() => {
+        loadUnreadCount();
+    }, []);
 
     const stats = [
         { label: 'Hours', value: '42', icon: Clock, color: '#8B5CF6' },
@@ -47,12 +80,50 @@ export default function VolunteerDashboard() {
                             <Text className="text-gray-500 font-medium text-sm">Welcome back,</Text>
                             <Text className="text-3xl font-extrabold text-gray-900 mt-1">Volunteer</Text>
                         </View>
-                        <View className="w-12 h-12 rounded-full border border-gray-100 overflow-hidden">
-                            <Image
-                                source={{ uri: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200' }}
-                                className="w-full h-full"
-                            />
-                        </View>
+                        <Pressable
+                            onPress={() => {
+                                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                                setShowMessageSelection(true);
+                            }}
+                            style={{
+                                width: 44,
+                                height: 44,
+                                borderRadius: 22,
+                                backgroundColor: '#10B981',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.15,
+                                shadowRadius: 8,
+                                elevation: 6,
+                                position: 'relative',
+                            }}
+                        >
+                            <MaterialIcons name="chat-bubble" size={22} color="#ffffff" />
+                            {totalUnreadCount > 0 && (
+                                <View
+                                    style={{
+                                        position: 'absolute',
+                                        top: -4,
+                                        right: -4,
+                                        minWidth: 20,
+                                        height: 20,
+                                        borderRadius: 10,
+                                        backgroundColor: '#EF4444',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        paddingHorizontal: 4,
+                                        borderWidth: 2,
+                                        borderColor: '#fff',
+                                    }}
+                                >
+                                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#fff' }}>
+                                        {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
+                                    </Text>
+                                </View>
+                            )}
+                        </Pressable>
                     </View>
                 </View>
 
@@ -205,6 +276,90 @@ export default function VolunteerDashboard() {
                 onClose={() => setActiveMission(null)}
                 type="mission_detail"
                 mission={activeMission}
+            />
+
+            {/* Message Selection Sheet */}
+            <AppBottomSheet
+                visible={showMessageSelection}
+                onClose={() => setShowMessageSelection(false)}
+                type="message_selection"
+                onNewDM={() => {
+                    setShowMessageSelection(false);
+                    setShowContactPicker(true);
+                }}
+                onNewGroup={() => {
+                    setShowMessageSelection(false);
+                    setShowGroupCreator(true);
+                }}
+                onOpenDMInbox={() => {
+                    setShowMessageSelection(false);
+                    setConversationFilterType('direct');
+                    setShowConversationList(true);
+                }}
+                onOpenGroupInbox={() => {
+                    setShowMessageSelection(false);
+                    setConversationFilterType('group');
+                    setShowConversationList(true);
+                }}
+            />
+
+            {/* Messaging Sheets */}
+            <ConversationListSheet
+                visible={showConversationList}
+                onClose={() => {
+                    setShowConversationList(false);
+                    setConversationFilterType('all');
+                    loadUnreadCount();
+                }}
+                filterType={conversationFilterType}
+                currentUser={currentUser}
+                onNewDM={() => setShowContactPicker(true)}
+                onNewGroup={() => setShowGroupCreator(true)}
+                onOpenChat={(conversation) => {
+                    setActiveConversation(conversation);
+                    setShowChatSheet(true);
+                }}
+            />
+
+            <ContactPicker
+                visible={showContactPicker}
+                onClose={() => setShowContactPicker(false)}
+                onSelect={(conversation: Conversation) => {
+                    setShowContactPicker(false);
+                    setActiveConversation(conversation);
+                    setShowChatSheet(true);
+                    loadUnreadCount();
+                }}
+                currentUser={currentUser}
+            />
+
+            <GroupCreator
+                visible={showGroupCreator}
+                onClose={() => setShowGroupCreator(false)}
+                onCreate={(conversation: Conversation) => {
+                    setShowGroupCreator(false);
+                    setActiveConversation(conversation);
+                    setShowChatSheet(true);
+                    loadUnreadCount();
+                }}
+                currentUser={currentUser}
+            />
+
+            <ChatSheet
+                visible={showChatSheet}
+                onClose={() => {
+                    setShowChatSheet(false);
+                    setActiveConversation(null);
+                    loadUnreadCount();
+                }}
+                onBack={() => {
+                    setShowChatSheet(false);
+                    setActiveConversation(null);
+                    setShowConversationList(true);
+                    loadUnreadCount();
+                }}
+                conversation={activeConversation}
+                currentUser={currentUser}
             />
         </View>
     );

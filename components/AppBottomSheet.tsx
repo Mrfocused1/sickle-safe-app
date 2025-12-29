@@ -2476,7 +2476,10 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                 (activeType === 'crisis') && { minHeight: height * 0.68 },
                                 (activeType === 'wellness_summary' || activeType === 'metrics_info' || activeType === 'manage_task') && { minHeight: height * 0.55 },
                                 (activeType === 'activity_detail') && { minHeight: height * 0.38 },
-                                (activeType === 'member') && { height: height * 0.85 }
+                                (activeType === 'member') && { height: height * 0.85 },
+                                (activeType === 'mission_detail') && { minHeight: height * 0.70 },
+                                (activeType === 'idea') && { minHeight: height * 0.55 },
+                                (activeType === 'group') && { minHeight: height * 0.60 }
                             ]}
                         >
                             <View style={styles.modalCard}>
@@ -2485,13 +2488,16 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                 </View>
                             {activeType !== 'message_selection' ? (
                             <View style={styles.header}>
+                                {activeType !== 'mission_detail' && (
                                 <View style={[styles.iconContainer, { backgroundColor: `${header.color}15` }]}>
                                     <MaterialIcons name={header.icon as any} size={28} color={header.color} />
                                 </View>
+                                )}
                                 <View style={styles.headerText}>
                                     <Text style={styles.headerTitle}>
                                         {activeType === 'member' ? header.title :
                                             activeType === 'community_actions' ? 'Community Hub' :
+                                                activeType === 'mission_detail' ? header.title :
                                                 (activeType === 'event_detail' || activeType === 'event_calendar' || activeType === 'create_event' || activeType === 'volunteer_actions' || activeType === 'volunteer_log_hours' || activeType === 'manage_task' || activeType === 'request_task')
                                                     ? header.title : 'Log ' + header.title}
                                     </Text>
@@ -2502,6 +2508,7 @@ export default function AppBottomSheet({ visible, onClose, type, task, member, a
                                                     activeType === 'community_actions' ? 'Manage your community' :
                                                         activeType === 'volunteer_actions' ? 'Your impact dashboard' :
                                                             activeType === 'volunteer_log_hours' ? 'Record service time' :
+                                                                activeType === 'mission_detail' ? 'Support opportunity details' :
                                                                 activeType === 'invite_member' ? 'Expand your circle' :
                                                                     activeType === 'manage_task' ? 'Delegate this task' :
                                                                         activeType === 'request_task' ? 'Be a hero today' :
